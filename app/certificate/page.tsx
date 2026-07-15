@@ -6,19 +6,7 @@ export default function CertificatePage() {
   const [answer1, setAnswer1] = useState("");
   const [answer2, setAnswer2] = useState("");
   const [loading, setLoading] = useState(false);
-  const currentUser = localStorage.getItem("currentUser");
-
-console.log(currentUser);
-
-if (!currentUser) {
-  alert("Please sign in first.");
-  return;
-}
-
-const user = JSON.parse(currentUser);
-
-console.log(user);
-console.log(user.username);
+  
   async function handleSubmit() {
     const currentUser = localStorage.getItem("currentUser");
 

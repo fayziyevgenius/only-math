@@ -6,9 +6,9 @@ export default function CertificatePage() {
   const [answer1, setAnswer1] = useState("");
   const [answer2, setAnswer2] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  async function handleSubmit() {
   const currentUser = localStorage.getItem("currentUser");
-
-console.log(currentUser);
 
 if (!currentUser) {
   alert("Please sign in first.");
@@ -16,19 +16,6 @@ if (!currentUser) {
 }
 
 const user = JSON.parse(currentUser);
-
-console.log(user);
-console.log(user.username);
-  async function handleSubmit() {
-    const currentUser = localStorage.getItem("currentUser");
-
-    if (!currentUser) {
-      alert("Please sign in first.");
-      return;
-    }
-
-    const user = JSON.parse(currentUser);
-
     if (!answer1 || !answer2) {
       alert("Please answer all questions.");
       return;
