@@ -47,17 +47,47 @@ export default function VerifyPasswordPage() {
     }
   };
 
-  const handleVerify = () => {
-    const code = otp.join("");
+  const handleVerify = async () => {
+  const code = otp.join("");
 
-    if (code.length !== 6) {
-      alert("Please enter the 6-digit code.");
+  if (code.length !== 6) {
+    alert("Please enter the 6-digit code.");
+    return;
+  }
+
+  const email = localStorage.getItem("resetEmail");
+
+  if (!email) {
+    alert("Email not found.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/verify-reset-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        otp: code,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
       return;
     }
 
-
     router.push("/resetpassword");
-  };
+
+  } catch (error) {
+    console.error(error);
+    alert("Server Error.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden text-white">

@@ -13,32 +13,63 @@ export default function ResetPasswordPage() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setPasswordError("");
-    setConfirmError("");
+  setPasswordError("");
+  setConfirmError("");
 
-    let hasError = false;
+  let hasError = false;
 
-    if (password.length < 8) {
-      setPasswordError("Password must contain at least 8 characters.");
-      hasError = true;
+  if (password.length < 8) {
+    setPasswordError("Password must contain at least 8 characters.");
+    hasError = true;
+  }
+
+  if (confirmPassword !== password) {
+    setConfirmError("Passwords do not match.");
+    hasError = true;
+  }
+
+  if (hasError) return;
+
+  const email = localStorage.getItem("resetEmail");
+
+  if (!email) {
+    alert("Email not found.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/reset-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
     }
 
-    if (confirmPassword !== password) {
-      setConfirmError("Passwords do not match.");
-      hasError = true;
-    }
+    localStorage.removeItem("resetEmail");
 
-    if (hasError) return;
-
-    // MongoDB update keyin shu yerga yoziladi
-
-    alert("Password changed successfully!");
+    alert("✅ Password changed successfully!");
 
     router.push("/");
-  };
+
+  } catch (error) {
+    console.error(error);
+    alert("Server Error.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden text-white">

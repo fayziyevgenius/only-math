@@ -12,7 +12,7 @@ export default function ForgotPassword() {
   const validateEmail = (email: string) => {
   return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
 };
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!validateEmail(email)) {
@@ -20,7 +20,34 @@ export default function ForgotPassword() {
     return;
   }
 
-  router.push("/verifypassword");
+  try {
+    const res = await fetch("/api/forgot-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
+    }
+
+    localStorage.setItem("resetEmail", email);
+
+    alert("Verification code sent successfully!");
+
+    router.push("/verifypassword");
+
+  } catch (error) {
+    console.error(error);
+    alert("Server Error.");
+  }
 };
 
   return (

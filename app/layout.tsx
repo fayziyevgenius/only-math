@@ -10,7 +10,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   pathname === "/" ||
   pathname === "/registration" ||
   pathname === "/forgot" ||
-  pathname === "/verify";
+  pathname === "/verify" ||
+  pathname === "/verifypassword" ||
+  pathname === "/resetpassword";
+
 
   return (
     <html lang="en">

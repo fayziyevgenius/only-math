@@ -50,9 +50,19 @@ export default function VerifyPage() {
 
     localStorage.removeItem("registerData");
 
-    alert("Account created successfully!");
+// Yangi userni login qilingan holatda saqlaymiz
+localStorage.setItem(
+  "currentUser",
+  JSON.stringify({
+    name: user.name,
+    username: user.username,
+    email: user.email,
+  })
+);
 
-    router.push("/account");
+alert("Account created successfully!");
+
+router.push("/afterregister");
   }
 
   return (

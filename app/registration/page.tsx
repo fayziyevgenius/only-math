@@ -44,24 +44,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/send-otp", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    email,
-  }),
-});
 
-const data = await res.json();
-
-if (!res.ok) {
-  alert(data.error);
-  return;
-}
-
-router.push("/verify");
 
     const newErrors = {
       name: "",
