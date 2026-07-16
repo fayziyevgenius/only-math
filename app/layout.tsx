@@ -1,51 +1,148 @@
-"use client"; // Hooklar ishlashi uchun zarur
+"use client";
 
 import "./globals.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const isAuthPage =
-  pathname === "/" ||
-  pathname === "/registration" ||
-  pathname === "/forgot" ||
-  pathname === "/verify" ||
-  pathname === "/verifypassword" ||
-  pathname === "/resetpassword";
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  const isAuthPage =
+    pathname === "/" ||
+    pathname === "/registration" ||
+    pathname === "/forgot" ||
+    pathname === "/verify" ||
+    pathname === "/verifypassword" ||
+    pathname === "/resetpassword";
 
   return (
     <html lang="en">
-      <body className="bg-black text-white flex min-h-screen">
-        {!isAuthPage && (
-          <div className="w-72 p-6 border-r border-gray-700 flex flex-col shrink-0">
-            <Link href="/afterregister" className="flex items-center gap-4 mb-12 group">
-              <img 
-                src="/logo.png" 
-                className="w-20 h-20 rounded-full border-2 border-green-500 p-1 object-cover transition group-hover:scale-110"
-                alt="Logo"
-              />
-              <h1 className="text-3xl font-serif font-bold group-hover:text-green-400">
-                Only Math
-              </h1>
-            </Link>
+      <body className="bg-black text-white min-h-screen flex">
 
-            <ul className="space-y-6 flex-1">
-              <li><Link href="/account" className="hover:text-green-400 transition">My account</Link></li>
-              <li><Link href="/certificate" className="hover:text-green-400 transition">Certificate</Link></li>
-              <li><Link href="/sat" className="hover:text-green-400 transition">SAT</Link></li>
-              <li><Link href="/olympiad" className="hover:text-green-400 transition">Olympiad</Link></li>
-              <li><Link href="/daily" className="hover:text-green-400 transition">Daily problem</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-green-400 transition">Leaderboard</Link></li>
-            </ul>
-          </div>
+        {!isAuthPage && (
+          <>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="fixed top-4 left-4 z-50 md:hidden bg-zinc-900 border border-zinc-700 rounded-xl p-3"
+            >
+              ☰
+            </button>
+
+            {/* Overlay */}
+            {menuOpen && (
+              <div
+                onClick={() => setMenuOpen(false)}
+                className="fixed inset-0 bg-black/60 z-40 md:hidden"
+              />
+            )}
+
+            {/* Sidebar */}
+            <aside
+              className={`
+                fixed top-0 left-0 z-50
+                h-screen w-72 bg-black border-r border-zinc-700
+                p-6 flex flex-col
+                transform transition-transform duration-300
+                ${menuOpen ? "translate-x-0" : "-translate-x-full"}
+                md:translate-x-0 md:static md:flex
+              `}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="md:hidden text-3xl self-end mb-4"
+              >
+                ✕
+              </button>
+
+              {/* Logo */}
+              <Link
+                href="/afterregister"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-4 mb-10"
+              >
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  className="w-20 h-20 rounded-full border-2 border-green-500 p-1"
+                />
+
+                <h1 className="text-3xl font-bold text-green-400">
+                  Only Math
+                </h1>
+              </Link>
+
+              <nav className="flex flex-col gap-5 text-lg">
+
+                <Link
+                  href="/account"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  👤 My Account
+                </Link>
+
+                <Link
+                  href="/certificate"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  📜 Certificate
+                </Link>
+
+                <Link
+                  href="/sat"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  📝 SAT
+                </Link>
+
+                <Link
+                  href="/olympiad"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  🏆 Olympiad
+                </Link>
+
+                <Link
+                  href="/daily"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  📅 Daily Problem
+                </Link>
+
+                <Link
+                  href="/leaderboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-green-400"
+                >
+                  🥇 Leaderboard
+                </Link>
+
+              </nav>
+            </aside>
+          </>
         )}
 
-        {/* Page content */}
-        <div className={`flex-1 ${isAuthPage ? 'flex items-center justify-center' : 'p-12'}`}>
+        {/* Main Content */}
+        <main
+          className={`
+            flex-1
+            ${!isAuthPage ? "md:ml-72 p-5 md:p-10" : ""}
+          `}
+        >
           {children}
-        </div>
+        </main>
 
       </body>
     </html>
