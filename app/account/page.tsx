@@ -30,59 +30,71 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
+    <div className="min-h-screen bg-black text-white p-4 md:p-10">
       <div className="max-w-5xl mx-auto">
 
-        <div className="border border-gray-700 rounded-3xl p-10">
+        <div className="border border-gray-700 rounded-3xl p-6 md:p-10">
 
-          <div className="flex items-center gap-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-8">
 
-            <div className="w-32 h-32 rounded-full bg-gray-800 flex items-center justify-center text-5xl">
+            <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-gray-800 flex items-center justify-center text-5xl">
               👤
             </div>
 
-            <div>
-              <h1 className="text-4xl font-bold">
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl md:text-5xl font-bold">
                 {user.name} {user.surname}
               </h1>
 
-              <p className="text-gray-400 mt-2">
+              <p className="text-gray-400 mt-2 text-lg break-all">
                 @{user.username}
               </p>
             </div>
 
           </div>
 
-          <div className="grid grid-cols-2 gap-8 mt-12">
+          {/* Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
 
             <div>
               <p className="text-gray-400">Name</p>
-              <p className="text-2xl">{user.name}</p>
+              <p className="text-xl md:text-2xl break-words">
+                {user.name}
+              </p>
             </div>
 
             <div>
               <p className="text-gray-400">Surname</p>
-              <p className="text-2xl">{user.surname}</p>
+              <p className="text-xl md:text-2xl break-words">
+                {user.surname}
+              </p>
             </div>
 
             <div>
               <p className="text-gray-400">Email</p>
-              <p className="text-2xl">{user.email}</p>
+              <p className="text-xl md:text-2xl break-all">
+                {user.email}
+              </p>
             </div>
 
             <div>
               <p className="text-gray-400">Username</p>
-              <p className="text-2xl">{user.username}</p>
+              <p className="text-xl md:text-2xl break-all">
+                @{user.username}
+              </p>
             </div>
 
             <div>
               <p className="text-gray-400">Birthday</p>
-              <p className="text-2xl">{user.birthday}</p>
+              <p className="text-xl md:text-2xl break-words">
+                {user.birthday}
+              </p>
             </div>
 
           </div>
 
-          <button className="mt-12 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition">
+          <button className="mt-12 w-full md:w-auto bg-white text-black px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition">
             Edit Profile
           </button>
 
