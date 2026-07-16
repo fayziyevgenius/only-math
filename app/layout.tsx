@@ -40,13 +40,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
     images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 1200,
-        alt: "Only Math",
-      },
-    ],
+  {
+    url: "/og-image.png",
+    width: 1200,
+    height: 630,
+    alt: "Only Math",
+  },
+],
   },
 
   twitter: {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Only Math",
     description:
       "Practice Olympiad Mathematics, SAT Math and Daily Challenges.",
-    images: ["/logo.png"],
+    images: ["/og-image.png"],
   },
 
   icons: {
