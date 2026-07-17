@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function ClientLayout({
   children,
@@ -10,6 +10,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isAuthPage =
@@ -19,6 +20,20 @@ export default function ClientLayout({
     pathname === "/verify" ||
     pathname === "/verifypassword" ||
     pathname === "/resetpassword";
+  useEffect(() => {
+  if (isAuthPage) return;
+
+  const currentUser = localStorage.getItem("currentUser");
+
+  if (!currentUser) {
+    router.replace("/");
+  }
+}, [isAuthPage, router]);
+
+const handleLogout = () => {
+  localStorage.removeItem("currentUser");
+  router.replace("/");
+};
 
   return (
     <div className="bg-black text-white min-h-screen flex">
@@ -120,6 +135,14 @@ export default function ClientLayout({
                 🥇 Leaderboard
               </Link>
             </nav>
+            <div className="mt-auto pt-8 border-t border-zinc-700">
+  <button
+    onClick={handleLogout}
+    className="w-full text-left text-red-400 hover:text-red-500 transition text-lg"
+  >
+    🚪 Sign Out
+  </button>
+</div>
           </aside>
         </>
       )}

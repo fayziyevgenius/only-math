@@ -3,13 +3,20 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
 export default function LoginPage() {
   const router = useRouter();
 
 const [username, setUsername] = useState("");
 const [password, setPassword] = useState("");
 const [loading, setLoading] = useState(false);
+useEffect(() => {
+  const currentUser = localStorage.getItem("currentUser");
+
+  if (currentUser) {
+    router.replace("/afterregister");
+  }
+}, [router]);
 async function handleLogin() {
   if (!username || !password) {
     alert("Please fill in all fields.");
@@ -39,11 +46,11 @@ async function handleLogin() {
     }
 
     localStorage.setItem(
-      "currentUser",
-      JSON.stringify(data.user)
-    );
+  "currentUser",
+  JSON.stringify(data.user)
+);
 
-    router.push("/afterregister");
+router.replace("/afterregister");
   } catch (error) {
     console.error(error);
     alert("Server error.");
