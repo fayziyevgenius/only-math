@@ -67,15 +67,27 @@ const handleLogout = () => {
           )}
 
           <aside
-            className={`
-              fixed top-0 left-0 z-50
-              h-screen w-72 bg-black border-r border-zinc-700
-              p-6 flex flex-col
-              transform transition-transform duration-300
-              ${menuOpen ? "translate-x-0" : "-translate-x-full"}
-              md:translate-x-0 md:static md:flex
-            `}
-          >
+  className={`
+    fixed
+    top-0
+    left-0
+    h-screen
+    w-72
+    bg-black
+    border-r
+    border-zinc-700
+    p-6
+    flex
+    flex-col
+    overflow-y-auto
+    z-50
+
+    transform transition-transform duration-300
+    ${menuOpen ? "translate-x-0" : "-translate-x-full"}
+
+    md:translate-x-0
+  `}
+>
             <button
               onClick={() => setMenuOpen(false)}
               className="md:hidden text-3xl self-end mb-4"
@@ -208,11 +220,13 @@ const handleLogout = () => {
       )}
 
       <main
-        className={`
-          flex-1
-          ${!isAuthPage ? "md:ml-72 p-5 md:p-10" : ""}
-        `}
-      >
+  className={`
+    flex-1
+    overflow-y-auto
+    h-screen
+    ${!isAuthPage ? "md:ml-72 p-5 md:p-10" : ""}
+  `}
+>
         {children}
       </main>
     </div>
