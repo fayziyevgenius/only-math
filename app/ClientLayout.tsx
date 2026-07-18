@@ -4,6 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
+import {
+  User,
+  FileText,
+  Calculator,
+  Trophy,
+  CalendarDays,
+  Medal,
+  LogOut,
+  Home,
+  Zap,
+  Globe,
+} from "lucide-react";
+
 export default function ClientLayout({
   children,
 }: {
@@ -88,60 +101,107 @@ const handleLogout = () => {
 
             <nav className="flex flex-col gap-5 text-lg">
               <Link
-                href="/account"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                👤 My Account
-              </Link>
+  href="/account"
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
+    pathname === "/account"
+      ? "bg-green-600 text-white"
+      : "hover:bg-zinc-800 hover:text-green-400"
+  }`}
+>
+  <User size={20} />
+  My Account
+</Link>
 
               <Link
-                href="/certificate"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                📜 Certificate
-              </Link>
+  href="/certificate"
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
+    pathname === "/certificate"
+      ? "bg-green-600 text-white"
+      : "hover:bg-zinc-800 hover:text-green-400"
+  }`}
+>
+  <FileText size={20} />
+  Certificate
+</Link>
 
               <Link
-                href="/sat"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                📝 SAT
-              </Link>
+  href="/sat"
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
+    pathname === "/sat"
+      ? "bg-green-600 text-white"
+      : "hover:bg-zinc-800 hover:text-green-400"
+  }`}
+>
+  <Calculator size={20} />
+  SAT
+</Link>
 
               <Link
-                href="/olympiad"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                🏆 Olympiad
-              </Link>
+  href="/olympiad"
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
+    pathname === "/olympiad"
+      ? "bg-green-600 text-white"
+      : "hover:bg-zinc-800 hover:text-green-400"
+  }`}
+>
+  <Trophy size={20} />
+  Olympiad
+</Link>
 
               <Link
-                href="/daily"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                📅 Daily Problem
-              </Link>
+  href="/daily"
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
+    pathname === "/daily"
+      ? "bg-green-600 text-white"
+      : "hover:bg-zinc-800 hover:text-green-400"
+  }`}
+>
+  <CalendarDays size={20} />
+  Daily Problem
+</Link>
 
-              <Link
-                href="/leaderboard"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-green-400"
-              >
-                🥇 Leaderboard
-              </Link>
+<Link
+  href="/leaderboard"
+  onClick={() => setMenuOpen(false)}
+  className="flex items-center gap-3 hover:text-green-400 transition"
+>
+  <Globe size={20} />
+  <span>Global Leaderboard</span>
+</Link>
+
+<Link
+  href="/math-spirit"
+  onClick={() => setMenuOpen(false)}
+  className="flex items-center gap-3 hover:text-green-400 transition"
+>
+  <Zap size={20} />
+  <span>Math Sprint</span>
+</Link>
+
+<Link
+  href="/math-spirit/leaderboard"
+  onClick={() => setMenuOpen(false)}
+  className="flex items-center gap-3 hover:text-green-400 transition"
+>
+  <Trophy size={20} />
+  <span>Sprint Leaderboard</span>
+</Link>
+
             </nav>
             <div className="mt-auto pt-8 border-t border-zinc-700">
   <button
-    onClick={handleLogout}
-    className="w-full text-left text-red-400 hover:text-red-500 transition text-lg"
-  >
-    🚪 Sign Out
-  </button>
+  onClick={handleLogout}
+  className="w-full flex items-center gap-3 rounded-xl px-3 py-2 text-red-400 hover:bg-zinc-800 hover:text-red-500 transition"
+>
+    
+  <LogOut size={20} />
+  Sign Out
+</button>
 </div>
           </aside>
         </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type User = {
   name: string;
@@ -94,9 +95,11 @@ export default function AccountPage() {
 
           </div>
 
-          <button className="mt-12 w-full md:w-auto bg-white text-black px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition">
-            Edit Profile
-          </button>
+          <Link href="/edit-profile">
+  <button className="mt-12 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition">
+    Edit Profile
+  </button>
+</Link>
 
         </div>
 

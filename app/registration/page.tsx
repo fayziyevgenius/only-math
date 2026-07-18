@@ -238,8 +238,9 @@ router.push("/verify");
                 }`}
               >
                 <option>Year</option>
-                {Array.from({ length: 50 }, (_, i) => (
-                  <option key={2026 - i}>{2026 - i}</option>
+{Array.from({ length: 127 }, (_, i) => (
+  <option key={2026 - i}>{2026 - i}</option>
+
                 ))}
               </select>
             </div>
