@@ -59,7 +59,7 @@ router.replace("/afterregister");
   setLoading(false);
 }
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white relative overflow-x-hidden overflow-y-auto">
       {/* Background dots */}
       <div
         className="absolute inset-0 opacity-30"
@@ -72,20 +72,20 @@ router.replace("/afterregister");
 
      
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-[420px] flex flex-col items-center">
+      <div className="relative z-10 flex items-center justify-center min-h-screen py-10 px-4">
+        <div className="w-full max-w-[420px] flex flex-col items-center">
           <img
             src="/logo.png"
             alt="Only Math"
-            className="w-52 h-52 rounded-full"
+            className="w-36 h-36 md:w-52 md:h-52 rounded-full"
           />
 
-          <h1 className="text-6xl font-bold mt-2 mb-10">
+          <h1 className="text-4xl md:text-6xl font-bold mt-2 mb-8">
             Sign in
           </h1>
 
           <div className="w-full mb-8">
-            <label className="text-3xl font-bold">
+            <label className="text-xl md:text-3xl font-bold">
               Email or Username:
             </label>
 
@@ -93,7 +93,7 @@ router.replace("/afterregister");
   type="text"
   value={username}
   onChange={(e) => setUsername(e.target.value)}
-  className="w-full h-16 mt-3 rounded-xl border-2 border-white bg-black px-5 text-2xl outline-none"
+  className="w-full h-14 md:h-16 mt-3 rounded-xl border-2 border-white bg-black px-5 text-lg md:text-2xl outline-none"
 />
           </div>
 
@@ -106,7 +106,7 @@ router.replace("/afterregister");
   type="password"
   value={password}
   onChange={(e) => setPassword(e.target.value)}
-  className="w-full h-16 mt-3 rounded-xl border-2 border-white bg-black px-5 text-2xl outline-none"
+  className="w-full h-14 md:h-16 mt-3 rounded-xl border-2 border-white bg-black px-5 text-lg md:text-2xl outline-none"
 />
           </div>
 
