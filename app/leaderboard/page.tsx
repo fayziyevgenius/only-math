@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 type User = {
+  _id: string;
   username: string;
   geniusPoints: number;
   streak: number;
@@ -134,7 +135,7 @@ useEffect(() => {
         {users.slice(3).map((user, index) => (
 
           <div
-            key={user.username}
+            key={user._id}
             className={`rounded-2xl p-6 flex items-center justify-between border transition ${
               currentUser?.username === user.username
                 ? "bg-green-950 border-green-500"
@@ -183,3 +184,4 @@ useEffect(() => {
     </div>
   );
 }
+//key

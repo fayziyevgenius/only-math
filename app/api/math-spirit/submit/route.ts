@@ -31,13 +31,20 @@ export async function POST(req: Request) {
       });
 
       await users.updateOne(
-        { username },
-        {
-          $inc: {
-            geniusPoints: gp,
-          },
-        }
-      );
+  { username },
+  {
+    $inc: {
+      geniusPoints: gp,
+      "stats.mathSpirit.games": 1,
+      "stats.mathSpirit.totalScore": score,
+    },
+
+    $max: {
+      "stats.mathSpirit.highestScore": score,
+      "stats.mathSpirit.bestCombo": bestCombo,
+    },
+  }
+);
     } else if (score > existing.score) {
       await leaderboard.updateOne(
         { username },
@@ -54,23 +61,36 @@ export async function POST(req: Request) {
 
       // Personal Best bonus
       await users.updateOne(
-        { username },
-        {
-          $inc: {
-            geniusPoints: gp + 10,
-          },
-        }
-      );
+  { username },
+  {
+    $inc: {
+      geniusPoints: gp + 10,
+      "stats.mathSpirit.games": 1,
+      "stats.mathSpirit.totalScore": score,
+    },
+
+    $max: {
+      "stats.mathSpirit.highestScore": score,
+      "stats.mathSpirit.bestCombo": bestCombo,
+    },
+  }
+);
     } else {
       // Oddiy o'yin (rekord yangilanmadi)
       await users.updateOne(
-        { username },
-        {
-          $inc: {
-            geniusPoints: gp,
-          },
-        }
-      );
+  { username },
+  {
+    $inc: {
+      geniusPoints: gp,
+      "stats.mathSpirit.games": 1,
+      "stats.mathSpirit.totalScore": score,
+    },
+
+    $max: {
+      "stats.mathSpirit.bestCombo": bestCombo,
+    },
+  }
+);
     }
 
     return NextResponse.json({

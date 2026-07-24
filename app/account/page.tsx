@@ -2,25 +2,54 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
+import { getTitle } from "@/lib/title";
 type User = {
   name: string;
   surname: string;
   email: string;
   username: string;
   birthday: string;
+
+  geniusPoints: number;
+  streak: number;
+  title: string;
 };
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+  async function loadUser() {
     const currentUser = localStorage.getItem("currentUser");
 
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
+    if (!currentUser) return;
+
+    const localUser = JSON.parse(currentUser);
+
+    const res = await fetch("/api/me", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: localUser.username,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setUser(data);
+
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify(data)
+      );
     }
-  }, []);
+  }
+
+  loadUser();
+}, []);
 
   if (!user) {
     return (
@@ -47,7 +76,9 @@ export default function AccountPage() {
               <h1 className="text-3xl md:text-5xl font-bold">
                 {user.name} {user.surname}
               </h1>
-
+              <p className="text-yellow-400 text-xl mt-2">
+  {getTitle(user.geniusPoints)}
+</p>
               <p className="text-gray-400 mt-2 text-lg break-all">
                 @{user.username}
               </p>
@@ -63,6 +94,7 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-words">
                 {user.name}
               </p>
+              
             </div>
 
             <div>

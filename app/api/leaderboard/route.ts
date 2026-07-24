@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-
+import { getTitle } from "@/lib/title";
 export async function GET() {
   try {
     const db = await connectDB();
@@ -18,8 +18,11 @@ export async function GET() {
       .sort({ geniusPoints: -1 })
       .limit(100)
       .toArray();
-
-    return NextResponse.json(users);
+    const leaderboard = users.map((user) => ({
+  ...user,
+  title: getTitle(user.geniusPoints || 0),
+}));
+    return NextResponse.json(leaderboard);
 
   } catch (error) {
     console.error(error);
