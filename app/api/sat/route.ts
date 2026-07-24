@@ -50,6 +50,12 @@ if (totalPoints >= 3000) title = "👑 Math Genius";
 
 const today = new Date().toISOString().split("T")[0];
 
+const correct =
+  (answer1.trim() === "17/24" ? 1 : 0) +
+  (answer2.trim() === "A" ? 1 : 0);
+
+const attempts = 2;
+
 let update: any = {
   $set: {
     satSolved: true,
@@ -57,6 +63,9 @@ let update: any = {
   },
   $inc: {
     geniusPoints: points,
+
+    "stats.sat.attempts": attempts,
+    "stats.sat.correct": correct,
   },
 };
 

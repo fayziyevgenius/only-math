@@ -50,6 +50,12 @@ if (totalPoints >= 3000) title = "👑 Math Genius";
 
 const today = new Date().toISOString().split("T")[0];
 
+const correct =
+  (answer1.replace(/\s/g, "") === "1071" ? 1 : 0) +
+  (answer2.trim() === "4" ? 1 : 0);
+
+const attempts = 2;
+
 let update: any = {
   $set: {
     olympiadSolved: true,
@@ -57,6 +63,9 @@ let update: any = {
   },
   $inc: {
     geniusPoints: points,
+
+    "stats.olympiad.attempts": attempts,
+    "stats.olympiad.correct": correct,
   },
 };
 

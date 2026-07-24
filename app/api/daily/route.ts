@@ -48,15 +48,20 @@ export async function POST(req: Request) {
     if (totalPoints >= 1500) title = "💎 Diamond";
     if (totalPoints >= 3000) title = "👑 Math Genius";
 
-    let update: any = {
-      $set: {
-        lastDailyDate: today,
-        title,
-      },
-      $inc: {
-        geniusPoints: points,
-      },
-    };
+    const correct = answer.trim() === "2024" ? 1 : 0;
+
+let update: any = {
+  $set: {
+    lastDailyDate: today,
+    title,
+  },
+  $inc: {
+    geniusPoints: points,
+
+    "stats.daily.attempts": 1,
+    "stats.daily.correct": correct,
+  },
+};
 
     // Streak kuniga faqat 1 marta oshadi
     if (user.lastSolvedDate !== today) {

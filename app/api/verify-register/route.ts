@@ -51,28 +51,33 @@ await db.collection("users").insertOne({
   dailySolved: false,
 
   stats: {
-    national: {
-      solved: 0,
-      correct: 0,
-    },
-
-    sat: {
-      solved: 0,
-      correct: 0,
-    },
-
-    olympiad: {
-      solved: 0,
-      correct: 0,
-    },
-
-    mathSpirit: {
-      games: 0,
-      highestScore: 0,
-      totalScore: 0,
-      bestCombo: 0,
-    },
+  national: {
+    attempts: 0,
+    correct: 0,
   },
+
+  sat: {
+    attempts: 0,
+    correct: 0,
+  },
+
+  olympiad: {
+    attempts: 0,
+    correct: 0,
+  },
+
+  daily: {
+    attempts: 0,
+    correct: 0,
+  },
+
+  mathSpirit: {
+    games: 0,
+    highestScore: 0,
+    totalScore: 0,
+    bestCombo: 0,
+  },
+},
 
   createdAt: new Date(),
 });

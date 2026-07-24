@@ -49,12 +49,21 @@ if (totalPoints >= 3000) title = "👑 Math Genius";
 
 const today = new Date().toISOString().split("T")[0];
 
+const correct =
+  (answer1.trim() === "3" ? 1 : 0) +
+  (answer2.trim() === "60" ? 1 : 0);
+
+const attempts = 2;
+
 let update: any = {
   $set: {
     certificateSolved: true,
   },
   $inc: {
     geniusPoints: points,
+
+    "stats.national.attempts": attempts,
+    "stats.national.correct": correct,
   },
 };
 

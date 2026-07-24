@@ -13,6 +13,31 @@ type User = {
   geniusPoints: number;
   streak: number;
   title: string;
+
+  stats: {
+    national: {
+      attempts: number;
+      correct: number;
+    };
+    sat: {
+      attempts: number;
+      correct: number;
+    };
+    olympiad: {
+      attempts: number;
+      correct: number;
+    };
+    daily: {
+      attempts: number;
+      correct: number;
+    };
+    mathSpirit: {
+      games: number;
+      highestScore: number;
+      totalScore: number;
+      bestCombo: number;
+    };
+  };
 };
 
 export default function AccountPage() {
@@ -52,14 +77,61 @@ export default function AccountPage() {
 }, []);
 
   if (!user) {
+    
     return (
+      
       <div className="min-h-screen bg-black flex items-center justify-center text-white text-2xl">
         Loading...
       </div>
+      
     );
   }
+  const nationalAccuracy =
+  user.stats.national.attempts === 0
+    ? 0
+    : Math.round(
+        (user.stats.national.correct /
+          user.stats.national.attempts) *
+          100
+      );
+
+const satAccuracy =
+  user.stats.sat.attempts === 0
+    ? 0
+    : Math.round(
+        (user.stats.sat.correct /
+          user.stats.sat.attempts) *
+          100
+      );
+
+const olympiadAccuracy =
+  user.stats.olympiad.attempts === 0
+    ? 0
+    : Math.round(
+        (user.stats.olympiad.correct /
+          user.stats.olympiad.attempts) *
+          100
+      );
+
+const dailyAccuracy =
+  user.stats.daily.attempts === 0
+    ? 0
+    : Math.round(
+        (user.stats.daily.correct /
+          user.stats.daily.attempts) *
+          100
+      );
+
+const averageSprintScore =
+  user.stats.mathSpirit.games === 0
+    ? 0
+    : Math.round(
+        user.stats.mathSpirit.totalScore /
+          user.stats.mathSpirit.games
+      );
 
   return (
+    
     <div className="min-h-screen bg-black text-white p-4 md:p-10">
       <div className="max-w-5xl mx-auto">
 
@@ -132,6 +204,158 @@ export default function AccountPage() {
     Edit Profile
   </button>
 </Link>
+<div className="mt-14">
+  <h2 className="text-4xl font-bold mb-8">
+    📊 Learning Statistics
+  </h2>
+
+  <div className="grid md:grid-cols-2 gap-6">
+
+    {/* National */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+      <h3 className="text-2xl font-bold mb-4">
+        🇺🇿 National Certificate
+      </h3>
+
+      <div className="flex justify-between mb-2">
+        <span>Attempts</span>
+        <span>{user.stats.national.attempts}</span>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <span>Correct</span>
+        <span className="text-green-400">
+          {user.stats.national.correct}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Accuracy</span>
+        <span className="text-yellow-400">
+          {nationalAccuracy}%
+        </span>
+      </div>
+    </div>
+
+    {/* SAT */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+      <h3 className="text-2xl font-bold mb-4">
+        🎓 SAT Math
+      </h3>
+
+      <div className="flex justify-between mb-2">
+        <span>Attempts</span>
+        <span>{user.stats.sat.attempts}</span>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <span>Correct</span>
+        <span className="text-green-400">
+          {user.stats.sat.correct}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Accuracy</span>
+        <span className="text-yellow-400">
+          {satAccuracy}%
+        </span>
+      </div>
+    </div>
+
+    {/* Olympiad */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+      <h3 className="text-2xl font-bold mb-4">
+        🏆 Olympiad
+      </h3>
+
+      <div className="flex justify-between mb-2">
+        <span>Attempts</span>
+        <span>{user.stats.olympiad.attempts}</span>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <span>Correct</span>
+        <span className="text-green-400">
+          {user.stats.olympiad.correct}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Accuracy</span>
+        <span className="text-yellow-400">
+          {olympiadAccuracy}%
+        </span>
+      </div>
+    </div>
+
+    {/* Daily */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+      <h3 className="text-2xl font-bold mb-4">
+        📅 Daily Problem
+      </h3>
+
+      <div className="flex justify-between mb-2">
+        <span>Attempts</span>
+        <span>{user.stats.daily.attempts}</span>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <span>Correct</span>
+        <span className="text-green-400">
+          {user.stats.daily.correct}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Accuracy</span>
+        <span className="text-yellow-400">
+          {dailyAccuracy}%
+        </span>
+      </div>
+    </div>
+
+    {/* Math Sprint */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:col-span-2">
+      <h3 className="text-2xl font-bold mb-5">
+        ⚡ Math Sprint
+      </h3>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+
+        <div>
+          <p className="text-zinc-400">Games</p>
+          <h2 className="text-3xl font-bold">
+            {user.stats.mathSpirit.games}
+          </h2>
+        </div>
+
+        <div>
+          <p className="text-zinc-400">Highest Score</p>
+          <h2 className="text-3xl font-bold text-green-400">
+            {user.stats.mathSpirit.highestScore}
+          </h2>
+        </div>
+
+        <div>
+          <p className="text-zinc-400">Average Score</p>
+          <h2 className="text-3xl font-bold text-blue-400">
+            {averageSprintScore}
+          </h2>
+        </div>
+
+        <div>
+          <p className="text-zinc-400">Best Combo</p>
+          <h2 className="text-3xl font-bold text-orange-400">
+            🔥 {user.stats.mathSpirit.bestCombo}
+          </h2>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
 
         </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import StatsCards from "@/components/dashboard/StatsCards";
-
+import { getTitle } from "@/lib/title";
 type User = {
   name: string;
   geniusPoints: number;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
+import { getTitle } from "@/lib/title";
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,10 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      ...user,
+      title: getTitle(user.geniusPoints || 0),
+    });
 
   } catch (error) {
     console.error(error);
