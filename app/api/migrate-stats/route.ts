@@ -5,55 +5,46 @@ export async function GET() {
   try {
     const db = await connectDB();
 
-    const result = await db.collection("users").updateMany(
-      {
-        stats: { $exists: false },
-      },
+    const users = db.collection("users");
+
+    const result = await users.updateMany(
+      {},
       {
         $set: {
-          stats: {
-            national: {
-              attempts: 0,
-              correct: 0,
-            },
-            sat: {
-              attempts: 0,
-              correct: 0,
-            },
-            olympiad: {
-              attempts: 0,
-              correct: 0,
-            },
-            daily: {
-              attempts: 0,
-              correct: 0,
-            },
-            mathSpirit: {
-              games: 0,
-              highestScore: 0,
-              totalScore: 0,
-              bestCombo: 0,
-            },
+          "stats.national": {
+            attempts: 0,
+            correct: 0,
           },
+          "stats.sat": {
+            attempts: 0,
+            correct: 0,
+          },
+          "stats.olympiad": {
+            attempts: 0,
+            correct: 0,
+          },
+          "stats.daily": {
+            attempts: 0,
+            correct: 0,
+          },
+        },
+        $setOnInsert: {},
+        $max: {
+          "stats.mathSpirit.highestScore": 0,
         },
       }
     );
 
     return NextResponse.json({
       success: true,
-      updatedUsers: result.modifiedCount,
+      modified: result.modifiedCount,
     });
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
-      {
-        success: false,
-        error: "Server Error",
-      },
-      {
-        status: 500,
-      }
+      { error: "Server Error" },
+      { status: 500 }
     );
   }
 }
