@@ -168,8 +168,8 @@ const genesisQuestions: Question[] = [
   {
     id: 19,
     question:
-      "Quyidagi ifoda butun son bo‘ladigan barcha k butun sonlar yig‘indisini toping.",
-    options: ["−8", "−10", "0", "26"],
+      "Asilbek ikkita kitob sotib oldi. Birinchi kitob ikkinchisıdan 75 % ga arzonroq bo*ldi. Ikkinchi kitob birinchisidan qancha foiz qimmatroq?",
+    options: ["200", "300", "250", "350"],
     points: 30,
   },
 
