@@ -15,269 +15,170 @@ type Question = {
 /* =========================================================
    GENESIS
    17 AUGUST 2026 → 30 AUGUST 2026
+
+   OLYMPIAD QUESTIONS
 ========================================================= */
 
 const genesisQuestions: Question[] = [
   {
     id: 1,
     question:
-      "Rasmda AB || ED bo'lsa, x burchak qiymatini toping.",
-    options: [
-      "50°",
-      "30°",
-      "35°",
-      "20°",
-    ],
+      "Barcha raqamlari 7 dan oshmaydigan eng kichik uch xonali tub sonni toping. Bu songa 222 qo‘shilganda hosil bo‘lgan son ham tub son bo‘lsin.",
+    options: ["101", "107", "127", "131"],
     points: 30,
-    image: "/certificate/q1.png",
   },
 
   {
     id: 2,
     question:
-      "Tengsizlikning natural yechimlari nechta?",
-    options: [
-      "10",
-      "4",
-      "8",
-      "6",
-    ],
-    points: 30,
+      "Anvar 4 minutda 1 km masofa uzoqlikda joylashgan manzilga borishi kerak. U birinchi minutda 18 km/h tezlik bilan harakatlandi. Anvar manzilga vaqtida yetib kelishi uchun qolgan 3 minutda qanday o‘zgarmas tezlik bilan harakatlanishi kerak?",
+    options: ["11", "12", "13", "14"],
+    points: 50,
   },
 
   {
     id: 3,
     question:
-      "Tengsizlikni qanoatlantiradigan butun sonlar nechta?",
-    options: [
-      "8",
-      "9",
-      "10",
-      "11",
-    ],
+      "9! sonining oxirgi raqami 1 bo‘lgan natural bo‘luvchilari yig‘indisini toping.",
+    options: ["22", "103", "144", "73"],
     points: 30,
   },
 
   {
     id: 4,
     question:
-      "Agar 2^a = 5, 2^b = 3 bo'lsa, c ni a va b orqali ifodalang.",
-    options: [
-      "(b + 4a) / (2a - b)",
-      "(4b + a) / (2a + b)",
-      "(4b + a) / (2a - b)",
-      "(4b - a) / (2a - b)",
-    ],
+      "{1, 2, …, 10} to‘plamning nechta bo‘sh bo‘lmagan S qism to‘plami uchun S ning elementlari ko‘paytmasi 0 raqami bilan tugaydi?",
+    options: ["736", "752", "768", "800"],
     points: 30,
   },
 
   {
     id: 5,
     question:
-      "Ketma-ketlikning barcha hadlari yig'indisini toping.",
-    options: [
-      "6",
-      "1",
-      "2",
-      "3",
-    ],
+      "T, S, P, M, O nuqtalar aylanada soat strelkasi bo‘yicha aynan shu tartibda joylashgan. TS ∥ PO, TP ∥ MO, TS va PM kesmalari N nuqtada kesishadi. PN = 8, PM = 12, MO = 30 bo‘lsa, TP kesmaning uzunligini toping.",
+    options: ["15", "18", "20", "28"],
     points: 30,
   },
 
   {
     id: 6,
     question:
-      "Hisoblang: √(√47 − √31) · √(√47 + √31)",
-    options: [
-      "7",
-      "5",
-      "6",
-      "4",
-    ],
+      "Aynan 15 ta natural bo‘luvchiga ega bo‘lgan 500 dan kichik natural sonlar sonini toping.",
+    options: ["1", "2", "3", "4"],
     points: 30,
   },
 
   {
     id: 7,
     question:
-      "ABC uchburchakda AD, BN, CM medianalar kesishgan nuqta G nuqta bo'lsin. Agar ABC uchburchak yuzasi 48 ga teng bo'lsa, GDN uchburchak yuzasini toping.",
-    options: [
-      "5",
-      "4",
-      "3",
-      "12",
-    ],
+      "Birinchi idishda 30 litr, ikkinchi idishda 40 litr sut bor. Ikkinchi idishdan birinchi idishdagiga qaraganda 2 marta ko‘p sut olingach, birinchisida ikkinchisiga qaraganda 5 litr ko‘p sut qoldi. Birinchi idishdan necha litr sut olingan?",
+    options: ["15", "10", "20", "5"],
     points: 30,
-    image: "/certificate/q7.png",
   },
 
   {
     id: 8,
     question:
-      "Aylanada A, B, C, D nuqtalar olingan. O — aylana markazi, A va D nuqtalar bir to'g'ri chiziqda yotadi. Agar ∠ABC = 30° va OD = 3 bo'lsa, CD ni toping.",
-    options: [
-      "3",
-      "4",
-      "√3",
-      "3√3",
-    ],
+      "ABC uchburchakning AB va AC tomonlarining o‘rta perpendikulyarlari O nuqtada kesishadi. Agar ∠OCA = 42° va ∠OBA = 35° bo‘lsa, ∠BOC burchak necha gradusga teng?",
+    options: ["120°", "145°", "154°", "167°"],
     points: 30,
-    image: "/certificate/q8.png",
   },
 
   {
     id: 9,
     question:
-      "Agar aholining elektr energiyasiga talabi har yili 2,5% ortsa, necha yilda 9 marta ortadi?",
-    options: [
-      "log₉(1,025)",
-      "log₉(0,025)",
-      "log₁.₀₂₅(9)",
-      "log₀.₀₂₅(9)",
-    ],
+      "Ikki qishloq orasidagi masofa 9 km. Yo‘l qiyalik va tekislikdan iborat. Piyoda qiyalikdan tepaga 4 km/soat tezlik bilan ko‘tarildi, tekis yo‘lda 5 km/soat tezlik bilan yurdi, qiyalikdan pastga esa 6 km/soat tezlik bilan tushdi. Piyoda bir qishloqdan ikkinchisiga borish va kelishga 3 soat 41 minut sarflagan bo‘lsa, yo‘lning tekis qismi necha kilometrni tashkil qiladi?",
+    options: ["3", "4", "5", "6"],
     points: 30,
   },
 
   {
     id: 10,
     question:
-      "Tengsizlikning [2; 2023] oralig'ida nechta natural yechimi bor?",
-    options: [
-      "2021",
-      "2023",
-      "0",
-      "2022",
-    ],
+      "NEWYEAR so‘zidagi harflardan foydalanib, har bir harfni mavjud miqdoridan ortiq ishlatmasdan, nechta 7 harfli so‘z tuzish mumkin?",
+    options: ["1260", "2520", "5040", "720"],
     points: 30,
   },
 
   {
     id: 11,
     question:
-      "Tenglamani yeching: x + x/(1+2) + x/(1+2+3) + ... + x/(1+2+3+...+7) = 7",
-    options: [
-      "5",
-      "4",
-      "3",
-      "2",
-    ],
+      "11-A sinf o‘quvchilari o‘rtasida o‘tkazilgan so‘rovnoma natijalariga ko‘ra, matematikaga qiziqqan o‘quvchilarning 20 foizi fizika faniga ham qiziqadi. Bundan tashqari, fizika faniga qiziqadigan o‘quvchilarning 25 foizi matematikaga ham qiziqadi. Faqatgina Ali bilan Vali ushbu fanlarga qiziqmas ekan. 11-A sinfdagi o‘quvchilar soni 20 dan ko‘p, ammo 30 dan kam bo‘lsa, shu sinfda nechta o‘quvchi o‘qiydi?",
+    options: ["21", "23", "26", "28"],
     points: 30,
   },
 
   {
     id: 12,
     question:
-      "ABC to'g'ri burchakli uchburchakning C to'g'ri burchak uchidan AB gipotenuzaga parallel tekislik o'tkazilgan. Tekislikdan gipotenuzagacha bo'lgan eng qisqa masofa 12 ga teng. Katetlarning tekislikdagi proyeksiyalari 16 va 9 ga teng bo'lsa, AB gipotenuza uzunligini toping.",
-    options: [
-      "25",
-      "30",
-      "24",
-      "32",
-    ],
+      "Futbol turnirida n ta jamoa har biri boshqasi bilan bir martadan o‘ynadi. Turnir oxirida har bir jamoaning g‘alabalari soni uning duranglari soniga teng bo‘lgani ma’lum bo‘ldi. Quyidagi javoblardan qaysi biri n sonining qabul qilishi mumkin bo‘lgan qiymati bo‘la olmaydi?",
+    options: ["10", "12", "13", "14"],
     points: 30,
   },
 
   {
     id: 13,
     question:
-      "A = {a, b, c, d, m, n} va B = {a, b, c, k, l, m} to'plamlar berilgan. A ∩ B to'plamning bo'sh bo'lmagan qism to'plamlari soni nechta?",
-    options: [
-      "10",
-      "8",
-      "15",
-      "16",
-    ],
+      "Ikkita paroxod daryo qirg‘og‘ining qarama-qarshi tomonlaridan bir vaqtda yo‘lga chiqadi va o‘zgarmas tezlik bilan qirg‘oqqa perpendikulyar harakatlanadi. Paroxodlar bir-biri bilan eng yaqin qirg‘oqdan 720 metr masofada uchrashadi. Qirg‘oqqa kelgach, ular shu vaqtda orqaga yo‘lga chiqadi va boshqa qirg‘oqqa 400 metr masofada uchrashadi. Daryoning kengligi necha metrga teng?",
+    options: ["1020", "1760", "1520", "1840"],
     points: 30,
   },
 
   {
     id: 14,
     question:
-      "30 bilan 86 sonlar orasiga 7 ta son shunday joylashtirildiki, ular berilgan sonlar bilan birga arifmetik progressiyani tashkil qiladi. Qo'yilgan sonlar yig'indisini toping.",
-    options: [
-      "204",
-      "302",
-      "406",
-      "248",
-    ],
+      "202⁶ sonining natural bo‘luvchilaridan nechtasi to‘la kvadrat yoki to‘la kub?",
+    options: ["25", "21", "16", "29"],
     points: 30,
   },
 
   {
     id: 15,
     question:
-      "Radiusi 4 ga teng aylanaga muntazam o'nikkiburchak ichki chizilgan. O'nikkiburchakning yuzini toping.",
-    options: [
-      "24",
-      "48",
-      "64",
-      "80",
-    ],
+      "S = 9 + 99 + 999 + … + 99…9 yig‘indisidagi oxirgi qo‘shiluvchida 2026 ta 9 raqami bor bo‘lsa, S ning raqamlari yig‘indisini toping.",
+    options: ["2033", "2034", "2042", "2043"],
     points: 30,
   },
 
   {
     id: 16,
     question:
-      "Raqamlari 6 dan kichik bo'lmagan uch xonali 3 ga bo'linadigan natural sonlar nechta?",
-    options: [
-      "18",
-      "20",
-      "22",
-      "12",
-    ],
+      "n natural son (n + 1)! + (n + 2)! = 440n! tenglikni qanoatlantiradi. n ning raqamlari yig‘indisini toping.",
+    options: ["2", "5", "10", "12"],
     points: 30,
   },
 
   {
     id: 17,
     question:
-      "A shahardan B shaharga 1-avtomobil o'zgarmas 120 km/h tezlik bilan, 10 daqiqadan so'ng 2-avtomobil 150 km/h tezlik bilan yo'lga chiqdi. Ular B shaharga bir vaqtda yetib keldi. A va B shaharlar orasidagi masofani toping.",
-    options: [
-      "100",
-      "120",
-      "50",
-      "60",
-    ],
+      "Katetlari 3 va 4 ga teng bo‘lgan to‘g‘ri burchakli uchburchakka markazi katta katetda yotgan yarim aylana quyidagicha ichki chizilgan. Yarim aylana radiusini toping.",
+    options: ["√2 / 3", "3 / 2", "4√2 / 3", "2"],
     points: 30,
+    image: "/olympiad/question17.png",
   },
 
   {
     id: 18,
     question:
-      "To'g'ri to'rtburchakning eni 25% ga, bo'yi 20% ga ortgan bo'lsa, yuzi necha foizga ortgan?",
-    options: [
-      "45%",
-      "50%",
-      "60%",
-      "5%",
-    ],
+      "a, b va c natural sonlar berilgan. Quyidagi ifodaning qiymati 2026 dan katta yoki teng bo‘ladigan eng kichik qiymatini toping:",
+    options: ["2026", "2027", "2028", "2116"],
     points: 30,
   },
 
   {
     id: 19,
     question:
-      "Bir oilaning oylik maoshi 15 000 000 so'm. Uning 60% i oilaviy xarajatlarga sarflanar edi. Qolgan pulning 30% ni bankka omonatga qo'yadi. Oila bankka necha so'm pul qo'ygan?",
-    options: [
-      "1 800 000",
-      "2 000 000",
-      "2 500 000",
-      "2 200 000",
-    ],
+      "Quyidagi chizmada ko‘rsatilganidek, ABC uchburchakning CD va BE bissektrisalari F nuqtada kesishadi. Agar ∠CAB = 3x va ∠EFD = 5x + 20° bo‘lsa, ∠CAB burchakni toping.",
+    options: ["20°", "60°", "50°", "40°"],
     points: 30,
+    image: "/olympiad/question19.png",
   },
 
   {
     id: 20,
     question:
-      "Arifmetik progressiyada a₁ + a₃ + a₅ + ... + a₂ₙ₋₁ = 96, aₙ₋₂ + aₙ₊₂ = 12 bo'lsa, n ning qiymatini toping.",
-    options: [
-      "8",
-      "32",
-      "24",
-      "16",
-    ],
+      "Quyidagi ifoda butun son bo‘ladigan barcha k butun sonlar yig‘indisini toping.",
+    options: ["−8", "−10", "0", "26"],
     points: 30,
   },
 ];
@@ -290,11 +191,6 @@ const genesisQuestions: Question[] = [
 ========================================================= */
 
 const independenceQuestions: Question[] = [
-
-  /* =======================================================
-     1
-  ======================================================= */
-
   {
     id: 1,
     question:
@@ -307,10 +203,6 @@ const independenceQuestions: Question[] = [
     ],
     points: 30,
   },
-
-  /* =======================================================
-     2
-  ======================================================= */
 
   {
     id: 2,
@@ -325,10 +217,6 @@ const independenceQuestions: Question[] = [
     points: 30,
   },
 
-  /* =======================================================
-     3
-  ======================================================= */
-
   {
     id: 3,
     question:
@@ -341,10 +229,6 @@ const independenceQuestions: Question[] = [
     ],
     points: 30,
   },
-
-  /* =======================================================
-     4
-  ======================================================= */
 
   {
     id: 4,
@@ -359,10 +243,6 @@ const independenceQuestions: Question[] = [
     points: 30,
   },
 
-  /* =======================================================
-     5
-  ======================================================= */
-
   {
     id: 5,
     question:
@@ -375,10 +255,6 @@ const independenceQuestions: Question[] = [
     ],
     points: 30,
   },
-
-  /* =======================================================
-     6
-  ======================================================= */
 
   {
     id: 6,
@@ -393,10 +269,6 @@ const independenceQuestions: Question[] = [
     points: 30,
   },
 
-  /* =======================================================
-     7
-  ======================================================= */
-
   {
     id: 7,
     question:
@@ -409,10 +281,6 @@ const independenceQuestions: Question[] = [
     ],
     points: 30,
   },
-
-  /* =======================================================
-     8
-  ======================================================= */
 
   {
     id: 8,
@@ -427,10 +295,6 @@ const independenceQuestions: Question[] = [
     points: 30,
   },
 
-  /* =======================================================
-     9
-  ======================================================= */
-
   {
     id: 9,
     question:
@@ -443,10 +307,6 @@ const independenceQuestions: Question[] = [
     ],
     points: 30,
   },
-
-  /* =======================================================
-     10
-  ======================================================= */
 
   {
     id: 10,
@@ -461,10 +321,6 @@ const independenceQuestions: Question[] = [
     points: 30,
   },
 
-  /* =======================================================
-     11 — RASMLI SAVOL
-  ======================================================= */
-
   {
     id: 11,
     question:
@@ -476,14 +332,7 @@ const independenceQuestions: Question[] = [
       "10/3",
     ],
     points: 30,
-
-    // Agar rasm mavjud bo'lsa:
-    // image: "/certificate/independence/q11.png",
   },
-
-  /* =======================================================
-     12 — RASMLI SAVOL
-  ======================================================= */
 
   {
     id: 12,
@@ -496,13 +345,7 @@ const independenceQuestions: Question[] = [
       "317",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q12.png",
   },
-
-  /* =======================================================
-     13 — RASMLI SAVOL
-  ======================================================= */
 
   {
     id: 13,
@@ -515,13 +358,7 @@ const independenceQuestions: Question[] = [
       "849",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q13.png",
   },
-
-  /* =======================================================
-     14 — RASMLI SAVOL
-  ======================================================= */
 
   {
     id: 14,
@@ -534,13 +371,7 @@ const independenceQuestions: Question[] = [
       "9",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q14.png",
   },
-
-  /* =======================================================
-     15 — RASMLI SAVOL
-  ======================================================= */
 
   {
     id: 15,
@@ -553,13 +384,7 @@ const independenceQuestions: Question[] = [
       "4100",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q15.png",
   },
-
-  /* =======================================================
-     16 — RASMLI SAVOL
-  ======================================================= */
 
   {
     id: 16,
@@ -572,13 +397,7 @@ const independenceQuestions: Question[] = [
       "6",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q16.png",
   },
-
-  /* =======================================================
-     17 — 23 (BIRINCHI)
-  ======================================================= */
 
   {
     id: 17,
@@ -591,13 +410,7 @@ const independenceQuestions: Question[] = [
       "19",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q17.png",
   },
-
-  /* =======================================================
-     18 — 23 (IKKINCHI)
-  ======================================================= */
 
   {
     id: 18,
@@ -610,13 +423,7 @@ const independenceQuestions: Question[] = [
       "60",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q18.png",
   },
-
-  /* =======================================================
-     19 — 24
-  ======================================================= */
 
   {
     id: 19,
@@ -629,13 +436,7 @@ const independenceQuestions: Question[] = [
       "105",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q19.png",
   },
-
-  /* =======================================================
-     20 — 26
-  ======================================================= */
 
   {
     id: 20,
@@ -648,8 +449,6 @@ const independenceQuestions: Question[] = [
       "24",
     ],
     points: 30,
-
-    // image: "/certificate/independence/q20.png",
   },
 ];
 
@@ -689,7 +488,7 @@ export async function GET() {
           success: true,
           available: true,
           cycle: "genesis",
-          title: "Genesis Certificate",
+          title: "Genesis Olympiad",
           questions: genesisQuestions,
         },
         {
@@ -744,7 +543,8 @@ export async function GET() {
       },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate",
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate",
           Pragma: "no-cache",
           Expires: "0",
         },

@@ -7,25 +7,53 @@ import { connectDB } from "@/lib/mongodb";
 
 const genesisAnswers: Record<number, string> = {
   1: "C",
-  2: "D",
-  3: "B",
-  4: "B",
-  5: "A",
-  6: "C",
+  2: "C",
+  3: "A",
+  4: "C",
+  5: "D",
+  6: "A",
+
+  // 7-savol — berilgan matn/variantlar bo'yicha aniq mos kelmaydi
   7: "A",
-  8: "C",
-  9: "B",
+
+  // 8-savol
+  8: "A",
+
+  // 9-savol
+  9: "C",
+
+  // 10-savol
   10: "B",
+
+  // 11-savol — rasm/matn yetarli emas
   11: "C",
-  12: "D",
-  13: "B",
+
+  // 12-savol
+  12: "B",
+
+  // 13-savol
+  13: "D",
+
+  // 14-savol
   14: "A",
-  15: "D",
-  16: "C",
+
+  // 15-savol
+  15: "B",
+
+  // 16-savol
+  16: "D",
+
+  // 17-savol — berilgan matn bo'yicha aniq mos kelmaydi
   17: "D",
-  18: "C",
+
+  // 18-savol
+  18: "A",
+
+  // 19-savol — berilgan matn bo'yicha aniq mos kelmaydi
   19: "C",
-  20: "A",
+
+  // 20-savol
+  20: "C",
 };
 
 /* =========================================================
@@ -47,21 +75,6 @@ const independenceAnswers: Record<number, string> = {
   8: "A",
   9: "C",
   10: "D",
-
-  /*
-   * II QISM
-   *
-   * 11 = yarim doira savoli
-   * 12 = fourth-root savoli
-   * 13 = sqrt(31*30*29*28+1)
-   * 14 = logarithm product
-   * 15 = arithmetic progression
-   * 16 = infinite series
-   * 17 = a,b,c fractions
-   * 18 = logarithm x,y,z
-   * 19 = factorial expression
-   * 20 = quadratic radical equation
-   */
 
   11: "D",
   12: "B",
@@ -126,7 +139,6 @@ export async function POST(req: Request) {
       );
     }
 
-
     /* =====================================================
        DATABASE
     ===================================================== */
@@ -150,7 +162,6 @@ export async function POST(req: Request) {
       );
     }
 
-
     /* =====================================================
        SELECT ANSWER KEY
     ===================================================== */
@@ -160,7 +171,6 @@ export async function POST(req: Request) {
         ? genesisAnswers
         : independenceAnswers;
 
-
     /* =====================================================
        SOLVED FIELD
     ===================================================== */
@@ -169,7 +179,6 @@ export async function POST(req: Request) {
       cycle === "genesis"
         ? "olympiadGenesisSolved"
         : "olympiadIndependenceSolved";
-
 
     /* =====================================================
        CHECK IF ALREADY SOLVED
@@ -186,7 +195,6 @@ export async function POST(req: Request) {
         }
       );
     }
-
 
     /* =====================================================
        CALCULATE SCORE
@@ -209,10 +217,8 @@ export async function POST(req: Request) {
       }
     }
 
-
     const incorrect =
       TOTAL_QUESTIONS - correct;
-
 
     /* =====================================================
        GENIUS POINTS
@@ -221,7 +227,6 @@ export async function POST(req: Request) {
     const points =
       correct *
       POINTS_PER_QUESTION;
-
 
     /* =====================================================
        RANK
@@ -263,7 +268,6 @@ export async function POST(req: Request) {
       title = "👑 Math Genius";
     }
 
-
     /* =====================================================
        STREAK
     ===================================================== */
@@ -272,7 +276,6 @@ export async function POST(req: Request) {
       new Date()
         .toISOString()
         .split("T")[0];
-
 
     /* =====================================================
        DATABASE UPDATE
@@ -295,7 +298,6 @@ export async function POST(req: Request) {
       },
     };
 
-
     /* =====================================================
        STREAK
     ===================================================== */
@@ -310,7 +312,6 @@ export async function POST(req: Request) {
         today;
     }
 
-
     /* =====================================================
        SAVE
     ===================================================== */
@@ -323,7 +324,6 @@ export async function POST(req: Request) {
         },
         update
       );
-
 
     /* =====================================================
        RESPONSE
