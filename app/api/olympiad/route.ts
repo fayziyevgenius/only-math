@@ -7,61 +7,31 @@ import { connectDB } from "@/lib/mongodb";
 
 const genesisAnswers: Record<number, string> = {
   1: "C",
-  2: "C",
-  3: "A",
-  4: "C",
-  5: "D",
-  6: "A",
-
-  // 7-savol — berilgan matn/variantlar bo'yicha aniq mos kelmaydi
+  2: "D",
+  3: "B",
+  4: "B",
+  5: "C",
+  6: "B",
   7: "A",
-
-  // 8-savol
-  8: "A",
-
-  // 9-savol
-  9: "C",
-
-  // 10-savol
+  8: "C",
+  9: "B",
   10: "B",
-
-  // 11-savol — rasm/matn yetarli emas
   11: "C",
-
-  // 12-savol
-  12: "B",
-
-  // 13-savol
-  13: "D",
-
-  // 14-savol
-  14: "A",
-
-  // 15-savol
-  15: "B",
-
-  // 16-savol
-  16: "D",
-
-  // 17-savol — berilgan matn bo'yicha aniq mos kelmaydi
-  17: "D",
-
-  // 18-savol
-  18: "A",
-
-  // 19-savol — berilgan matn bo'yicha aniq mos kelmaydi
-  19: "C",
-
-  // 20-savol
-  20: "C",
+  12: "D",
+  13: "B",
+  14: "B",
+  15: "D",
+  16: "C",
+  17: "B",
+  18: "B",
+  19: "B",
+  20: "B",
 };
 
 /* =========================================================
    INDEPENDENCE ANSWERS
 
-   Independence savollari:
-   1–10  -> I qism
-   11–20 -> II qism
+   Independence savollariga tegilmaydi.
 ========================================================= */
 
 const independenceAnswers: Record<number, string> = {
@@ -75,7 +45,6 @@ const independenceAnswers: Record<number, string> = {
   8: "A",
   9: "C",
   10: "D",
-
   11: "D",
   12: "B",
   13: "A",
@@ -88,15 +57,12 @@ const independenceAnswers: Record<number, string> = {
   20: "C",
 };
 
-
 /* =========================================================
    SETTINGS
 ========================================================= */
 
 const POINTS_PER_QUESTION = 30;
-
 const TOTAL_QUESTIONS = 20;
-
 
 /* =========================================================
    POST
@@ -125,10 +91,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (
-      cycle !== "genesis" &&
-      cycle !== "independence"
-    ) {
+    if (cycle !== "genesis" && cycle !== "independence") {
       return NextResponse.json(
         {
           error: "Invalid cycle.",
@@ -145,11 +108,9 @@ export async function POST(req: Request) {
 
     const db = await connectDB();
 
-    const user = await db
-      .collection("users")
-      .findOne({
-        username,
-      });
+    const user = await db.collection("users").findOne({
+      username,
+    });
 
     if (!user) {
       return NextResponse.json(
@@ -203,50 +164,34 @@ export async function POST(req: Request) {
     let correct = 0;
 
     for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
-      const userAnswer = String(
-        answers[i] || ""
-      )
+      const userAnswer = String(answers[i] || "")
         .trim()
         .toUpperCase();
 
-      if (
-        userAnswer ===
-        correctAnswers[i]
-      ) {
+      if (userAnswer === correctAnswers[i]) {
         correct++;
       }
     }
 
-    const incorrect =
-      TOTAL_QUESTIONS - correct;
+    const incorrect = TOTAL_QUESTIONS - correct;
 
     /* =====================================================
        GENIUS POINTS
     ===================================================== */
 
-    const points =
-      correct *
-      POINTS_PER_QUESTION;
+    const points = correct * POINTS_PER_QUESTION;
 
     /* =====================================================
        RANK
     ===================================================== */
 
-    const oldTitle =
-      user.title ||
-      "🌱 Beginner";
+    const oldTitle = user.title || "🌱 Beginner";
 
-    const currentPoints =
-      Number(
-        user.geniusPoints || 0
-      );
+    const currentPoints = Number(user.geniusPoints || 0);
 
-    const totalPoints =
-      currentPoints +
-      points;
+    const totalPoints = currentPoints + points;
 
-    let title =
-      "🌱 Beginner";
+    let title = "🌱 Beginner";
 
     if (totalPoints >= 100) {
       title = "🥉 Bronze";
@@ -272,10 +217,7 @@ export async function POST(req: Request) {
        STREAK
     ===================================================== */
 
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
     /* =====================================================
        DATABASE UPDATE
@@ -302,28 +244,22 @@ export async function POST(req: Request) {
        STREAK
     ===================================================== */
 
-    if (
-      user.lastSolvedDate !==
-      today
-    ) {
+    if (user.lastSolvedDate !== today) {
       update.$inc.streak = 1;
 
-      update.$set.lastSolvedDate =
-        today;
+      update.$set.lastSolvedDate = today;
     }
 
     /* =====================================================
        SAVE
     ===================================================== */
 
-    await db
-      .collection("users")
-      .updateOne(
-        {
-          username,
-        },
-        update
-      );
+    await db.collection("users").updateOne(
+      {
+        username,
+      },
+      update
+    );
 
     /* =====================================================
        RESPONSE
@@ -342,27 +278,19 @@ export async function POST(req: Request) {
 
       total: TOTAL_QUESTIONS,
 
-      rankUp:
-        oldTitle !== title,
+      rankUp: oldTitle !== title,
 
-      oldRank:
-        oldTitle,
+      oldRank: oldTitle,
 
-      newRank:
-        title,
+      newRank: title,
 
       message:
-        correct ===
-        TOTAL_QUESTIONS
+        correct === TOTAL_QUESTIONS
           ? "Perfect! You solved every Olympiad question correctly."
           : `You received ${points} Genius Points.`,
     });
-
   } catch (error) {
-    console.error(
-      "Olympiad submit error:",
-      error
-    );
+    console.error("Olympiad submit error:", error);
 
     return NextResponse.json(
       {

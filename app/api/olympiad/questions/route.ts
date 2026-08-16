@@ -13,10 +13,10 @@ type Question = {
 };
 
 /* =========================================================
-   GENESIS
+   GENESIS CYCLE
    17 AUGUST 2026 → 30 AUGUST 2026
 
-   OLYMPIAD QUESTIONS
+   GENESIS UCHUN YANGI 20 TA SAVOL
 ========================================================= */
 
 const genesisQuestions: Question[] = [
@@ -33,7 +33,7 @@ const genesisQuestions: Question[] = [
     question:
       "Anvar 4 minutda 1 km masofa uzoqlikda joylashgan manzilga borishi kerak. U birinchi minutda 18 km/h tezlik bilan harakatlandi. Anvar manzilga vaqtida yetib kelishi uchun qolgan 3 minutda qanday o‘zgarmas tezlik bilan harakatlanishi kerak?",
     options: ["11", "12", "13", "14"],
-    points: 50,
+    points: 30,
   },
 
   {
@@ -160,34 +160,33 @@ const genesisQuestions: Question[] = [
   {
     id: 18,
     question:
-      "a, b va c natural sonlar berilgan. Quyidagi ifodaning qiymati 2026 dan katta yoki teng bo‘ladigan eng kichik qiymatini toping:",
-    options: ["2026", "2027", "2028", "2116"],
+      "a ning qanday qiymatida quyidagi tenglama yechimga ega emas?\n\na x + 5 = a − 2x",
+    options: ["−2", "0", "1", "2"],
     points: 30,
   },
 
   {
     id: 19,
     question:
-      "Quyidagi chizmada ko‘rsatilganidek, ABC uchburchakning CD va BE bissektrisalari F nuqtada kesishadi. Agar ∠CAB = 3x va ∠EFD = 5x + 20° bo‘lsa, ∠CAB burchakni toping.",
-    options: ["20°", "60°", "50°", "40°"],
+      "Quyidagi ifoda butun son bo‘ladigan barcha k butun sonlar yig‘indisini toping.",
+    options: ["−8", "−10", "0", "26"],
     points: 30,
-    image: "/olympiad/question19.png",
   },
 
   {
     id: 20,
     question:
-      "Quyidagi ifoda butun son bo‘ladigan barcha k butun sonlar yig‘indisini toping.",
-    options: ["−8", "−10", "0", "26"],
+      "Tekislikda 5 ta nuqta berilgan va ularning hech qaysi uchtasi bir to‘g‘ri chiziqda yotmaydi. Kamida uchta nuqtadan o‘tuvchi aylanalarning sonini n deb belgilaymiz. n sonining barcha qabul qilishi mumkin bo‘lgan qiymatlari yig‘indisini toping.",
+    options: ["12", "15", "18", "20"],
     points: 30,
   },
 ];
 
 /* =========================================================
-   INDEPENDENCE
+   INDEPENDENCE CYCLE
    31 AUGUST 2026 → 13 SEPTEMBER 2026
 
-   AYNAN USER YUBORGAN 20 TA SAVOL
+   BU QISM O'ZGARTIRILMADI
 ========================================================= */
 
 const independenceQuestions: Question[] = [
@@ -195,12 +194,7 @@ const independenceQuestions: Question[] = [
     id: 1,
     question:
       "7²⁰¹⁸ sonining o'nlar xonasidagi raqamini toping?",
-    options: [
-      "0",
-      "3",
-      "4",
-      "1",
-    ],
+    options: ["0", "3", "4", "1"],
     points: 30,
   },
 
@@ -208,12 +202,7 @@ const independenceQuestions: Question[] = [
     id: 2,
     question:
       "702, 787 va 855 sonlarini m ga bo'linganda bir xil r qoldiq qoladi. 412, 722 va 815 sonlarini n ga bo'lganda bir xil s (s ≠ r) qoldiq qoladi. m + n + r + s ni toping?",
-    options: [
-      "63",
-      "65",
-      "62",
-      "61",
-    ],
+    options: ["63", "65", "62", "61"],
     points: 30,
   },
 
@@ -234,12 +223,7 @@ const independenceQuestions: Question[] = [
     id: 4,
     question:
       "2²⁹ sonining o'nli yozuvida barcha 10 ta raqamdan faqat bittasi ishtirok etmaydi. Ushbu ishtirok etmagan raqamni toping?",
-    options: [
-      "5",
-      "3",
-      "4",
-      "7",
-    ],
+    options: ["5", "3", "4", "7"],
     points: 30,
   },
 
@@ -247,12 +231,7 @@ const independenceQuestions: Question[] = [
     id: 5,
     question:
       "y/(x−z) = (x+y)/z = x/y bo'lsa, x/y ni toping.",
-    options: [
-      "3",
-      "1/2",
-      "2/3",
-      "2",
-    ],
+    options: ["3", "1/2", "2/3", "2"],
     points: 30,
   },
 
@@ -260,12 +239,7 @@ const independenceQuestions: Question[] = [
     id: 6,
     question:
       "Agar to'rtburchakning ketma-ket tomonlari 70, 90, 130, 110 ga teng bo'lib, bu to'rtburchakka tashqi va ichki aylana chizish mumkin bo'lsa. Ichki chizilgan aylana uzunligi 130 ga teng tomonga uringan nuqtada uni x va y uzunlikdagi kesmalarga bo'ladi. |x − y| ni toping?",
-    options: [
-      "13",
-      "12",
-      "14",
-      "15",
-    ],
+    options: ["13", "12", "14", "15"],
     points: 30,
   },
 
@@ -273,12 +247,7 @@ const independenceQuestions: Question[] = [
     id: 7,
     question:
       "Ikkita basseyn bo'sh bo'lgan holatida, 7 ta teng quvvatli quvur birinchi basseynga ulandi. Birinchi basseyn 1/4 qismi to'lgach, 3 ta quvur olinib ikkinchi basseynni to'ldirishga ulandi. Birinchi basseyn 1/2 qismi to'lgach yana ikkita quvur olinib ikkinchi basseynni to'ldirishga ulandi. Bu ishlardan keyin ikki basseyn ham bir vaqtda to'ldi. Birinchi basseyn va ikkinchi basseyn sig'imlari nisbatini toping?",
-    options: [
-      "16/23",
-      "7/16",
-      "7/23",
-      "9/16",
-    ],
+    options: ["16/23", "7/16", "7/23", "9/16"],
     points: 30,
   },
 
@@ -286,12 +255,7 @@ const independenceQuestions: Question[] = [
     id: 8,
     question:
       "Quyidagi sonlardan eng kattasini toping?",
-    options: [
-      "30³⁰",
-      "50¹⁰",
-      "40²⁰",
-      "45¹⁵",
-    ],
+    options: ["30³⁰", "50¹⁰", "40²⁰", "45¹⁵"],
     points: 30,
   },
 
@@ -299,12 +263,7 @@ const independenceQuestions: Question[] = [
     id: 9,
     question:
       "Ushbu ikki tenglama umumiy ildizga ega bo'ladigan k ning mumkin bo'lgan qiymatlari yig'indisini toping:\n\nx² − 3x + 2 = 0\n\nva\n\nx² − 5x + k = 0",
-    options: [
-      "6",
-      "8",
-      "10",
-      "12",
-    ],
+    options: ["6", "8", "10", "12"],
     points: 30,
   },
 
@@ -312,12 +271,7 @@ const independenceQuestions: Question[] = [
     id: 10,
     question:
       "Agar (x + 2)(x + b) = x² + cx + 6 tenglik o'rinli bo'lsa, c ning qiymatini toping?",
-    options: [
-      "−5",
-      "−3",
-      "3",
-      "5",
-    ],
+    options: ["−5", "−3", "3", "5"],
     points: 30,
   },
 
@@ -325,12 +279,7 @@ const independenceQuestions: Question[] = [
     id: 11,
     question:
       "To'g'ri burchakli ABC da, AC = 12, BC = 5, C to'g'ri burchak. Yarim doira chizmadagidek chizilgan, ushbu yarim doira radiusini toping?",
-    options: [
-      "7/6",
-      "13/5",
-      "59/18",
-      "10/3",
-    ],
+    options: ["7/6", "13/5", "59/18", "10/3"],
     points: 30,
   },
 
@@ -338,12 +287,7 @@ const independenceQuestions: Question[] = [
     id: 12,
     question:
       "Quyidagi tenglamaning ildizlari yig'indisini toping:\n\n⁴√x = 12 / (7 − ⁴√x)",
-    options: [
-      "307",
-      "337",
-      "377",
-      "317",
-    ],
+    options: ["307", "337", "377", "317"],
     points: 30,
   },
 
@@ -351,12 +295,7 @@ const independenceQuestions: Question[] = [
     id: 13,
     question:
       "Hisoblang:\n\n√(31 · 30 · 29 · 28 + 1)",
-    options: [
-      "869",
-      "879",
-      "859",
-      "849",
-    ],
+    options: ["869", "879", "859", "849"],
     points: 30,
   },
 
@@ -364,12 +303,7 @@ const independenceQuestions: Question[] = [
     id: 14,
     question:
       "Hisoblang:\n\nlog₃7 · log₅9 · log₇11 · log₉13 · ... · log₂₃27",
-    options: [
-      "3",
-      "10",
-      "6",
-      "9",
-    ],
+    options: ["3", "10", "6", "9"],
     points: 30,
   },
 
@@ -377,12 +311,7 @@ const independenceQuestions: Question[] = [
     id: 15,
     question:
       "Hisoblang:\n\n20 + 20 1/5 + 20 2/5 + ... + 40",
-    options: [
-      "3000",
-      "3030",
-      "3150",
-      "4100",
-    ],
+    options: ["3000", "3030", "3150", "4100"],
     points: 30,
   },
 
@@ -390,12 +319,7 @@ const independenceQuestions: Question[] = [
     id: 16,
     question:
       "Hisoblang:\n\n1/2 + 4/2² + 9/2³ + 16/2⁴ + ...",
-    options: [
-      "4",
-      "2",
-      "1",
-      "6",
-    ],
+    options: ["4", "2", "1", "6"],
     points: 30,
   },
 
@@ -403,12 +327,7 @@ const independenceQuestions: Question[] = [
     id: 17,
     question:
       "a, b, c haqiqiy sonlar uchun:\n\nac/(a+b) + ba/(b+c) + cb/(c+a) = −9\n\nva\n\nbc/(a+b) + ca/(b+c) + ab/(c+a) = 10\n\nbo'lsa,\n\nb/(a+b) + c/(b+c) + a/(c+a)\n\nning qiymatini toping?",
-    options: [
-      "13",
-      "17",
-      "11",
-      "19",
-    ],
+    options: ["13", "17", "11", "19"],
     points: 30,
   },
 
@@ -416,12 +335,7 @@ const independenceQuestions: Question[] = [
     id: 18,
     question:
       "Agar x, y va z lar 1 dan katta va bu yerda w musbat son uchun logₓw = 24, logᵧw = 40 va logₓᵧ𝓏w = 12 bo'lsa, log𝓏w ning qiymatini toping?",
-    options: [
-      "50",
-      "25",
-      "40",
-      "60",
-    ],
+    options: ["50", "25", "40", "60"],
     points: 30,
   },
 
@@ -429,12 +343,7 @@ const independenceQuestions: Question[] = [
     id: 19,
     question:
       "Hisoblang:\n\n(3! + 4!)/(2(1! + 2!)) + (4! + 5!)/(3(2! + 3!)) + ... + (12! + 13!)/(11(10! + 11!))",
-    options: [
-      "90",
-      "95",
-      "100",
-      "105",
-    ],
+    options: ["90", "95", "100", "105"],
     points: 30,
   },
 
@@ -442,18 +351,13 @@ const independenceQuestions: Question[] = [
     id: 20,
     question:
       "Quyidagi tenglamaning ildizlari ko'paytmasini toping:\n\nx² + 18x + 30 = 2√(x² + 18x + 45)",
-    options: [
-      "18",
-      "15",
-      "20",
-      "24",
-    ],
+    options: ["18", "15", "20", "24"],
     points: 30,
   },
 ];
 
 /* =========================================================
-   GET CURRENT CYCLE
+   UZBEKISTAN DATE
 ========================================================= */
 
 function getUzbekistanDate() {
@@ -515,7 +419,7 @@ export async function GET() {
           success: true,
           available: true,
           cycle: "independence",
-          title: "Independence Certificate",
+          title: "Independence Olympiad",
           questions: independenceQuestions,
         },
         {
@@ -551,10 +455,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    console.error(
-      "Certificate Questions API Error:",
-      error
-    );
+    console.error("Olympiad Questions API Error:", error);
 
     return NextResponse.json(
       {
