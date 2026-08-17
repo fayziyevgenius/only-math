@@ -21,7 +21,7 @@ const genesisQuestions = [
   {
     id: 2,
     question:
-      "Question: In the xy-plane, the slope of line r is  1/2. Line s is parallel to line r and passes through the point (1, −1). Which of the following points lies on line s?",
+      " In the xy-plane, the slope of line r is  1/2. Line s is parallel to line r and passes through the point (1, −1). Which of the following points lies on line s?",
     options: [
       "(−3, −3)",
       "(−2, −2)",
@@ -33,12 +33,12 @@ const genesisQuestions = [
   {
     id: 3,
     question:
-      "The function f is defined by f(x) = k(1.84)ˣ, where k is a constant. The value of f(x) increases by p% for every increase of x by 1. For which function g(x), where k is a constant, does the value of g(x) increase by p% for every increase of x by 4?",
+      "A local coffee shop sells medium cups of coffee for $3 and large cups of coffee for $4. On a certain day, the coffee shop sold a total of 120 cups of coffee and made a total revenue of $410. How many medium cups of coffee did the shop sell that day?",
     options: [
-      "g(x) = k(1.84)ˣ⁄⁴",
-      "g(x) = k(1.84ˣ)⁴",
-      "g(x) = k(1.84)ˣ⁻⁴",
-      "g(x) = k(1.84)ˣ⁺⁴",
+      "70",
+      "80",
+      "90",
+      "100",
     ],
     points: 10,
   },
