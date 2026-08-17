@@ -435,7 +435,7 @@ const genesisAnswers: Record<number, string> = {
   8: "D",
   9: "A",
   10: "D",
-  11: "B",
+  11: "D",
   12: "C",
   13: "B",
   14: "A",
@@ -443,7 +443,7 @@ const genesisAnswers: Record<number, string> = {
   16: "C",
   17: "D",
   18: "C",
-  19: "A",
+  19: "B",
   20: "C",
 };
 
