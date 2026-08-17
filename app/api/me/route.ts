@@ -33,64 +33,106 @@ export async function POST(req: Request) {
       );
     }
 
-    // =====================================================
-    // NATIONAL CERTIFICATE
-    // =====================================================
+    /* =====================================================
+       NATIONAL CERTIFICATE
+    ===================================================== */
 
     const national = {
       attempts: Number(
         user.stats?.national?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.national?.correct ?? 0
       ),
     };
 
-    // =====================================================
-    // SAT
-    // =====================================================
+    /* =====================================================
+       CERTIFICATE PERFECT
+       
+       Certificate route:
+       attempts += 1
+       correct += correct answers
+       
+       Shuning uchun nationalAttempts va
+       nationalCorrectni solishtirmaymiz.
+    ===================================================== */
+
+    const certificateCycles =
+      user.certificateCycles || {};
+
+    const genesisCertificate =
+      certificateCycles.genesis;
+
+    const independenceCertificate =
+      certificateCycles.independence;
+
+    const genesisCertificatePerfect =
+      genesisCertificate?.solved === true &&
+      Number(genesisCertificate.correct ?? 0) ===
+        Number(genesisCertificate.totalQuestions ?? 0) &&
+      Number(genesisCertificate.totalQuestions ?? 0) > 0;
+
+    const independenceCertificatePerfect =
+      independenceCertificate?.solved === true &&
+      Number(independenceCertificate.correct ?? 0) ===
+        Number(independenceCertificate.totalQuestions ?? 0) &&
+      Number(independenceCertificate.totalQuestions ?? 0) > 0;
+
+    const certificatePerfect =
+      genesisCertificatePerfect ||
+      independenceCertificatePerfect;
+
+    /* =====================================================
+       SAT
+    ===================================================== */
 
     const sat = {
       attempts: Number(
         user.stats?.sat?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.sat?.correct ?? 0
       ),
     };
 
-    // =====================================================
-    // DAILY
-    // =====================================================
+    /*
+      SAT route:
+      attempts += 20
+      correct += correct
+
+      Shuning uchun:
+      20/20 => attempts 20, correct 20
+    */
+
+    const satPerfect =
+      sat.attempts > 0 &&
+      sat.correct === sat.attempts;
+
+    /* =====================================================
+       DAILY
+    ===================================================== */
 
     const daily = {
       attempts: Number(
         user.stats?.daily?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.daily?.correct ?? 0
       ),
     };
 
-    // =====================================================
-    // OLYMPIAD
-    //
-    // Oddiy:
-    // stats.olympiad.attempts
-    //
-    // Genesis:
-    // stats.olympiad.genesis.attempts
-    //
-    // Independence:
-    // stats.olympiad.independence.attempts
-    //
-    // Achievement uchun barchasini birlashtiramiz.
-    // =====================================================
+    /* =====================================================
+       OLYMPIAD
+    ===================================================== */
 
     const olympiadBase = {
       attempts: Number(
         user.stats?.olympiad?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.olympiad?.correct ?? 0
       ),
@@ -100,6 +142,7 @@ export async function POST(req: Request) {
       attempts: Number(
         user.stats?.olympiad?.genesis?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.olympiad?.genesis?.correct ?? 0
       ),
@@ -109,6 +152,7 @@ export async function POST(req: Request) {
       attempts: Number(
         user.stats?.olympiad?.independence?.attempts ?? 0
       ),
+
       correct: Number(
         user.stats?.olympiad?.independence?.correct ?? 0
       ),
@@ -132,9 +176,70 @@ export async function POST(req: Request) {
       independence: olympiadIndependence,
     };
 
-    // =====================================================
-    // MATH SPRINT
-    // =====================================================
+    /* =====================================================
+       OLYMPIAD PERFECT
+    ===================================================== */
+
+    const olympiadGenesisPerfect =
+      olympiadGenesis.attempts > 0 &&
+      olympiadGenesis.correct ===
+        olympiadGenesis.attempts;
+
+    const olympiadIndependencePerfect =
+      olympiadIndependence.attempts > 0 &&
+      olympiadIndependence.correct ===
+        olympiadIndependence.attempts;
+
+    const olympiadBasePerfect =
+      olympiadBase.attempts > 0 &&
+      olympiadBase.correct ===
+        olympiadBase.attempts;
+
+    const olympiadPerfect =
+      olympiadBasePerfect ||
+      olympiadGenesisPerfect ||
+      olympiadIndependencePerfect;
+
+    /* =====================================================
+       PERFECT TRIO
+    ===================================================== */
+
+    const perfectTrio =
+      certificatePerfect &&
+      satPerfect &&
+      olympiadPerfect;
+
+    console.log(
+      "========== PERFECT TRIO =========="
+    );
+
+    console.log(
+      "Certificate Perfect:",
+      certificatePerfect
+    );
+
+    console.log(
+      "SAT Perfect:",
+      satPerfect
+    );
+
+    console.log(
+      "Olympiad Perfect:",
+      olympiadPerfect
+    );
+
+    console.log(
+      "Perfect Trio:",
+      perfectTrio
+    );
+
+    console.log(
+      "=================================="
+    );
+
+    /* =====================================================
+       MATH SPRINT
+    ===================================================== */
 
     const mathSpirit = {
       games: Number(
@@ -154,9 +259,9 @@ export async function POST(req: Request) {
       ),
     };
 
-    // =====================================================
-    // FINAL STATS
-    // =====================================================
+    /* =====================================================
+       FINAL STATS
+    ===================================================== */
 
     const stats = {
       national,
@@ -166,9 +271,9 @@ export async function POST(req: Request) {
       mathSpirit,
     };
 
-    // =====================================================
-    // RESPONSE
-    // =====================================================
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
 
     return NextResponse.json({
       ...user,
@@ -178,6 +283,26 @@ export async function POST(req: Request) {
       ),
 
       stats,
+
+      /* Achievement values */
+
+      certificatePerfect,
+
+      certificateGenesisPerfect:
+        genesisCertificatePerfect,
+
+      certificateIndependencePerfect:
+        independenceCertificatePerfect,
+
+      satPerfect,
+
+      olympiadPerfect,
+
+      olympiadGenesisPerfect,
+
+      olympiadIndependencePerfect,
+
+      perfectTrio,
     });
 
   } catch (error) {
