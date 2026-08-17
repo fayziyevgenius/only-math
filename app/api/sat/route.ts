@@ -5,10 +5,7 @@ import { connectDB } from "@/lib/mongodb";
    GENESIS ANSWERS
 ========================================================= */
 
-const genesisAnswers: Record<
-  number,
-  string
-> = {
+const genesisAnswers: Record<number, string> = {
   1: "C",
   2: "A",
   3: "A",
@@ -19,7 +16,7 @@ const genesisAnswers: Record<
   8: "D",
   9: "A",
   10: "D",
-  11: "D",
+  11: "B",
   12: "C",
   13: "B",
   14: "A",
@@ -27,24 +24,20 @@ const genesisAnswers: Record<
   16: "C",
   17: "D",
   18: "C",
-  19: "B",
+  19: "A",
   20: "C",
 };
 
 /* =========================================================
    INDEPENDENCE ANSWERS
-   QUESTIONS 1–17 PROVIDED BY USER
 ========================================================= */
 
-const independenceAnswers: Record<
-  number,
-  string
-> = {
+const independenceAnswers: Record<number, string> = {
   1: "B",
   2: "D",
   3: "C",
   4: "A",
-  5: "C",
+  5: "D",
   6: "A",
   7: "D",
   8: "A",
@@ -57,6 +50,9 @@ const independenceAnswers: Record<
   15: "B",
   16: "B",
   17: "A",
+  18: "B",
+  19: "B",
+  20: "C",
 };
 
 /* =========================================================
@@ -66,33 +62,41 @@ const independenceAnswers: Record<
 const POINTS_PER_QUESTION = 10;
 
 /* =========================================================
+   NORMALIZE ANSWER
+========================================================= */
+
+function normalizeAnswer(
+  answer: unknown
+): string {
+  if (answer === undefined || answer === null) {
+    return "";
+  }
+
+  return String(answer)
+    .trim()
+    .toUpperCase();
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
-export async function POST(
-  req: Request
-) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const username =
-      body?.username;
+    const username = body?.username;
+    const answers = body?.answers;
+    const cycle = body?.cycle;
 
-    const answers =
-      body?.answers;
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
 
-    const cycle =
-      body?.cycle;
-
-    if (
-      !username ||
-      !answers ||
-      !cycle
-    ) {
+    if (!username || !answers || !cycle) {
       return NextResponse.json(
         {
-          error:
-            "Invalid request.",
+          error: "Invalid request.",
         },
         { status: 400 }
       );
@@ -104,35 +108,35 @@ export async function POST(
     ) {
       return NextResponse.json(
         {
-          error:
-            "Invalid cycle.",
+          error: "Invalid cycle.",
         },
         { status: 400 }
       );
     }
 
-    const db =
-      await connectDB();
+    /* =====================================================
+       DATABASE
+    ===================================================== */
 
-    const user =
-      await db
-        .collection("users")
-        .findOne({
-          username,
-        });
+    const db = await connectDB();
+
+    const users = db.collection("users");
+
+    const user = await users.findOne({
+      username,
+    });
 
     if (!user) {
       return NextResponse.json(
         {
-          error:
-            "User not found.",
+          error: "User not found.",
         },
         { status: 404 }
       );
     }
 
     /* =====================================================
-       SELECT ANSWER KEY
+       ANSWER KEY
     ===================================================== */
 
     const correctAnswers =
@@ -140,15 +144,8 @@ export async function POST(
         ? genesisAnswers
         : independenceAnswers;
 
-    /*
-      Independence currently has 17 questions
-      until Q18–Q20 are added.
-    */
-
     const totalQuestions =
-      Object.keys(
-        correctAnswers
-      ).length;
+      Object.keys(correctAnswers).length;
 
     /* =====================================================
        SOLVED FIELD
@@ -158,6 +155,10 @@ export async function POST(
       cycle === "genesis"
         ? "satGenesisSolved"
         : "satIndependenceSolved";
+
+    /* =====================================================
+       ALREADY COMPLETED
+    ===================================================== */
 
     if (user[solvedField]) {
       return NextResponse.json(
@@ -170,57 +171,101 @@ export async function POST(
     }
 
     /* =====================================================
-       CALCULATE
+       DEBUG
+    ===================================================== */
+
+    console.log("=================================");
+    console.log("SAT SUBMISSION");
+    console.log("Username:", username);
+    console.log("Cycle:", cycle);
+    console.log("Answers received:", answers);
+    console.log("Correct answers:", correctAnswers);
+    console.log("=================================");
+
+    /* =====================================================
+       CALCULATE SCORE
     ===================================================== */
 
     let correct = 0;
+
+    const checkedAnswers: Record<
+      number,
+      {
+        user: string;
+        correct: string;
+        isCorrect: boolean;
+      }
+    > = {};
 
     for (
       let i = 1;
       i <= totalQuestions;
       i++
     ) {
-      const userAnswer = String(
-        answers[i] || ""
-      )
-        .trim()
-        .toUpperCase();
+      const userAnswer =
+        normalizeAnswer(answers[i]);
 
-      if (
-        userAnswer ===
-        correctAnswers[i]
-      ) {
+      const correctAnswer =
+        normalizeAnswer(correctAnswers[i]);
+
+      const isCorrect =
+        userAnswer === correctAnswer;
+
+      if (isCorrect) {
         correct++;
       }
+
+      checkedAnswers[i] = {
+        user: userAnswer,
+        correct: correctAnswer,
+        isCorrect,
+      };
     }
 
     const incorrect =
-      totalQuestions -
-      correct;
+      totalQuestions - correct;
 
     const points =
-      correct *
-      POINTS_PER_QUESTION;
+      correct * POINTS_PER_QUESTION;
 
     /* =====================================================
-       RANK
+       LOG RESULT
+    ===================================================== */
+
+    console.log(
+      "SAT checked answers:",
+      checkedAnswers
+    );
+
+    console.log(
+      "SAT correct:",
+      correct
+    );
+
+    console.log(
+      "SAT incorrect:",
+      incorrect
+    );
+
+    console.log(
+      "SAT points:",
+      points
+    );
+
+    /* =====================================================
+       TITLE
     ===================================================== */
 
     const oldTitle =
-      user.title ||
-      "🌱 Beginner";
+      user.title || "🌱 Beginner";
 
     const currentPoints =
-      Number(
-        user.geniusPoints || 0
-      );
+      Number(user.geniusPoints || 0);
 
     const totalPoints =
-      currentPoints +
-      points;
+      currentPoints + points;
 
-    let title =
-      "🌱 Beginner";
+    let title = "🌱 Beginner";
 
     if (totalPoints >= 100) {
       title = "🥉 Bronze";
@@ -246,50 +291,69 @@ export async function POST(
        STREAK
     ===================================================== */
 
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
+
+    /* =====================================================
+       DATABASE UPDATE
+       
+       MUHIM:
+       stats.sat.attempts
+       stats.sat.correct
+
+       Achievementlar aynan shu fieldlarni
+       tekshiradi.
+    ===================================================== */
 
     const update: any = {
       $set: {
         [solvedField]: true,
         title,
+        lastSATCycle: cycle,
+        updatedAt: new Date(),
       },
 
       $inc: {
-        geniusPoints:
-          points,
+        geniusPoints: points,
 
-        [`stats.sat.${cycle}.attempts`]:
+        "stats.sat.attempts":
           totalQuestions,
 
-        [`stats.sat.${cycle}.correct`]:
+        "stats.sat.correct":
           correct,
       },
     };
 
+    /* =====================================================
+       STREAK UPDATE
+    ===================================================== */
+
     if (
-      user.lastSolvedDate !==
-      today
+      user.lastSolvedDate !== today
     ) {
       update.$inc.streak = 1;
+
       update.$set.lastSolvedDate =
         today;
     }
 
     /* =====================================================
-       UPDATE DATABASE
+       DATABASE SAVE
     ===================================================== */
 
-    await db
-      .collection("users")
-      .updateOne(
+    const updateResult =
+      await users.updateOne(
         {
           username,
         },
         update
       );
+
+    console.log(
+      "SAT DB update:",
+      updateResult
+    );
 
     /* =====================================================
        RESPONSE
@@ -306,8 +370,7 @@ export async function POST(
 
       incorrect,
 
-      total:
-        totalQuestions,
+      total: totalQuestions,
 
       rankUp:
         oldTitle !== title,
@@ -319,10 +382,12 @@ export async function POST(
         title,
 
       message:
-        correct ===
-        totalQuestions
+        correct === totalQuestions
           ? "Perfect! You solved every SAT question correctly."
           : `You received ${points} Genius Points.`,
+
+      /* DEBUG */
+      checkedAnswers,
     });
   } catch (error) {
     console.error(
@@ -332,8 +397,7 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error:
-          "Server Error.",
+        error: "Server Error.",
       },
       { status: 500 }
     );
