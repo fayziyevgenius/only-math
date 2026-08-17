@@ -274,44 +274,43 @@ export default function AchievementsPage() {
   // =====================================================
 
   const certificatePerfect =
-  currentUser.certificatePerfect === true;
+    nationalAttempts > 0 &&
+    nationalCorrect === nationalAttempts;
 
-const satPerfect =
-  currentUser.satPerfect === true;
+  const satPerfect =
+    satAttempts > 0 &&
+    satCorrect === satAttempts;
 
-const olympiadPerfect =
-  currentUser.olympiadPerfect === true;
+  /*
+   * Olympiad perfect:
+   *
+   * Flat stats ham ishlaydi.
+   * Genesis stats ham ishlaydi.
+   * Independence stats ham ishlaydi.
+   */
 
-const perfectTrioUnlocked =
-  currentUser.perfectTrio === true;
-console.log("========== ACHIEVEMENT DEBUG ==========");
+  const olympiadPerfectFlat =
+    olympiadAttempts > 0 &&
+    olympiadCorrect === olympiadAttempts;
 
-console.log(
-  "Certificate Perfect:",
-  certificatePerfect
-);
+  const olympiadGenesisPerfect =
+    olympiadGenesisAttempts > 0 &&
+    olympiadGenesisCorrect === olympiadGenesisAttempts;
 
-console.log(
-  "SAT Perfect:",
-  satPerfect
-);
+  const olympiadIndependencePerfect =
+    olympiadIndependenceAttempts > 0 &&
+    olympiadIndependenceCorrect ===
+      olympiadIndependenceAttempts;
 
-console.log(
-  "Olympiad Perfect:",
-  olympiadPerfect
-);
+  const olympiadPerfect =
+    olympiadPerfectFlat ||
+    olympiadGenesisPerfect ||
+    olympiadIndependencePerfect;
 
-console.log(
-  "Perfect Trio:",
-  perfectTrioUnlocked
-);
-
-console.log(
-  "FULL USER:",
-  currentUser
-);
-
-console.log("========================================");
+  const perfectTrioUnlocked =
+    certificatePerfect &&
+    satPerfect &&
+    olympiadPerfect;
 
   // =====================================================
   // 5. TOP 3
