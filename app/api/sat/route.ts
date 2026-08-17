@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
 /* =========================================================
-   GENESIS ANSWERS
+   ANSWERS
 ========================================================= */
 
 const genesisAnswers: Record<number, string> = {
@@ -28,16 +28,12 @@ const genesisAnswers: Record<number, string> = {
   20: "C",
 };
 
-/* =========================================================
-   INDEPENDENCE ANSWERS
-========================================================= */
-
 const independenceAnswers: Record<number, string> = {
   1: "B",
   2: "D",
   3: "C",
   4: "A",
-  5: "C",
+  5: "D",
   6: "A",
   7: "D",
   8: "A",
@@ -50,6 +46,9 @@ const independenceAnswers: Record<number, string> = {
   15: "B",
   16: "B",
   17: "A",
+  18: "B",
+  19: "B",
+  20: "C",
 };
 
 /* =========================================================
@@ -59,6 +58,64 @@ const independenceAnswers: Record<number, string> = {
 const POINTS_PER_QUESTION = 10;
 
 /* =========================================================
+   NORMALIZE ANSWER
+========================================================= */
+
+function normalizeAnswer(value: unknown): string {
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  return String(value)
+    .trim()
+    .toUpperCase();
+}
+
+/* =========================================================
+   GET USER ANSWER
+   Supports BOTH:
+
+   {
+     1: "C",
+     2: "A"
+   }
+
+   AND
+
+   ["C", "A"]
+========================================================= */
+
+function getUserAnswer(
+  answers: unknown,
+  questionNumber: number
+): string {
+  if (!answers) {
+    return "";
+  }
+
+  // Array format:
+  // ["C", "A", "A", ...]
+  if (Array.isArray(answers)) {
+    return normalizeAnswer(
+      answers[questionNumber - 1]
+    );
+  }
+
+  // Object format:
+  // { "1": "C", "2": "A" }
+  if (typeof answers === "object") {
+    const answerObject =
+      answers as Record<string, unknown>;
+
+    return normalizeAnswer(
+      answerObject[String(questionNumber)]
+    );
+  }
+
+  return "";
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
@@ -66,34 +123,41 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    console.log("========== SAT SUBMIT ==========");
+    console.log("BODY:", JSON.stringify(body, null, 2));
+
     const username = body?.username;
     const answers = body?.answers;
     const cycle = body?.cycle;
 
     /* =====================================================
-       DEBUG
-    ===================================================== */
-
-    console.log("=================================");
-    console.log("SAT SUBMIT");
-    console.log("username:", username);
-    console.log("cycle:", cycle);
-    console.log("answers:", answers);
-    console.log("answers type:", Array.isArray(answers) ? "ARRAY" : "OBJECT");
-    console.log("=================================");
-
-    /* =====================================================
        VALIDATION
     ===================================================== */
 
-    if (!username || !answers || !cycle) {
+    if (!username) {
       return NextResponse.json(
         {
-          error: "Invalid request.",
+          error: "Username kerak.",
         },
+        { status: 400 }
+      );
+    }
+
+    if (!answers) {
+      return NextResponse.json(
         {
-          status: 400,
-        }
+          error: "Answers kerak.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!cycle) {
+      return NextResponse.json(
+        {
+          error: "Cycle kerak.",
+        },
+        { status: 400 }
       );
     }
 
@@ -105,9 +169,7 @@ export async function POST(req: Request) {
         {
           error: "Invalid cycle.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
@@ -128,9 +190,7 @@ export async function POST(req: Request) {
         {
           error: "User not found.",
         },
-        {
-          status: 404,
-        }
+        { status: 404 }
       );
     }
 
@@ -155,19 +215,13 @@ export async function POST(req: Request) {
         ? "satGenesisSolved"
         : "satIndependenceSolved";
 
-    /* =====================================================
-       ALREADY SOLVED
-    ===================================================== */
-
     if (user[solvedField]) {
       return NextResponse.json(
         {
           error:
             "You have already completed this SAT test.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
@@ -177,60 +231,41 @@ export async function POST(req: Request) {
 
     let correct = 0;
 
-    for (let i = 1; i <= totalQuestions; i++) {
-      let rawAnswer: unknown;
+    const results: {
+      question: number;
+      userAnswer: string;
+      correctAnswer: string;
+      isCorrect: boolean;
+    }[] = [];
 
-      /*
-       * Agar frontend:
-       *
-       * {
-       *   1: "A",
-       *   2: "B"
-       * }
-       *
-       * yuborsa.
-       */
-
-      if (
-        answers &&
-        typeof answers === "object" &&
-        !Array.isArray(answers)
-      ) {
-        rawAnswer = answers[i];
-      }
-
-      /*
-       * Agar frontend:
-       *
-       * ["A", "B", "C", ...]
-       *
-       * yuborsa.
-       *
-       * Array 0-indexed bo'lgani uchun i - 1.
-       */
-
-      if (Array.isArray(answers)) {
-        rawAnswer = answers[i - 1];
-      }
-
-      const userAnswer = String(
-        rawAnswer ?? ""
-      )
-        .trim()
-        .toUpperCase();
-
-      const correctAnswer =
-        String(correctAnswers[i])
-          .trim()
-          .toUpperCase();
-
-      console.log(
-        `Q${i}: user=${userAnswer} correct=${correctAnswer}`
+    for (
+      let questionNumber = 1;
+      questionNumber <= totalQuestions;
+      questionNumber++
+    ) {
+      const userAnswer = getUserAnswer(
+        answers,
+        questionNumber
       );
 
-      if (userAnswer === correctAnswer) {
+      const correctAnswer =
+        normalizeAnswer(
+          correctAnswers[questionNumber]
+        );
+
+      const isCorrect =
+        userAnswer === correctAnswer;
+
+      if (isCorrect) {
         correct++;
       }
+
+      results.push({
+        question: questionNumber,
+        userAnswer,
+        correctAnswer,
+        isCorrect,
+      });
     }
 
     const incorrect =
@@ -240,19 +275,56 @@ export async function POST(req: Request) {
       correct * POINTS_PER_QUESTION;
 
     /* =====================================================
+       DEBUG
+    ===================================================== */
+
+    console.log(
+      "CYCLE:",
+      cycle
+    );
+
+    console.log(
+      "TOTAL QUESTIONS:",
+      totalQuestions
+    );
+
+    console.log(
+      "CORRECT:",
+      correct
+    );
+
+    console.log(
+      "INCORRECT:",
+      incorrect
+    );
+
+    console.log(
+      "RESULTS:",
+      JSON.stringify(
+        results,
+        null,
+        2
+      )
+    );
+
+    /* =====================================================
        RANK
     ===================================================== */
 
     const oldTitle =
-      user.title || "🌱 Beginner";
+      user.title ||
+      "🌱 Beginner";
 
     const currentPoints =
-      Number(user.geniusPoints || 0);
+      Number(
+        user.geniusPoints || 0
+      );
 
     const totalPoints =
       currentPoints + points;
 
-    let title = "🌱 Beginner";
+    let title =
+      "🌱 Beginner";
 
     if (totalPoints >= 100) {
       title = "🥉 Bronze";
@@ -278,18 +350,24 @@ export async function POST(req: Request) {
        STREAK
     ===================================================== */
 
-    const today = new Date()
-      .toISOString()
-      .split("T")[0];
+    const today =
+      new Intl.DateTimeFormat(
+        "en-CA",
+        {
+          timeZone: "Asia/Tashkent",
+        }
+      ).format(new Date());
 
     /* =====================================================
-       DATABASE UPDATE
+       UPDATE
     ===================================================== */
 
     const update: any = {
       $set: {
         [solvedField]: true,
         title,
+        updatedAt: new Date(),
+        lastSATCycle: cycle,
       },
 
       $inc: {
@@ -297,16 +375,11 @@ export async function POST(req: Request) {
 
         /*
          * MUHIM:
+         * Account page stats.sat.attempts
+         * va stats.sat.correct ni o'qiydi.
          *
-         * stats.sat.attempts
-         * stats.sat.correct
-         *
-         * ga yozamiz.
-         *
-         * stats.sat.genesis.attempts
-         * kabi alohida field yaratmaymiz.
+         * Shuning uchun aynan shu fieldlarga yozamiz.
          */
-
         "stats.sat.attempts":
           totalQuestions,
 
@@ -320,7 +393,8 @@ export async function POST(req: Request) {
     ===================================================== */
 
     if (
-      user.lastSolvedDate !== today
+      user.lastSolvedDate !==
+      today
     ) {
       update.$inc.streak = 1;
 
@@ -329,14 +403,20 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       SAVE
+       DATABASE UPDATE
     ===================================================== */
 
-    await users.updateOne(
-      {
-        username,
-      },
-      update
+    const updateResult =
+      await users.updateOne(
+        {
+          username,
+        },
+        update
+      );
+
+    console.log(
+      "DATABASE UPDATE:",
+      updateResult
     );
 
     /* =====================================================
@@ -365,6 +445,8 @@ export async function POST(req: Request) {
       newRank:
         title,
 
+      results,
+
       message:
         correct === totalQuestions
           ? "Perfect! You solved every SAT question correctly."
@@ -380,9 +462,7 @@ export async function POST(req: Request) {
       {
         error: "Server Error.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
