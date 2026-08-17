@@ -17,11 +17,17 @@ function getCurrentCycle(): CycleName | null {
 
   const today = formatter.format(new Date());
 
-  if (today >= "2026-08-17" && today <= "2026-08-30") {
+  if (
+    today >= "2026-08-17" &&
+    today <= "2026-08-30"
+  ) {
     return "genesis";
   }
 
-  if (today >= "2026-08-31" && today <= "2026-09-13") {
+  if (
+    today >= "2026-08-31" &&
+    today <= "2026-09-13"
+  ) {
     return "independence";
   }
 
@@ -31,11 +37,6 @@ function getCurrentCycle(): CycleName | null {
 /* =========================================================
    GENESIS ANSWERS
    INDEX = CORRECT OPTION
-
-   0 = A
-   1 = B
-   2 = C
-   3 = D
 ========================================================= */
 
 const genesisAnswers: Record<string, number> = {
@@ -64,13 +65,6 @@ const genesisAnswers: Record<string, number> = {
 /* =========================================================
    INDEPENDENCE ANSWERS
    INDEX = CORRECT OPTION
-
-   0 = A
-   1 = B
-   2 = C
-   3 = D
-
-   Q18 hali qo'shilmagan.
 ========================================================= */
 
 const independenceAnswers: Record<string, number> = {
@@ -90,9 +84,17 @@ const independenceAnswers: Record<string, number> = {
   "14": 0,
   "15": 1,
   "16": 1,
+
+  /*
+    Q17 mavjud.
+  */
+
   "17": 0,
 
-  // Q18 keyin qo'shiladi
+  /*
+    Q18 diagram savolining javobi
+    hozircha berilmagan.
+  */
 };
 
 /* =========================================================
@@ -115,16 +117,13 @@ function getTitle(points: number) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-
-    const username = body?.username;
-    const answers = body?.answers;
+    const { username, answers } = await req.json();
 
     /* =====================================================
        VALIDATION
     ===================================================== */
 
-    if (!username || typeof username !== "string") {
+    if (!username) {
       return NextResponse.json(
         {
           error: "Username is required.",
@@ -137,8 +136,7 @@ export async function POST(req: Request) {
 
     if (
       !answers ||
-      typeof answers !== "object" ||
-      Array.isArray(answers)
+      typeof answers !== "object"
     ) {
       return NextResponse.json(
         {
@@ -179,27 +177,6 @@ export async function POST(req: Request) {
 
     const totalQuestions =
       Object.keys(correctAnswers).length;
-
-    /* =====================================================
-       CHECK THAT ALL ANSWERS ARE PROVIDED
-    ===================================================== */
-
-    const submittedQuestionIds =
-      Object.keys(answers);
-
-    if (
-      submittedQuestionIds.length !==
-      totalQuestions
-    ) {
-      return NextResponse.json(
-        {
-          error: `Please answer all ${totalQuestions} questions.`,
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
     /* =====================================================
        DATABASE
@@ -257,28 +234,20 @@ export async function POST(req: Request) {
 
     let correct = 0;
 
-    for (const questionId of Object.keys(
-      correctAnswers
-    )) {
+    for (
+      const questionId of Object.keys(
+        correctAnswers
+      )
+    ) {
       const userAnswer =
         answers[questionId];
 
       const correctAnswer =
         correctAnswers[questionId];
 
-      /*
-        Frontend index yuboradi:
-
-        A = 0
-        B = 1
-        C = 2
-        D = 3
-      */
-
       if (
         userAnswer !== undefined &&
-        Number(userAnswer) ===
-          correctAnswer
+        Number(userAnswer) === correctAnswer
       ) {
         correct++;
       }
@@ -297,7 +266,7 @@ export async function POST(req: Request) {
       user.title || "🌱 Beginner";
 
     const oldPoints =
-      Number(user.geniusPoints) || 0;
+      user.geniusPoints || 0;
 
     const totalPoints =
       oldPoints + points;
@@ -313,21 +282,15 @@ export async function POST(req: Request) {
     ===================================================== */
 
     const formatter =
-      new Intl.DateTimeFormat(
-        "en-CA",
-        {
-          timeZone:
-            "Asia/Tashkent",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }
-      );
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Tashkent",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
 
     const today =
-      formatter.format(
-        new Date()
-      );
+      formatter.format(new Date());
 
     const now = new Date();
 
@@ -355,11 +318,7 @@ export async function POST(req: Request) {
        UPDATE
     ===================================================== */
 
-    const update: {
-      $set: Record<string, unknown>;
-      $inc: Record<string, number>;
-      $push?: Record<string, unknown>;
-    } = {
+    const update: any = {
       $set: {
         title: newTitle,
 
@@ -370,10 +329,20 @@ export async function POST(req: Request) {
       $inc: {
         geniusPoints: points,
 
-        "stats.certificate.attempts":
-          1,
+        /*
+          IMPORTANT:
+          Certificate = National Certificate
 
-        "stats.certificate.correct":
+          Achievements page:
+          stats.national.attempts
+          stats.national.correct
+
+          shuni o'qiydi.
+        */
+
+        "stats.national.attempts": 1,
+
+        "stats.national.correct":
           correct,
       },
     };
@@ -412,8 +381,7 @@ export async function POST(req: Request) {
     ===================================================== */
 
     if (
-      user.lastSolvedDate !==
-      today
+      user.lastSolvedDate !== today
     ) {
       update.$inc.streak = 1;
 
@@ -429,7 +397,7 @@ export async function POST(req: Request) {
       {
         username,
       },
-      update as any
+      update
     );
 
     /* =====================================================
@@ -456,12 +424,19 @@ export async function POST(req: Request) {
       newRank: newTitle,
 
       trainingAdded:
-        cycle ===
-        "independence",
+        cycle === "independence",
+
+      /*
+        Juda foydali:
+        frontendga Certificate perfect
+        bo'lgan-bo'lmaganini ham yuboramiz.
+      */
+
+      certificatePerfect:
+        correct === totalQuestions,
 
       message:
-        correct ===
-        totalQuestions
+        correct === totalQuestions
           ? `Perfect! You solved all ${totalQuestions} questions correctly.`
           : `You solved ${correct} out of ${totalQuestions} questions correctly.`,
     });
