@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from "react";
 
+type OlympiadStats = {
+  attempts: number;
+  correct: number;
+
+  genesis?: {
+    attempts: number;
+    correct: number;
+  };
+
+  independence?: {
+    attempts: number;
+    correct: number;
+  };
+};
+
 type User = {
   name: string;
   surname: string;
@@ -20,10 +35,7 @@ type User = {
       correct: number;
     };
 
-    olympiad: {
-      attempts: number;
-      correct: number;
-    };
+    olympiad: OlympiadStats;
 
     daily: {
       attempts: number;
@@ -162,6 +174,67 @@ export default function AchievementsPage() {
   const currentUser: User = user;
 
   // =====================================================
+  // OLYMPIAD STATS
+  //
+  // Eski struktura:
+  // stats.olympiad.attempts
+  // stats.olympiad.correct
+  //
+  // Yangi cycle struktura:
+  // stats.olympiad.genesis.attempts
+  // stats.olympiad.genesis.correct
+  //
+  // stats.olympiad.independence.attempts
+  // stats.olympiad.independence.correct
+  // =====================================================
+
+  const olympiadGenesisAttempts =
+    Number(
+      currentUser.stats.olympiad?.genesis
+        ?.attempts || 0
+    );
+
+  const olympiadGenesisCorrect =
+    Number(
+      currentUser.stats.olympiad?.genesis
+        ?.correct || 0
+    );
+
+  const olympiadIndependenceAttempts =
+    Number(
+      currentUser.stats.olympiad?.independence
+        ?.attempts || 0
+    );
+
+  const olympiadIndependenceCorrect =
+    Number(
+      currentUser.stats.olympiad?.independence
+        ?.correct || 0
+    );
+
+  // Eski umumiy olympiad statistikasi ham saqlanadi
+  const olympiadOldAttempts =
+    Number(
+      currentUser.stats.olympiad?.attempts || 0
+    );
+
+  const olympiadOldCorrect =
+    Number(
+      currentUser.stats.olympiad?.correct || 0
+    );
+
+  // Barcha Olympiad natijalarini birlashtiramiz
+  const olympiadAttempts =
+    olympiadOldAttempts +
+    olympiadGenesisAttempts +
+    olympiadIndependenceAttempts;
+
+  const olympiadCorrect =
+    olympiadOldCorrect +
+    olympiadGenesisCorrect +
+    olympiadIndependenceCorrect;
+
+  // =====================================================
   // ACHIEVEMENT CONDITIONS
   // =====================================================
 
@@ -170,21 +243,26 @@ export default function AchievementsPage() {
    */
 
   const daily7Unlocked =
-    currentUser.stats.daily.attempts >= 7;
+    Number(
+      currentUser.stats.daily?.attempts || 0
+    ) >= 7;
 
   /*
    * 2. Solve any Certificate / SAT / Olympiad question
    */
 
   const solveAnyQuestionUnlocked =
-    currentUser.stats.national.attempts > 0 ||
-    currentUser.stats.sat.attempts > 0 ||
-    currentUser.stats.olympiad.attempts > 0;
+    Number(
+      currentUser.stats.national?.attempts || 0
+    ) > 0 ||
+    Number(
+      currentUser.stats.sat?.attempts || 0
+    ) > 0 ||
+    olympiadAttempts > 0;
 
   /*
    * 3. Math Sprint 60+
    *
-   * MUHIM:
    * highestScore ishlatilmoqda.
    *
    * 60 ham unlock qiladi.
@@ -192,7 +270,7 @@ export default function AchievementsPage() {
 
   const sprint60Unlocked =
     Number(
-      currentUser.stats.mathSpirit.highestScore
+      currentUser.stats.mathSpirit?.highestScore || 0
     ) >= 60;
 
   /*
@@ -207,24 +285,41 @@ export default function AchievementsPage() {
    * correct === attempts
    *
    * Olympiad:
-   * attempts > 0
-   * correct === attempts
+   * Genesis + Independence + eski umumiy
+   * statistikalar hisobga olinadi.
    */
 
+  const certificateAttempts =
+    Number(
+      currentUser.stats.national?.attempts || 0
+    );
+
+  const certificateCorrect =
+    Number(
+      currentUser.stats.national?.correct || 0
+    );
+
+  const satAttempts =
+    Number(
+      currentUser.stats.sat?.attempts || 0
+    );
+
+  const satCorrect =
+    Number(
+      currentUser.stats.sat?.correct || 0
+    );
+
   const certificatePerfect =
-    currentUser.stats.national.attempts > 0 &&
-    currentUser.stats.national.correct ===
-      currentUser.stats.national.attempts;
+    certificateAttempts > 0 &&
+    certificateCorrect === certificateAttempts;
 
   const satPerfect =
-    currentUser.stats.sat.attempts > 0 &&
-    currentUser.stats.sat.correct ===
-      currentUser.stats.sat.attempts;
+    satAttempts > 0 &&
+    satCorrect === satAttempts;
 
   const olympiadPerfect =
-    currentUser.stats.olympiad.attempts > 0 &&
-    currentUser.stats.olympiad.correct ===
-      currentUser.stats.olympiad.attempts;
+    olympiadAttempts > 0 &&
+    olympiadCorrect === olympiadAttempts;
 
   const perfectTrioUnlocked =
     certificatePerfect &&
@@ -241,12 +336,23 @@ export default function AchievementsPage() {
   /*
    * 6. Genesis Cycle
    *
-   * Certificate / SAT / Olympiad'dan
-   * hech bo'lmasa bitta savol.
+   * Genesis Cycle'da:
+   * Certificate yoki SAT yoki Olympiad'dan
+   * kamida bitta savol yechilgan bo'lishi kerak.
+   *
+   * MUHIM:
+   * Olympiad uchun aynan Genesis statistikasi
+   * ham tekshirilmoqda.
    */
 
   const genesisCycleUnlocked =
-    solveAnyQuestionUnlocked;
+    Number(
+      currentUser.stats.national?.attempts || 0
+    ) > 0 ||
+    Number(
+      currentUser.stats.sat?.attempts || 0
+    ) > 0 ||
+    olympiadGenesisAttempts > 0;
 
   // =====================================================
   // ACHIEVEMENTS
