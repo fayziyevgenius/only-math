@@ -21,7 +21,7 @@ const genesisQuestions = [
   {
     id: 2,
     question:
-      "Line r is shown in the xy-plane. Line s is parallel to line r and passes through the point (1, −1). Which point lies on line s?",
+      "Question: In the xy-plane, the slope of line r is  1/2. Line s is parallel to line r and passes through the point (1, −1). Which of the following points lies on line s?",
     options: [
       "(−3, −3)",
       "(−2, −2)",
