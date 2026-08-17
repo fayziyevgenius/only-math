@@ -14,8 +14,9 @@ export async function POST(req: Request) {
     }
 
     const db = await connectDB();
+    const users = db.collection("users");
 
-    const user = await db.collection("users").findOne(
+    const user = await users.findOne(
       { username },
       {
         projection: {
@@ -23,8 +24,6 @@ export async function POST(req: Request) {
         },
       }
     );
-
-    console.log("API /me USER:", user);
 
     if (!user) {
       return NextResponse.json(
@@ -34,207 +33,119 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       NATIONAL CERTIFICATE
+       NATIONAL / CERTIFICATE
     ===================================================== */
 
-    const national = {
-      attempts: Number(
-        user.stats?.national?.attempts ?? 0
-      ),
+    let nationalAttempts = Number(
+      user.stats?.national?.attempts ?? 0
+    );
 
-      correct: Number(
-        user.stats?.national?.correct ?? 0
-      ),
-    };
+    let nationalCorrect = Number(
+      user.stats?.national?.correct ?? 0
+    );
 
-    /* =====================================================
-       CERTIFICATE PERFECT
-       
-       Certificate route:
-       attempts += 1
-       correct += correct answers
-       
-       Shuning uchun nationalAttempts va
-       nationalCorrectni solishtirmaymiz.
-    ===================================================== */
+    /*
+     * Eski Certificate natijasini ham tekshiramiz.
+     *
+     * Agar oldingi test 20/20 bo'lib,
+     * stats.national.attempts noto'g'ri 1 bo'lib qolgan bo'lsa,
+     * uni 20/20 sifatida hisoblaymiz.
+     */
 
     const certificateCycles =
       user.certificateCycles || {};
 
-    const genesisCertificate =
-      certificateCycles.genesis;
+    for (const cycleName of [
+      "genesis",
+      "independence",
+    ]) {
+      const cycle = certificateCycles[cycleName];
 
-    const independenceCertificate =
-      certificateCycles.independence;
+      if (
+        cycle?.solved === true &&
+        Number(cycle?.totalQuestions ?? 0) === 20
+      ) {
+        const cycleCorrect = Number(
+          cycle?.correct ?? 0
+        );
 
-    const genesisCertificatePerfect =
-      genesisCertificate?.solved === true &&
-      Number(genesisCertificate.correct ?? 0) ===
-        Number(genesisCertificate.totalQuestions ?? 0) &&
-      Number(genesisCertificate.totalQuestions ?? 0) > 0;
+        if (nationalAttempts < 20) {
+          nationalAttempts = 20;
+        }
 
-    const independenceCertificatePerfect =
-      independenceCertificate?.solved === true &&
-      Number(independenceCertificate.correct ?? 0) ===
-        Number(independenceCertificate.totalQuestions ?? 0) &&
-      Number(independenceCertificate.totalQuestions ?? 0) > 0;
-
-    const certificatePerfect =
-      genesisCertificatePerfect ||
-      independenceCertificatePerfect;
+        if (
+          cycleCorrect === 20 &&
+          nationalCorrect < 20
+        ) {
+          nationalCorrect = 20;
+        }
+      }
+    }
 
     /* =====================================================
        SAT
     ===================================================== */
 
-    const sat = {
-      attempts: Number(
-        user.stats?.sat?.attempts ?? 0
-      ),
+    const satAttempts = Number(
+      user.stats?.sat?.attempts ?? 0
+    );
 
-      correct: Number(
-        user.stats?.sat?.correct ?? 0
-      ),
-    };
-
-    /*
-      SAT route:
-      attempts += 20
-      correct += correct
-
-      Shuning uchun:
-      20/20 => attempts 20, correct 20
-    */
-
-    const satPerfect =
-      sat.attempts > 0 &&
-      sat.correct === sat.attempts;
-
-    /* =====================================================
-       DAILY
-    ===================================================== */
-
-    const daily = {
-      attempts: Number(
-        user.stats?.daily?.attempts ?? 0
-      ),
-
-      correct: Number(
-        user.stats?.daily?.correct ?? 0
-      ),
-    };
+    const satCorrect = Number(
+      user.stats?.sat?.correct ?? 0
+    );
 
     /* =====================================================
        OLYMPIAD
     ===================================================== */
 
-    const olympiadBase = {
-      attempts: Number(
-        user.stats?.olympiad?.attempts ?? 0
-      ),
+    const olympiadBaseAttempts = Number(
+      user.stats?.olympiad?.attempts ?? 0
+    );
 
-      correct: Number(
-        user.stats?.olympiad?.correct ?? 0
-      ),
-    };
+    const olympiadBaseCorrect = Number(
+      user.stats?.olympiad?.correct ?? 0
+    );
 
-    const olympiadGenesis = {
-      attempts: Number(
-        user.stats?.olympiad?.genesis?.attempts ?? 0
-      ),
+    const olympiadGenesisAttempts = Number(
+      user.stats?.olympiad?.genesis?.attempts ?? 0
+    );
 
-      correct: Number(
-        user.stats?.olympiad?.genesis?.correct ?? 0
-      ),
-    };
+    const olympiadGenesisCorrect = Number(
+      user.stats?.olympiad?.genesis?.correct ?? 0
+    );
 
-    const olympiadIndependence = {
-      attempts: Number(
-        user.stats?.olympiad?.independence?.attempts ?? 0
-      ),
+    const olympiadIndependenceAttempts = Number(
+      user.stats?.olympiad?.independence?.attempts ?? 0
+    );
 
-      correct: Number(
-        user.stats?.olympiad?.independence?.correct ?? 0
-      ),
-    };
+    const olympiadIndependenceCorrect = Number(
+      user.stats?.olympiad?.independence?.correct ?? 0
+    );
+
+    /*
+     * Barcha Olympiad natijalarini birlashtiramiz.
+     */
 
     const olympiadAttempts =
-      olympiadBase.attempts +
-      olympiadGenesis.attempts +
-      olympiadIndependence.attempts;
+      olympiadBaseAttempts +
+      olympiadGenesisAttempts +
+      olympiadIndependenceAttempts;
 
     const olympiadCorrect =
-      olympiadBase.correct +
-      olympiadGenesis.correct +
-      olympiadIndependence.correct;
-
-    const olympiad = {
-      attempts: olympiadAttempts,
-      correct: olympiadCorrect,
-
-      genesis: olympiadGenesis,
-      independence: olympiadIndependence,
-    };
+      olympiadBaseCorrect +
+      olympiadGenesisCorrect +
+      olympiadIndependenceCorrect;
 
     /* =====================================================
-       OLYMPIAD PERFECT
+       DAILY
     ===================================================== */
 
-    const olympiadGenesisPerfect =
-      olympiadGenesis.attempts > 0 &&
-      olympiadGenesis.correct ===
-        olympiadGenesis.attempts;
-
-    const olympiadIndependencePerfect =
-      olympiadIndependence.attempts > 0 &&
-      olympiadIndependence.correct ===
-        olympiadIndependence.attempts;
-
-    const olympiadBasePerfect =
-      olympiadBase.attempts > 0 &&
-      olympiadBase.correct ===
-        olympiadBase.attempts;
-
-    const olympiadPerfect =
-      olympiadBasePerfect ||
-      olympiadGenesisPerfect ||
-      olympiadIndependencePerfect;
-
-    /* =====================================================
-       PERFECT TRIO
-    ===================================================== */
-
-    const perfectTrio =
-      certificatePerfect &&
-      satPerfect &&
-      olympiadPerfect;
-
-    console.log(
-      "========== PERFECT TRIO =========="
+    const dailyAttempts = Number(
+      user.stats?.daily?.attempts ?? 0
     );
 
-    console.log(
-      "Certificate Perfect:",
-      certificatePerfect
-    );
-
-    console.log(
-      "SAT Perfect:",
-      satPerfect
-    );
-
-    console.log(
-      "Olympiad Perfect:",
-      olympiadPerfect
-    );
-
-    console.log(
-      "Perfect Trio:",
-      perfectTrio
-    );
-
-    console.log(
-      "=================================="
+    const dailyCorrect = Number(
+      user.stats?.daily?.correct ?? 0
     );
 
     /* =====================================================
@@ -264,12 +175,86 @@ export async function POST(req: Request) {
     ===================================================== */
 
     const stats = {
-      national,
-      sat,
-      olympiad,
-      daily,
+      national: {
+        attempts: nationalAttempts,
+        correct: nationalCorrect,
+      },
+
+      sat: {
+        attempts: satAttempts,
+        correct: satCorrect,
+      },
+
+      olympiad: {
+        attempts: olympiadAttempts,
+        correct: olympiadCorrect,
+
+        genesis: {
+          attempts: olympiadGenesisAttempts,
+          correct: olympiadGenesisCorrect,
+        },
+
+        independence: {
+          attempts: olympiadIndependenceAttempts,
+          correct: olympiadIndependenceCorrect,
+        },
+      },
+
+      daily: {
+        attempts: dailyAttempts,
+        correct: dailyCorrect,
+      },
+
       mathSpirit,
     };
+
+    /* =====================================================
+       PERFECT TRIO
+    ===================================================== */
+
+    const certificatePerfect =
+      nationalAttempts === 20 &&
+      nationalCorrect === 20;
+
+    const satPerfect =
+      satAttempts === 20 &&
+      satCorrect === 20;
+
+    const olympiadPerfect =
+      olympiadAttempts === 20 &&
+      olympiadCorrect === 20;
+
+    const perfectTrio =
+      certificatePerfect &&
+      satPerfect &&
+      olympiadPerfect;
+
+    /* =====================================================
+       SELF-HEAL OLD CERTIFICATE DATA
+    ===================================================== */
+
+    /*
+     * Agar eski Certificate natijasi MongoDB'da
+     * 1 attempt bo'lib qolgan bo'lsa, uni 20 ga to'g'rilaymiz.
+     *
+     * Bu eski 20/20 natijani yo'qotmaydi.
+     */
+
+    if (
+      nationalAttempts === 20 &&
+      nationalCorrect === 20 &&
+      Number(user.stats?.national?.attempts ?? 0) !== 20
+    ) {
+      await users.updateOne(
+        { username },
+        {
+          $set: {
+            "stats.national.attempts": 20,
+            "stats.national.correct": 20,
+          },
+        }
+      );
+    }
 
     /* =====================================================
        RESPONSE
@@ -284,27 +269,8 @@ export async function POST(req: Request) {
 
       stats,
 
-      /* Achievement values */
-
-      certificatePerfect,
-
-      certificateGenesisPerfect:
-        genesisCertificatePerfect,
-
-      certificateIndependencePerfect:
-        independenceCertificatePerfect,
-
-      satPerfect,
-
-      olympiadPerfect,
-
-      olympiadGenesisPerfect,
-
-      olympiadIndependencePerfect,
-
       perfectTrio,
     });
-
   } catch (error) {
     console.error(
       "API /me ERROR:",

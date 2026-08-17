@@ -269,48 +269,54 @@ export default function AchievementsPage() {
   const sprint60Unlocked =
     highestSprintScore >= 60;
 
-  // =====================================================
-  // 4. PERFECT TRIO
-  // =====================================================
+  /* =====================================================
+   PERFECT TRIO
+===================================================== */
 
-  const certificatePerfect =
-    nationalAttempts > 0 &&
-    nationalCorrect === nationalAttempts;
+const certificatePerfect =
+  nationalAttempts === 20 &&
+  nationalCorrect === 20;
 
-  const satPerfect =
-    satAttempts > 0 &&
-    satCorrect === satAttempts;
+const satPerfect =
+  satAttempts === 20 &&
+  satCorrect === 20;
 
-  /*
-   * Olympiad perfect:
-   *
-   * Flat stats ham ishlaydi.
-   * Genesis stats ham ishlaydi.
-   * Independence stats ham ishlaydi.
-   */
+const olympiadPerfect =
+  olympiadAttempts === 20 &&
+  olympiadCorrect === 20;
 
-  const olympiadPerfectFlat =
-    olympiadAttempts > 0 &&
-    olympiadCorrect === olympiadAttempts;
+const perfectTrioUnlocked =
+  certificatePerfect &&
+  satPerfect &&
+  olympiadPerfect;
 
-  const olympiadGenesisPerfect =
-    olympiadGenesisAttempts > 0 &&
-    olympiadGenesisCorrect === olympiadGenesisAttempts;
+console.log("========== PERFECT TRIO ==========");
 
-  const olympiadIndependencePerfect =
-    olympiadIndependenceAttempts > 0 &&
-    olympiadIndependenceCorrect ===
-      olympiadIndependenceAttempts;
+console.log(
+  "Certificate:",
+  nationalCorrect,
+  "/",
+  nationalAttempts
+);
 
-  const olympiadPerfect =
-    olympiadPerfectFlat ||
-    olympiadGenesisPerfect ||
-    olympiadIndependencePerfect;
+console.log(
+  "SAT:",
+  satCorrect,
+  "/",
+  satAttempts
+);
 
-  const perfectTrioUnlocked =
-    certificatePerfect &&
-    satPerfect &&
-    olympiadPerfect;
+console.log(
+  "Olympiad:",
+  olympiadCorrect,
+  "/",
+  olympiadAttempts
+);
+
+console.log(
+  "Perfect Trio:",
+  perfectTrioUnlocked
+);
 
   // =====================================================
   // 5. TOP 3

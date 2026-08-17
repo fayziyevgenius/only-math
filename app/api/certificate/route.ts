@@ -5,17 +5,21 @@ import { connectDB } from "@/lib/mongodb";
    CYCLE
 ========================================================= */
 
-type CycleName = "genesis" | "independence";
+type CycleName =
+  | "genesis"
+  | "independence";
 
 function getCurrentCycle(): CycleName | null {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tashkent",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const formatter =
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tashkent",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
 
-  const today = formatter.format(new Date());
+  const today =
+    formatter.format(new Date());
 
   if (
     today >= "2026-08-17" &&
@@ -36,10 +40,12 @@ function getCurrentCycle(): CycleName | null {
 
 /* =========================================================
    GENESIS ANSWERS
-   INDEX = CORRECT OPTION
 ========================================================= */
 
-const genesisAnswers: Record<string, number> = {
+const genesisAnswers: Record<
+  string,
+  number
+> = {
   "1": 3,
   "2": 3,
   "3": 2,
@@ -64,10 +70,12 @@ const genesisAnswers: Record<string, number> = {
 
 /* =========================================================
    INDEPENDENCE ANSWERS
-   INDEX = CORRECT OPTION
 ========================================================= */
 
-const independenceAnswers: Record<string, number> = {
+const independenceAnswers: Record<
+  string,
+  number
+> = {
   "1": 1,
   "2": 3,
   "3": 2,
@@ -84,17 +92,7 @@ const independenceAnswers: Record<string, number> = {
   "14": 0,
   "15": 1,
   "16": 1,
-
-  /*
-    Q17 mavjud.
-  */
-
   "17": 0,
-
-  /*
-    Q18 diagram savolining javobi
-    hozircha berilmagan.
-  */
 };
 
 /* =========================================================
@@ -102,11 +100,20 @@ const independenceAnswers: Record<string, number> = {
 ========================================================= */
 
 function getTitle(points: number) {
-  if (points >= 3000) return "👑 Math Genius";
-  if (points >= 1500) return "💎 Diamond";
-  if (points >= 700) return "🥇 Gold";
-  if (points >= 300) return "🥈 Silver";
-  if (points >= 100) return "🥉 Bronze";
+  if (points >= 3000)
+    return "👑 Math Genius";
+
+  if (points >= 1500)
+    return "💎 Diamond";
+
+  if (points >= 700)
+    return "🥇 Gold";
+
+  if (points >= 300)
+    return "🥈 Silver";
+
+  if (points >= 100)
+    return "🥉 Bronze";
 
   return "🌱 Beginner";
 }
@@ -115,9 +122,14 @@ function getTitle(points: number) {
    POST
 ========================================================= */
 
-export async function POST(req: Request) {
+export async function POST(
+  req: Request
+) {
   try {
-    const { username, answers } = await req.json();
+    const {
+      username,
+      answers,
+    } = await req.json();
 
     /* =====================================================
        VALIDATION
@@ -126,7 +138,8 @@ export async function POST(req: Request) {
     if (!username) {
       return NextResponse.json(
         {
-          error: "Username is required.",
+          error:
+            "Username is required.",
         },
         {
           status: 400,
@@ -140,7 +153,8 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Answers are required.",
+          error:
+            "Answers are required.",
         },
         {
           status: 400,
@@ -149,10 +163,11 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       CURRENT CYCLE
+       CYCLE
     ===================================================== */
 
-    const cycle = getCurrentCycle();
+    const cycle =
+      getCurrentCycle();
 
     if (!cycle) {
       return NextResponse.json(
@@ -167,7 +182,7 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       ANSWER KEY
+       ANSWERS
     ===================================================== */
 
     const correctAnswers =
@@ -176,24 +191,30 @@ export async function POST(req: Request) {
         : independenceAnswers;
 
     const totalQuestions =
-      Object.keys(correctAnswers).length;
+      Object.keys(
+        correctAnswers
+      ).length;
 
     /* =====================================================
        DATABASE
     ===================================================== */
 
-    const db = await connectDB();
+    const db =
+      await connectDB();
 
-    const users = db.collection("users");
+    const users =
+      db.collection("users");
 
-    const user = await users.findOne({
-      username,
-    });
+    const user =
+      await users.findOne({
+        username,
+      });
 
     if (!user) {
       return NextResponse.json(
         {
-          error: "User not found.",
+          error:
+            "User not found.",
         },
         {
           status: 404,
@@ -212,15 +233,13 @@ export async function POST(req: Request) {
       certificateCycles[cycle];
 
     if (
-      currentCycleData &&
-      currentCycleData.solved === true
+      currentCycleData?.solved ===
+      true
     ) {
       return NextResponse.json(
         {
           error:
-            cycle === "genesis"
-              ? "You have already completed the Genesis Certificate."
-              : "You have already completed the Independence Certificate.",
+            "You have already completed this Certificate.",
         },
         {
           status: 400,
@@ -235,38 +254,52 @@ export async function POST(req: Request) {
     let correct = 0;
 
     for (
-      const questionId of Object.keys(
-        correctAnswers
-      )
+      const questionId of
+        Object.keys(
+          correctAnswers
+        )
     ) {
       const userAnswer =
         answers[questionId];
 
       const correctAnswer =
-        correctAnswers[questionId];
+        correctAnswers[
+          questionId
+        ];
 
       if (
-        userAnswer !== undefined &&
-        Number(userAnswer) === correctAnswer
+        userAnswer !==
+          undefined &&
+        Number(userAnswer) ===
+          correctAnswer
       ) {
         correct++;
       }
     }
 
     const incorrect =
-      totalQuestions - correct;
+      totalQuestions -
+      correct;
 
     /* =====================================================
        POINTS
     ===================================================== */
 
-    const points = correct * 10;
+    const points =
+      correct * 10;
+
+    /* =====================================================
+       TITLE
+    ===================================================== */
 
     const oldTitle =
-      user.title || "🌱 Beginner";
+      user.title ||
+      "🌱 Beginner";
 
     const oldPoints =
-      user.geniusPoints || 0;
+      Number(
+        user.geniusPoints || 0
+      );
 
     const totalPoints =
       oldPoints + points;
@@ -274,43 +307,41 @@ export async function POST(req: Request) {
     const newTitle =
       getTitle(totalPoints);
 
-    const rankUp =
-      oldTitle !== newTitle;
-
     /* =====================================================
        DATE
     ===================================================== */
 
     const formatter =
-      new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Tashkent",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
+      new Intl.DateTimeFormat(
+        "en-CA",
+        {
+          timeZone:
+            "Asia/Tashkent",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }
+      );
 
     const today =
-      formatter.format(new Date());
+      formatter.format(
+        new Date()
+      );
 
-    const now = new Date();
+    const now =
+      new Date();
 
     /* =====================================================
-       CYCLE RESULT
+       RESULT
     ===================================================== */
 
     const cycleResult = {
       solved: true,
-
       correct,
-
       incorrect,
-
       totalQuestions,
-
       points,
-
       completedAt: now,
-
       date: today,
     };
 
@@ -327,20 +358,19 @@ export async function POST(req: Request) {
       },
 
       $inc: {
-        geniusPoints: points,
+        geniusPoints:
+          points,
 
         /*
-          IMPORTANT:
-          Certificate = National Certificate
+         * MUHIM:
+         *
+         * 20 ta savol = 20 attempts
+         *
+         * 20/20 = 20 correct
+         */
 
-          Achievements page:
-          stats.national.attempts
-          stats.national.correct
-
-          shuni o'qiydi.
-        */
-
-        "stats.national.attempts": 1,
+        "stats.national.attempts":
+          totalQuestions,
 
         "stats.national.correct":
           correct,
@@ -351,12 +381,17 @@ export async function POST(req: Request) {
        INDEPENDENCE → TRAINING
     ===================================================== */
 
-    if (cycle === "independence") {
+    if (
+      cycle ===
+      "independence"
+    ) {
       update.$push = {
         training: {
-          source: "independence",
+          source:
+            "independence",
 
-          type: "certificate",
+          type:
+            "certificate",
 
           completedAt: now,
 
@@ -381,7 +416,8 @@ export async function POST(req: Request) {
     ===================================================== */
 
     if (
-      user.lastSolvedDate !== today
+      user.lastSolvedDate !==
+      today
     ) {
       update.$inc.streak = 1;
 
@@ -417,26 +453,23 @@ export async function POST(req: Request) {
 
       totalQuestions,
 
-      rankUp,
+      rankUp:
+        oldTitle !==
+        newTitle,
 
-      oldRank: oldTitle,
+      oldRank:
+        oldTitle,
 
-      newRank: newTitle,
-
-      trainingAdded:
-        cycle === "independence",
-
-      /*
-        Juda foydali:
-        frontendga Certificate perfect
-        bo'lgan-bo'lmaganini ham yuboramiz.
-      */
+      newRank:
+        newTitle,
 
       certificatePerfect:
-        correct === totalQuestions,
+        correct ===
+        totalQuestions,
 
       message:
-        correct === totalQuestions
+        correct ===
+        totalQuestions
           ? `Perfect! You solved all ${totalQuestions} questions correctly.`
           : `You solved ${correct} out of ${totalQuestions} questions correctly.`,
     });
@@ -448,7 +481,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        error: "Server Error",
+        error:
+          "Server Error",
       },
       {
         status: 500,

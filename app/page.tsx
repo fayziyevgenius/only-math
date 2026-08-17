@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser");
@@ -21,10 +22,11 @@ export default function LoginPage() {
 
   async function handleLogin() {
     if (!username.trim() || !password) {
-      alert("Please fill in all fields.");
+      setError("Please fill in all fields.");
       return;
     }
 
+    setError("");
     setLoading(true);
 
     try {
@@ -35,24 +37,34 @@ export default function LoginPage() {
         },
         body: JSON.stringify({
           username: username.trim(),
-          password,
+          password: password,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Invalid username or password.");
-        setLoading(false);
+        setError(data.error || "Invalid username or password.");
         return;
       }
 
-      localStorage.setItem("currentUser", JSON.stringify(data.user));
+      if (!data.success || !data.user) {
+        setError("Login failed. User data was not returned.");
+        return;
+      }
+
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify(data.user)
+      );
 
       router.replace("/afterregister");
     } catch (error) {
       console.error("Login error:", error);
-      alert("Server error. Please try again.");
+
+      setError(
+        "Unable to connect to the server. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -60,12 +72,11 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* ================================
-          BACKGROUND GLOW
-      ================================= */}
+
+      {/* BACKGROUND GLOW */}
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Main purple glow */}
+
         <div
           className="
             absolute
@@ -81,7 +92,6 @@ export default function LoginPage() {
           "
         />
 
-        {/* Top left glow */}
         <div
           className="
             absolute
@@ -95,7 +105,6 @@ export default function LoginPage() {
           "
         />
 
-        {/* Bottom right glow */}
         <div
           className="
             absolute
@@ -108,11 +117,10 @@ export default function LoginPage() {
             blur-[110px]
           "
         />
+
       </div>
 
-      {/* ================================
-          BACKGROUND DOTS
-      ================================= */}
+      {/* BACKGROUND DOTS */}
 
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -123,121 +131,48 @@ export default function LoginPage() {
         }}
       />
 
-      {/* ================================
-          FLOATING STARS
-      ================================= */}
+      {/* FLOATING STARS */}
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="
-            absolute
-            left-[8%]
-            top-[18%]
-            text-purple-400/40
-            text-2xl
-            animate-pulse
-          "
-        >
+
+        <div className="absolute left-[8%] top-[18%] text-purple-400/40 text-2xl animate-pulse">
           ✦
         </div>
 
-        <div
-          className="
-            absolute
-            left-[18%]
-            top-[72%]
-            text-purple-400/30
-            text-xl
-            animate-pulse
-          "
-        >
+        <div className="absolute left-[18%] top-[72%] text-purple-400/30 text-xl animate-pulse">
           ✧
         </div>
 
-        <div
-          className="
-            absolute
-            right-[10%]
-            top-[16%]
-            text-purple-400/40
-            text-2xl
-            animate-pulse
-          "
-        >
+        <div className="absolute right-[10%] top-[16%] text-purple-400/40 text-2xl animate-pulse">
           ✦
         </div>
 
-        <div
-          className="
-            absolute
-            right-[18%]
-            top-[70%]
-            text-purple-400/30
-            text-2xl
-            animate-pulse
-          "
-        >
+        <div className="absolute right-[18%] top-[70%] text-purple-400/30 text-2xl animate-pulse">
           ◇
         </div>
 
-        <div
-          className="
-            absolute
-            left-[30%]
-            top-[12%]
-            text-purple-400/30
-            text-lg
-            animate-pulse
-          "
-        >
+        <div className="absolute left-[30%] top-[12%] text-purple-400/30 text-lg animate-pulse">
           ✧
         </div>
 
-        <div
-          className="
-            absolute
-            right-[32%]
-            bottom-[12%]
-            text-purple-400/40
-            text-xl
-            animate-pulse
-          "
-        >
+        <div className="absolute right-[32%] bottom-[12%] text-purple-400/40 text-xl animate-pulse">
           ✦
         </div>
 
-        <div
-          className="
-            absolute
-            left-[5%]
-            bottom-[20%]
-            text-purple-400/30
-            text-lg
-            animate-pulse
-          "
-        >
+        <div className="absolute left-[5%] bottom-[20%] text-purple-400/30 text-lg animate-pulse">
           ◇
         </div>
 
-        <div
-          className="
-            absolute
-            right-[5%]
-            bottom-[30%]
-            text-purple-400/30
-            text-lg
-            animate-pulse
-          "
-        >
+        <div className="absolute right-[5%] bottom-[30%] text-purple-400/30 text-lg animate-pulse">
           ✧
         </div>
+
       </div>
 
-      {/* ================================
-          ORBITS
-      ================================= */}
+      {/* ORBITS */}
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden sm:block">
+
         <div
           className="
             absolute
@@ -297,17 +232,19 @@ export default function LoginPage() {
             "
           />
         </div>
+
       </div>
 
-      {/* ================================
-          LOGIN CONTENT
-      ================================= */}
+      {/* LOGIN */}
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+
         <div className="w-full max-w-[420px] flex flex-col items-center">
 
-          {/* Logo */}
+          {/* LOGO */}
+
           <div className="relative mb-2">
+
             <div
               className="
                 absolute
@@ -331,9 +268,11 @@ export default function LoginPage() {
                 object-cover
               "
             />
+
           </div>
 
-          {/* Title */}
+          {/* TITLE */}
+
           <h1
             className="
               mt-2
@@ -347,8 +286,10 @@ export default function LoginPage() {
             Sign in
           </h1>
 
-          {/* Username */}
+          {/* USERNAME / EMAIL */}
+
           <div className="w-full mb-8">
+
             <label
               htmlFor="username"
               className="text-xl md:text-3xl font-bold"
@@ -360,8 +301,17 @@ export default function LoginPage() {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !loading) {
+                  handleLogin();
+                }
+              }}
               autoComplete="username"
+              disabled={loading}
               className="
                 w-full
                 h-14
@@ -378,12 +328,16 @@ export default function LoginPage() {
                 outline-none
                 focus:border-purple-400
                 transition
+                disabled:opacity-60
               "
             />
+
           </div>
 
-          {/* Password */}
+          {/* PASSWORD */}
+
           <div className="w-full">
+
             <label
               htmlFor="password"
               className="text-xl md:text-3xl font-bold"
@@ -395,13 +349,17 @@ export default function LoginPage() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !loading) {
                   handleLogin();
                 }
               }}
               autoComplete="current-password"
+              disabled={loading}
               className="
                 w-full
                 h-14
@@ -418,11 +376,37 @@ export default function LoginPage() {
                 outline-none
                 focus:border-purple-400
                 transition
+                disabled:opacity-60
               "
             />
+
           </div>
 
-          {/* Sign in button */}
+          {/* ERROR */}
+
+          {error && (
+            <div
+              className="
+                w-full
+                mt-5
+                rounded-xl
+                border
+                border-red-500/50
+                bg-red-500/10
+                px-4
+                py-3
+                text-center
+                text-red-400
+                text-base
+                md:text-lg
+              "
+            >
+              {error}
+            </div>
+          )}
+
+          {/* SIGN IN */}
+
           <button
             type="button"
             onClick={handleLogin}
@@ -447,7 +431,8 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
 
-          {/* Forgot password */}
+          {/* FORGOT */}
+
           <Link
             href="/forgot"
             className="
@@ -461,7 +446,8 @@ export default function LoginPage() {
             Forgot your password?
           </Link>
 
-          {/* Registration */}
+          {/* REGISTER */}
+
           <Link
             href="/registration"
             className="
@@ -474,8 +460,11 @@ export default function LoginPage() {
           >
             Don't have an account yet?
           </Link>
+
         </div>
+
       </div>
+
     </main>
   );
 }
