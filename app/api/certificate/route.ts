@@ -8,29 +8,20 @@ import { connectDB } from "@/lib/mongodb";
 type CycleName = "genesis" | "independence";
 
 function getCurrentCycle(): CycleName | null {
-  const formatter = new Intl.DateTimeFormat(
-    "en-CA",
-    {
-      timeZone: "Asia/Tashkent",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }
-  );
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tashkent",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
   const today = formatter.format(new Date());
 
-  if (
-    today >= "2026-08-17" &&
-    today <= "2026-08-30"
-  ) {
+  if (today >= "2026-08-17" && today <= "2026-08-30") {
     return "genesis";
   }
 
-  if (
-    today >= "2026-08-31" &&
-    today <= "2026-09-13"
-  ) {
+  if (today >= "2026-08-31" && today <= "2026-09-13") {
     return "independence";
   }
 
@@ -40,6 +31,11 @@ function getCurrentCycle(): CycleName | null {
 /* =========================================================
    GENESIS ANSWERS
    INDEX = CORRECT OPTION
+
+   0 = A
+   1 = B
+   2 = C
+   3 = D
 ========================================================= */
 
 const genesisAnswers: Record<string, number> = {
@@ -68,6 +64,13 @@ const genesisAnswers: Record<string, number> = {
 /* =========================================================
    INDEPENDENCE ANSWERS
    INDEX = CORRECT OPTION
+
+   0 = A
+   1 = B
+   2 = C
+   3 = D
+
+   Q18 hali qo'shilmagan.
 ========================================================= */
 
 const independenceAnswers: Record<string, number> = {
@@ -89,10 +92,7 @@ const independenceAnswers: Record<string, number> = {
   "16": 1,
   "17": 0,
 
-  /*
-    Q18 diagram savolining to'g'ri javobi
-    hozircha berilmagan.
-  */
+  // Q18 keyin qo'shiladi
 };
 
 /* =========================================================
@@ -115,13 +115,16 @@ function getTitle(points: number) {
 
 export async function POST(req: Request) {
   try {
-    const { username, answers } = await req.json();
+    const body = await req.json();
+
+    const username = body?.username;
+    const answers = body?.answers;
 
     /* =====================================================
        VALIDATION
     ===================================================== */
 
-    if (!username) {
+    if (!username || typeof username !== "string") {
       return NextResponse.json(
         {
           error: "Username is required.",
@@ -134,7 +137,8 @@ export async function POST(req: Request) {
 
     if (
       !answers ||
-      typeof answers !== "object"
+      typeof answers !== "object" ||
+      Array.isArray(answers)
     ) {
       return NextResponse.json(
         {
@@ -177,18 +181,37 @@ export async function POST(req: Request) {
       Object.keys(correctAnswers).length;
 
     /* =====================================================
+       CHECK THAT ALL ANSWERS ARE PROVIDED
+    ===================================================== */
+
+    const submittedQuestionIds =
+      Object.keys(answers);
+
+    if (
+      submittedQuestionIds.length !==
+      totalQuestions
+    ) {
+      return NextResponse.json(
+        {
+          error: `Please answer all ${totalQuestions} questions.`,
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /* =====================================================
        DATABASE
     ===================================================== */
 
     const db = await connectDB();
 
-    const users =
-      db.collection("users");
+    const users = db.collection("users");
 
-    const user =
-      await users.findOne({
-        username,
-      });
+    const user = await users.findOne({
+      username,
+    });
 
     if (!user) {
       return NextResponse.json(
@@ -234,16 +257,23 @@ export async function POST(req: Request) {
 
     let correct = 0;
 
-    for (
-      const questionId of Object.keys(
-        correctAnswers
-      )
-    ) {
+    for (const questionId of Object.keys(
+      correctAnswers
+    )) {
       const userAnswer =
         answers[questionId];
 
       const correctAnswer =
         correctAnswers[questionId];
+
+      /*
+        Frontend index yuboradi:
+
+        A = 0
+        B = 1
+        C = 2
+        D = 3
+      */
 
       if (
         userAnswer !== undefined &&
@@ -261,15 +291,13 @@ export async function POST(req: Request) {
        POINTS
     ===================================================== */
 
-    const points =
-      correct * 10;
+    const points = correct * 10;
 
     const oldTitle =
-      user.title ||
-      "🌱 Beginner";
+      user.title || "🌱 Beginner";
 
     const oldPoints =
-      user.geniusPoints || 0;
+      Number(user.geniusPoints) || 0;
 
     const totalPoints =
       oldPoints + points;
@@ -327,7 +355,11 @@ export async function POST(req: Request) {
        UPDATE
     ===================================================== */
 
-    const update: any = {
+    const update: {
+      $set: Record<string, unknown>;
+      $inc: Record<string, number>;
+      $push?: Record<string, unknown>;
+    } = {
       $set: {
         title: newTitle,
 
@@ -350,20 +382,14 @@ export async function POST(req: Request) {
        INDEPENDENCE → TRAINING
     ===================================================== */
 
-    if (
-      cycle ===
-      "independence"
-    ) {
+    if (cycle === "independence") {
       update.$push = {
         training: {
-          source:
-            "independence",
+          source: "independence",
 
-          type:
-            "certificate",
+          type: "certificate",
 
-          completedAt:
-            now,
+          completedAt: now,
 
           correct,
 
@@ -403,7 +429,7 @@ export async function POST(req: Request) {
       {
         username,
       },
-      update
+      update as any
     );
 
     /* =====================================================
@@ -425,11 +451,9 @@ export async function POST(req: Request) {
 
       rankUp,
 
-      oldRank:
-        oldTitle,
+      oldRank: oldTitle,
 
-      newRank:
-        newTitle,
+      newRank: newTitle,
 
       trainingAdded:
         cycle ===

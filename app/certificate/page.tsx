@@ -70,7 +70,9 @@ function formatCountdown(target: number) {
     };
   }
 
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const days = Math.floor(
+    diff / (1000 * 60 * 60 * 24)
+  );
 
   const hours = Math.floor(
     (diff % (1000 * 60 * 60 * 24)) /
@@ -106,13 +108,20 @@ function getCycleInfo() {
   for (let i = 0; i < CYCLES.length; i++) {
     const cycle = CYCLES[i];
 
-    const start = new Date(cycle.start).getTime();
-    const end = new Date(cycle.end).getTime();
+    const start =
+      new Date(cycle.start).getTime();
 
-    /*
-      Hozir cycle ichidamiz
-    */
-    if (now >= start && now < end) {
+    const end =
+      new Date(cycle.end).getTime();
+
+    /* =====================================================
+       CURRENT CYCLE
+    ===================================================== */
+
+    if (
+      now >= start &&
+      now < end
+    ) {
       return {
         current: cycle,
         next: CYCLES[i + 1] || null,
@@ -120,9 +129,10 @@ function getCycleInfo() {
       };
     }
 
-    /*
-      Cycle hali boshlanmagan
-    */
+    /* =====================================================
+       BEFORE CYCLE
+    ===================================================== */
+
     if (now < start) {
       return {
         current: null,
@@ -152,6 +162,10 @@ function MathText({
 }) {
   if (!text) return null;
 
+  /* =======================================================
+     BLOCK MATH
+  ======================================================= */
+
   if (block) {
     let math = text.trim();
 
@@ -178,11 +192,19 @@ function MathText({
     );
   }
 
+  /* =======================================================
+     EXPLICIT MATH
+  ======================================================= */
+
   const hasExplicitMath =
     text.includes("\\(") ||
     text.includes("\\)") ||
     text.includes("\\[") ||
     text.includes("\\]");
+
+  /* =======================================================
+     AUTO LATEX
+  ======================================================= */
 
   if (!hasExplicitMath) {
     const looksLikeLatex =
@@ -208,6 +230,10 @@ function MathText({
     return <span>{text}</span>;
   }
 
+  /* =======================================================
+     PARSE MIXED TEXT + MATH
+  ======================================================= */
+
   const result: React.ReactNode[] = [];
 
   let remaining = text;
@@ -229,7 +255,9 @@ function MathText({
         inlineStart < blockStart)
     ) {
       start = inlineStart;
-    } else if (blockStart !== -1) {
+    } else if (
+      blockStart !== -1
+    ) {
       start = blockStart;
       isBlock = true;
     }
@@ -240,6 +268,7 @@ function MathText({
           {remaining}
         </span>
       );
+
       break;
     }
 
@@ -267,13 +296,15 @@ function MathText({
           {remaining.slice(start)}
         </span>
       );
+
       break;
     }
 
-    const math = remaining.slice(
-      start + 2,
-      closeIndex
-    );
+    const math =
+      remaining.slice(
+        start + 2,
+        closeIndex
+      );
 
     if (isBlock) {
       result.push(
@@ -295,9 +326,11 @@ function MathText({
       );
     }
 
-    remaining = remaining.slice(
-      closeIndex + closeToken.length
-    );
+    remaining =
+      remaining.slice(
+        closeIndex +
+          closeToken.length
+      );
   }
 
   return <>{result}</>;
@@ -327,8 +360,26 @@ export default function CertificatePage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
+  /*
+    MUHIM:
+
+    Old:
+    Record<number, string>
+
+    New:
+    Record<number, number>
+
+    Chunki backend correct answerni
+    index orqali tekshiradi.
+
+    A = 0
+    B = 1
+    C = 2
+    D = 3
+  */
+
   const [answers, setAnswers] =
-    useState<Record<number, string>>({});
+    useState<Record<number, number>>({});
 
   const [loading, setLoading] =
     useState(false);
@@ -398,7 +449,8 @@ export default function CertificatePage() {
           );
         }
 
-        const data = await res.json();
+        const data =
+          await res.json();
 
         if (!data.available) {
           setQuestions([]);
@@ -408,17 +460,23 @@ export default function CertificatePage() {
         }
 
         if (
-          !Array.isArray(data.questions)
+          !Array.isArray(
+            data.questions
+          )
         ) {
           throw new Error(
             "Invalid questions format"
           );
         }
 
-        setQuestions(data.questions);
+        setQuestions(
+          data.questions
+        );
+
         setCertificateTitle(
           data.title || ""
         );
+
         setCertificateSet(
           data.set || ""
         );
@@ -443,24 +501,33 @@ export default function CertificatePage() {
 
   useEffect(() => {
     successSound.current =
-      new Audio("/sounds/success.mp3");
+      new Audio(
+        "/sounds/success.mp3"
+      );
 
     failSound.current =
-      new Audio("/sounds/fail.mp3");
+      new Audio(
+        "/sounds/fail.mp3"
+      );
 
     perfectSound.current =
-      new Audio("/sounds/perfect.mp3");
+      new Audio(
+        "/sounds/perfect.mp3"
+      );
 
     if (successSound.current) {
-      successSound.current.volume = 0.6;
+      successSound.current.volume =
+        0.6;
     }
 
     if (failSound.current) {
-      failSound.current.volume = 0.6;
+      failSound.current.volume =
+        0.6;
     }
 
     if (perfectSound.current) {
-      perfectSound.current.volume = 0.8;
+      perfectSound.current.volume =
+        0.8;
     }
 
     return () => {
@@ -476,20 +543,26 @@ export default function CertificatePage() {
 
   useEffect(() => {
     function updateTimer() {
-      const info = getCycleInfo();
+      const info =
+        getCycleInfo();
 
-      /*
-        Agar hozir cycle hali boshlanmagan bo'lsa:
-        masalan 16-avgust -> 17-avgust
-      */
-      if (info.isBeforeCycle && info.next) {
+      /* =====================================================
+         BEFORE NEXT CYCLE
+      ===================================================== */
+
+      if (
+        info.isBeforeCycle &&
+        info.next
+      ) {
         const target =
           new Date(
             info.next.start
           ).getTime();
 
         const countdown =
-          formatCountdown(target);
+          formatCountdown(
+            target
+          );
 
         setCountdownTitle(
           `${info.next.name} starts in`
@@ -502,20 +575,20 @@ export default function CertificatePage() {
         return;
       }
 
-      /*
-        Agar hozir cycle ichida bo'lsak:
-        masalan 17-avgust -> 30-avgust
-      */
+      /* =====================================================
+         CURRENT CYCLE
+      ===================================================== */
+
       if (info.current) {
         const target =
-          info.current
-            ? new Date(
-                info.current.end
-              ).getTime()
-            : 0;
+          new Date(
+            info.current.end
+          ).getTime();
 
         const countdown =
-          formatCountdown(target);
+          formatCountdown(
+            target
+          );
 
         setCountdownTitle(
           "Current Cycle ends in"
@@ -528,9 +601,10 @@ export default function CertificatePage() {
         return;
       }
 
-      /*
-        Barcha cycle tugagan bo'lsa
-      */
+      /* =====================================================
+         NO CYCLE
+      ===================================================== */
+
       setCountdownTitle(
         "Next Cycle"
       );
@@ -561,10 +635,20 @@ export default function CertificatePage() {
       ? questions[currentQuestion]
       : null;
 
+  /*
+    selectedAnswer endi option index.
+
+    Masalan:
+    A -> 0
+    B -> 1
+    C -> 2
+    D -> 3
+  */
+
   const selectedAnswer =
     question
       ? answers[question.id]
-      : "";
+      : undefined;
 
   const progress =
     questions.length > 0
@@ -602,13 +686,14 @@ export default function CertificatePage() {
   ========================================================= */
 
   function selectAnswer(
-    answer: string
+    answerIndex: number
   ) {
     if (!question) return;
 
     setAnswers((prev) => ({
       ...prev,
-      [question.id]: answer,
+      [question.id]:
+        answerIndex,
     }));
   }
 
@@ -619,10 +704,14 @@ export default function CertificatePage() {
   function nextQuestion() {
     if (!question) return;
 
-    if (!selectedAnswer) {
+    if (
+      selectedAnswer ===
+      undefined
+    ) {
       alert(
         "Please select an answer."
       );
+
       return;
     }
 
@@ -648,7 +737,9 @@ export default function CertificatePage() {
   ========================================================= */
 
   function previousQuestion() {
-    if (currentQuestion > 0) {
+    if (
+      currentQuestion > 0
+    ) {
       setCurrentQuestion(
         (prev) => prev - 1
       );
@@ -676,16 +767,24 @@ export default function CertificatePage() {
       alert(
         "Please sign in first."
       );
+
       return;
     }
 
+    /*
+      Barcha savollarga javob berilganini
+      tekshiramiz.
+    */
+
     if (
-      Object.keys(answers).length !==
+      Object.keys(answers)
+        .length !==
       questions.length
     ) {
       alert(
         "Please answer all questions."
       );
+
       return;
     }
 
@@ -701,6 +800,7 @@ export default function CertificatePage() {
       alert(
         "Invalid user session."
       );
+
       return;
     }
 
@@ -708,31 +808,54 @@ export default function CertificatePage() {
       alert(
         "Invalid user session."
       );
+
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "/api/certificate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            username:
-              user.username,
-            answers,
-            set: certificateSet,
-          }),
-        }
-      );
+      const res =
+        await fetch(
+          "/api/certificate",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              username:
+                user.username,
+
+              /*
+                answers endi:
+
+                {
+                  "1": 0,
+                  "2": 2,
+                  "3": 1
+                }
+
+                ko'rinishida yuboriladi.
+              */
+
+              answers,
+
+              set:
+                certificateSet,
+            }),
+          }
+        );
 
       const data =
         await res.json();
+
+      /* =====================================================
+         ERROR
+      ===================================================== */
 
       if (!res.ok) {
         if (
@@ -742,6 +865,7 @@ export default function CertificatePage() {
         ) {
           setCompleted(true);
           setLoading(false);
+
           return;
         }
 
@@ -751,10 +875,19 @@ export default function CertificatePage() {
         );
 
         setLoading(false);
+
         return;
       }
 
+      /* =====================================================
+         RESULT
+      ===================================================== */
+
       setResult(data);
+
+      /* =====================================================
+         PERFECT
+      ===================================================== */
 
       if (
         data.correct ===
@@ -766,29 +899,41 @@ export default function CertificatePage() {
 
         confetti({
           particleCount: 180,
+
           spread: 90,
+
           origin: {
             y: 0.6,
           },
         });
-      } else if (
+      }
+
+      /* =====================================================
+         SUCCESS
+      ===================================================== */
+
+      else if (
         data.correct > 0
       ) {
         successSound.current
           ?.play()
           .catch(() => {});
-      } else {
+      }
+
+      /* =====================================================
+         FAIL
+      ===================================================== */
+
+      else {
         failSound.current
           ?.play()
           .catch(() => {});
       }
 
       /*
-        Javoblarni tozalaymiz,
-        lekin completed ni hozircha
-        ochmaymiz.
-        
-        Natija oynasi ko'rinadi.
+        Javoblarni tozalaymiz.
+
+        Result modal ochiq qoladi.
       */
 
       setAnswers({});
@@ -815,11 +960,13 @@ export default function CertificatePage() {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center px-4">
         <div className="text-center">
+
           <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
 
           <p className="text-gray-400 text-sm sm:text-base">
             Loading Certificate...
           </p>
+
         </div>
       </div>
     );
@@ -834,6 +981,7 @@ export default function CertificatePage() {
   ) {
     return (
       <div className="w-full min-h-[500px] flex items-center justify-center px-4">
+
         <div className="text-center max-w-md">
 
           <div className="text-5xl mb-5">
@@ -865,6 +1013,7 @@ export default function CertificatePage() {
           )}
 
         </div>
+
       </div>
     );
   }
@@ -876,6 +1025,7 @@ export default function CertificatePage() {
   if (!question) {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center px-4">
+
         <div className="text-center">
 
           <p className="text-red-400 font-bold">
@@ -893,6 +1043,7 @@ export default function CertificatePage() {
           </button>
 
         </div>
+
       </div>
     );
   }
@@ -907,7 +1058,9 @@ export default function CertificatePage() {
   return (
     <div className="w-full max-w-5xl mx-auto pb-16 px-3 sm:px-5">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <div className="mb-5 sm:mb-7">
 
@@ -937,7 +1090,9 @@ export default function CertificatePage() {
 
       </div>
 
-      {/* PROGRESS */}
+      {/* =====================================================
+          PROGRESS
+      ===================================================== */}
 
       <div className="mb-5 sm:mb-7">
 
@@ -968,7 +1123,9 @@ export default function CertificatePage() {
 
       </div>
 
-      {/* QUESTION CARD */}
+      {/* =====================================================
+          QUESTION CARD
+      ===================================================== */}
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-7">
 
@@ -993,14 +1150,18 @@ export default function CertificatePage() {
 
         </div>
 
-        {/* QUESTION */}
+        {/* ===================================================
+            QUESTION
+        =================================================== */}
 
         <div className="bg-black border border-zinc-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 mb-4">
 
           <div className="text-base sm:text-lg md:text-xl text-white leading-relaxed overflow-x-auto">
 
             <MathText
-              text={question.question}
+              text={
+                question.question
+              }
             />
 
           </div>
@@ -1024,7 +1185,9 @@ export default function CertificatePage() {
 
         </div>
 
-        {/* IMAGE */}
+        {/* ===================================================
+            IMAGE
+        =================================================== */}
 
         {questionImage &&
           !imageError && (
@@ -1033,7 +1196,9 @@ export default function CertificatePage() {
               <div className="bg-black border border-zinc-800 rounded-xl sm:rounded-2xl overflow-hidden flex justify-center items-center p-2 sm:p-3">
 
                 <img
-                  src={questionImage}
+                  src={
+                    questionImage
+                  }
                   alt={`Certificate question ${question.id} diagram`}
                   className="block w-auto max-w-full max-h-[280px] sm:max-h-[380px] md:max-h-[450px] object-contain rounded-lg"
                   onError={() =>
@@ -1053,21 +1218,38 @@ export default function CertificatePage() {
             </div>
           )}
 
-        {/* OPTIONS */}
+        {/* ===================================================
+            OPTIONS
+        =================================================== */}
 
         <div className="space-y-2.5 sm:space-y-3">
 
           {question.options.map(
-            (option, index) => {
+            (
+              option,
+              index
+            ) => {
 
               const letter =
                 String.fromCharCode(
                   65 + index
                 );
 
+              /*
+                MUHIM:
+
+                selectedAnswer = index
+
+                Masalan:
+                A -> 0
+                B -> 1
+                C -> 2
+                D -> 3
+              */
+
               const selected =
                 selectedAnswer ===
-                option;
+                index;
 
               return (
                 <button
@@ -1075,7 +1257,7 @@ export default function CertificatePage() {
                   type="button"
                   onClick={() =>
                     selectAnswer(
-                      option
+                      index
                     )
                   }
                   className={`w-full text-left p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex items-center gap-3 sm:gap-4 overflow-hidden ${
@@ -1096,9 +1278,13 @@ export default function CertificatePage() {
                   </span>
 
                   <span className="min-w-0 flex-1 overflow-x-auto text-white">
+
                     <MathOption
-                      option={option}
+                      option={
+                        option
+                      }
                     />
+
                   </span>
 
                   {selected && (
@@ -1114,7 +1300,9 @@ export default function CertificatePage() {
 
         </div>
 
-        {/* BUTTONS */}
+        {/* ===================================================
+            BUTTONS
+        =================================================== */}
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-between mt-6 sm:mt-8 gap-2.5">
 
@@ -1124,7 +1312,8 @@ export default function CertificatePage() {
               previousQuestion
             }
             disabled={
-              currentQuestion === 0 ||
+              currentQuestion ===
+                0 ||
               loading
             }
             className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-sm sm:text-base font-bold disabled:opacity-30 disabled:cursor-not-allowed transition"
@@ -1134,6 +1323,7 @@ export default function CertificatePage() {
 
           {currentQuestion ===
           questions.length - 1 ? (
+
             <button
               type="button"
               onClick={
@@ -1141,7 +1331,8 @@ export default function CertificatePage() {
               }
               disabled={
                 loading ||
-                !selectedAnswer
+                selectedAnswer ===
+                  undefined
               }
               className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
@@ -1149,20 +1340,24 @@ export default function CertificatePage() {
                 ? "Submitting..."
                 : "Submit Test ✓"}
             </button>
+
           ) : (
+
             <button
               type="button"
               onClick={
                 nextQuestion
               }
               disabled={
-                !selectedAnswer ||
+                selectedAnswer ===
+                  undefined ||
                 loading
               }
               className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               Next Question →
             </button>
+
           )}
 
         </div>
@@ -1226,31 +1421,27 @@ export default function CertificatePage() {
               type="button"
               onClick={() => {
 
-                if (result.rankUp) {
-
+                if (
+                  result.rankUp
+                ) {
                   setRankData({
                     oldRank:
                       result.oldRank ||
                       "",
+
                     newRank:
                       result.newRank ||
                       "",
                   });
 
                   setResult(null);
+
                   setShowRankUp(
                     true
                   );
-
                 } else {
-
                   setResult(null);
 
-                  /*
-                    Test tugadi.
-                    Endi keyingi cycle
-                    countdownini ko'rsatamiz.
-                  */
                   setCompleted(
                     true
                   );
@@ -1286,7 +1477,9 @@ export default function CertificatePage() {
               You have successfully completed this Certificate.
             </p>
 
-            {/* NEXT CYCLE */}
+            {/* =================================================
+                NEXT CYCLE
+            ================================================= */}
 
             <div className="bg-black border border-zinc-800 rounded-xl sm:rounded-2xl p-5 mt-6 text-center">
 
@@ -1335,7 +1528,9 @@ export default function CertificatePage() {
             <button
               type="button"
               onClick={() =>
-                setCompleted(false)
+                setCompleted(
+                  false
+                )
               }
               className="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl text-base sm:text-lg font-bold transition"
             >
@@ -1352,22 +1547,30 @@ export default function CertificatePage() {
       ===================================================== */}
 
       <RankUpModal
-        open={showRankUp}
+        open={
+          showRankUp
+        }
         oldRank={
-          rankData?.oldRank || ""
+          rankData?.oldRank ||
+          ""
         }
         newRank={
-          rankData?.newRank || ""
+          rankData?.newRank ||
+          ""
         }
         onClose={() => {
-          setShowRankUp(false);
-          setRankData(null);
 
-          /*
-            Rank Up oynasi yopilgandan keyin
-            Certificate Completed oynasi chiqadi.
-          */
-          setCompleted(true);
+          setShowRankUp(
+            false
+          );
+
+          setRankData(
+            null
+          );
+
+          setCompleted(
+            true
+          );
         }}
       />
 
