@@ -2,21 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-type OlympiadStats = {
-  attempts: number;
-  correct: number;
-
-  genesis?: {
-    attempts: number;
-    correct: number;
-  };
-
-  independence?: {
-    attempts: number;
-    correct: number;
-  };
-};
-
 type User = {
   name: string;
   surname: string;
@@ -24,25 +9,41 @@ type User = {
 
   geniusPoints: number;
 
+  olympiadGenesisSolved?: boolean;
+  olympiadIndependenceSolved?: boolean;
+
   stats: {
-    national: {
+    national?: {
       attempts: number;
       correct: number;
     };
 
-    sat: {
+    sat?: {
       attempts: number;
       correct: number;
     };
 
-    olympiad: OlympiadStats;
+    olympiad?: {
+      attempts: number;
+      correct: number;
 
-    daily: {
+      genesis?: {
+        attempts: number;
+        correct: number;
+      };
+
+      independence?: {
+        attempts: number;
+        correct: number;
+      };
+    };
+
+    daily?: {
       attempts: number;
       correct: number;
     };
 
-    mathSpirit: {
+    mathSpirit?: {
       games: number;
       highestScore: number;
       totalScore: number;
@@ -113,9 +114,13 @@ export default function AchievementsPage() {
           return;
         }
 
+        console.log(
+          "ACHIEVEMENTS USER:",
+          data
+        );
+
         setUser(data);
 
-        // Yangilangan userni localStorage'ga ham saqlaymiz
         localStorage.setItem(
           "currentUser",
           JSON.stringify(data)
@@ -171,188 +176,212 @@ export default function AchievementsPage() {
     );
   }
 
-  const currentUser: User = user;
+  const currentUser = user;
 
   // =====================================================
-  // OLYMPIAD STATS
-  //
-  // Eski struktura:
-  // stats.olympiad.attempts
-  // stats.olympiad.correct
-  //
-  // Yangi cycle struktura:
-  // stats.olympiad.genesis.attempts
-  // stats.olympiad.genesis.correct
-  //
-  // stats.olympiad.independence.attempts
-  // stats.olympiad.independence.correct
+  // SAFE STATS
   // =====================================================
 
-  const olympiadGenesisAttempts =
-    Number(
-      currentUser.stats.olympiad?.genesis
-        ?.attempts || 0
-    );
+  const nationalAttempts = Number(
+    currentUser.stats?.national?.attempts || 0
+  );
 
-  const olympiadGenesisCorrect =
-    Number(
-      currentUser.stats.olympiad?.genesis
-        ?.correct || 0
-    );
+  const nationalCorrect = Number(
+    currentUser.stats?.national?.correct || 0
+  );
 
-  const olympiadIndependenceAttempts =
-    Number(
-      currentUser.stats.olympiad?.independence
-        ?.attempts || 0
-    );
+  const satAttempts = Number(
+    currentUser.stats?.sat?.attempts || 0
+  );
 
-  const olympiadIndependenceCorrect =
-    Number(
-      currentUser.stats.olympiad?.independence
-        ?.correct || 0
-    );
+  const satCorrect = Number(
+    currentUser.stats?.sat?.correct || 0
+  );
 
-  // Eski umumiy olympiad statistikasi ham saqlanadi
-  const olympiadOldAttempts =
-    Number(
-      currentUser.stats.olympiad?.attempts || 0
-    );
+  const olympiadAttempts = Number(
+    currentUser.stats?.olympiad?.attempts || 0
+  );
 
-  const olympiadOldCorrect =
-    Number(
-      currentUser.stats.olympiad?.correct || 0
-    );
+  const olympiadCorrect = Number(
+    currentUser.stats?.olympiad?.correct || 0
+  );
 
-  // Barcha Olympiad natijalarini birlashtiramiz
-  const olympiadAttempts =
-    olympiadOldAttempts +
-    olympiadGenesisAttempts +
-    olympiadIndependenceAttempts;
+  const olympiadGenesisAttempts = Number(
+    currentUser.stats?.olympiad?.genesis?.attempts || 0
+  );
 
-  const olympiadCorrect =
-    olympiadOldCorrect +
-    olympiadGenesisCorrect +
-    olympiadIndependenceCorrect;
+  const olympiadGenesisCorrect = Number(
+    currentUser.stats?.olympiad?.genesis?.correct || 0
+  );
+
+  const olympiadIndependenceAttempts = Number(
+    currentUser.stats?.olympiad?.independence?.attempts || 0
+  );
+
+  const olympiadIndependenceCorrect = Number(
+    currentUser.stats?.olympiad?.independence?.correct || 0
+  );
+
+  const dailyAttempts = Number(
+    currentUser.stats?.daily?.attempts || 0
+  );
+
+  const highestSprintScore = Number(
+    currentUser.stats?.mathSpirit?.highestScore || 0
+  );
 
   // =====================================================
-  // ACHIEVEMENT CONDITIONS
+  // 1. DAILY MASTER
   // =====================================================
-
-  /*
-   * 1. Solve 7 Daily Problems
-   */
 
   const daily7Unlocked =
-    Number(
-      currentUser.stats.daily?.attempts || 0
-    ) >= 7;
+    dailyAttempts >= 7;
 
-  /*
-   * 2. Solve any Certificate / SAT / Olympiad question
-   */
+  // =====================================================
+  // 2. PROBLEM SOLVER
+  //
+  // ANY academic question:
+  // Certificate OR SAT OR Olympiad
+  //
+  // Olympiad:
+  // - old stats.olympiad.attempts
+  // - genesis attempts
+  // - independence attempts
+  // - solved boolean
+  // =====================================================
+
+  const olympiadSolved =
+    olympiadAttempts > 0 ||
+    olympiadGenesisAttempts > 0 ||
+    olympiadIndependenceAttempts > 0 ||
+    currentUser.olympiadGenesisSolved === true ||
+    currentUser.olympiadIndependenceSolved === true;
 
   const solveAnyQuestionUnlocked =
-    Number(
-      currentUser.stats.national?.attempts || 0
-    ) > 0 ||
-    Number(
-      currentUser.stats.sat?.attempts || 0
-    ) > 0 ||
-    olympiadAttempts > 0;
+    nationalAttempts > 0 ||
+    satAttempts > 0 ||
+    olympiadSolved;
 
-  /*
-   * 3. Math Sprint 60+
-   *
-   * highestScore ishlatilmoqda.
-   *
-   * 60 ham unlock qiladi.
-   */
+  // =====================================================
+  // 3. SPRINT RUNNER
+  // =====================================================
 
   const sprint60Unlocked =
-    Number(
-      currentUser.stats.mathSpirit?.highestScore || 0
-    ) >= 60;
+    highestSprintScore >= 60;
 
-  /*
-   * 4. Perfect score on all three
-   *
-   * Certificate:
-   * attempts > 0
-   * correct === attempts
-   *
-   * SAT:
-   * attempts > 0
-   * correct === attempts
-   *
-   * Olympiad:
-   * Genesis + Independence + eski umumiy
-   * statistikalar hisobga olinadi.
-   */
-
-  const certificateAttempts =
-    Number(
-      currentUser.stats.national?.attempts || 0
-    );
-
-  const certificateCorrect =
-    Number(
-      currentUser.stats.national?.correct || 0
-    );
-
-  const satAttempts =
-    Number(
-      currentUser.stats.sat?.attempts || 0
-    );
-
-  const satCorrect =
-    Number(
-      currentUser.stats.sat?.correct || 0
-    );
+  // =====================================================
+  // 4. PERFECT TRIO
+  // =====================================================
 
   const certificatePerfect =
-    certificateAttempts > 0 &&
-    certificateCorrect === certificateAttempts;
+    nationalAttempts > 0 &&
+    nationalCorrect === nationalAttempts;
 
   const satPerfect =
     satAttempts > 0 &&
     satCorrect === satAttempts;
 
-  const olympiadPerfect =
+  /*
+   * Olympiad perfect:
+   *
+   * Flat stats ham ishlaydi.
+   * Genesis stats ham ishlaydi.
+   * Independence stats ham ishlaydi.
+   */
+
+  const olympiadPerfectFlat =
     olympiadAttempts > 0 &&
     olympiadCorrect === olympiadAttempts;
+
+  const olympiadGenesisPerfect =
+    olympiadGenesisAttempts > 0 &&
+    olympiadGenesisCorrect === olympiadGenesisAttempts;
+
+  const olympiadIndependencePerfect =
+    olympiadIndependenceAttempts > 0 &&
+    olympiadIndependenceCorrect ===
+      olympiadIndependenceAttempts;
+
+  const olympiadPerfect =
+    olympiadPerfectFlat ||
+    olympiadGenesisPerfect ||
+    olympiadIndependencePerfect;
 
   const perfectTrioUnlocked =
     certificatePerfect &&
     satPerfect &&
     olympiadPerfect;
 
-  /*
-   * 5. Top 3
-   */
+  // =====================================================
+  // 5. TOP 3
+  // =====================================================
 
   const top3Unlocked =
     currentUser.topThree === true;
 
-  /*
-   * 6. Genesis Cycle
-   *
-   * Genesis Cycle'da:
-   * Certificate yoki SAT yoki Olympiad'dan
-   * kamida bitta savol yechilgan bo'lishi kerak.
-   *
-   * MUHIM:
-   * Olympiad uchun aynan Genesis statistikasi
-   * ham tekshirilmoqda.
-   */
+  // =====================================================
+  // 6. GENESIS CYCLE
+  //
+  // Genesis'da Certificate / SAT / Olympiad
+  // dan kamida bitta savol.
+  // =====================================================
 
   const genesisCycleUnlocked =
-    Number(
-      currentUser.stats.national?.attempts || 0
-    ) > 0 ||
-    Number(
-      currentUser.stats.sat?.attempts || 0
-    ) > 0 ||
-    olympiadGenesisAttempts > 0;
+    nationalAttempts > 0 ||
+    satAttempts > 0 ||
+    olympiadGenesisAttempts > 0 ||
+    currentUser.olympiadGenesisSolved === true;
+
+  // =====================================================
+  // DEBUG
+  // =====================================================
+
+  console.log("=== ACHIEVEMENT STATUS ===");
+
+  console.log(
+    "National attempts:",
+    nationalAttempts
+  );
+
+  console.log(
+    "SAT attempts:",
+    satAttempts
+  );
+
+  console.log(
+    "Olympiad attempts:",
+    olympiadAttempts
+  );
+
+  console.log(
+    "Olympiad Genesis attempts:",
+    olympiadGenesisAttempts
+  );
+
+  console.log(
+    "Olympiad Independence attempts:",
+    olympiadIndependenceAttempts
+  );
+
+  console.log(
+    "Olympiad Genesis solved:",
+    currentUser.olympiadGenesisSolved
+  );
+
+  console.log(
+    "Olympiad Independence solved:",
+    currentUser.olympiadIndependenceSolved
+  );
+
+  console.log(
+    "Problem Solver:",
+    solveAnyQuestionUnlocked
+  );
+
+  console.log(
+    "Genesis Cycle:",
+    genesisCycleUnlocked
+  );
 
   // =====================================================
   // ACHIEVEMENTS
@@ -361,74 +390,116 @@ export default function AchievementsPage() {
   const achievements: Achievement[] = [
     {
       id: "genesis-cycle",
+
       title: "Genesis Cycle",
+
       description:
         "Only Math tarixining birinchi cycle'ida boshlanganingizni bildiruvchi maxsus avatar.",
+
       requirement:
         "Genesis Cycle'da Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
-      image: "/avatars/genesis-cycle.png",
-      unlocked: genesisCycleUnlocked,
+
+      image:
+        "/avatars/genesis-cycle.png",
+
+      unlocked:
+        genesisCycleUnlocked,
     },
 
     {
       id: "daily-7",
+
       title: "Daily Master",
+
       description:
         "Daily Challenge'ni muntazam bajargan foydalanuvchilar uchun.",
+
       requirement:
         "7 ta Daily Problem yeching.",
-      image: "/avatars/daily-7.png",
-      unlocked: daily7Unlocked,
+
+      image:
+        "/avatars/daily-7.png",
+
+      unlocked:
+        daily7Unlocked,
     },
 
     {
       id: "solve-question",
+
       title: "Problem Solver",
+
       description:
         "Birinchi akademik savolingizni yechganingizni bildiradi.",
+
       requirement:
         "Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
-      image: "/avatars/solve-question.png",
+
+      image:
+        "/avatars/solve-question.png",
+
       unlocked:
         solveAnyQuestionUnlocked,
     },
 
     {
       id: "sprint-60",
+
       title: "Sprint Runner",
+
       description:
         "Math Sprint'da yuqori tezlik va aniqlikni ko'rsatganlar uchun.",
+
       requirement:
         "Math Sprint'da 60 yoki undan yuqori score oling.",
-      image: "/avatars/sprint-60.png",
+
+      image:
+        "/avatars/sprint-60.png",
+
       unlocked:
         sprint60Unlocked,
     },
 
     {
       id: "perfect-trio",
+
       title: "Perfect Trio",
+
       description:
         "Uchta asosiy yo'nalishda mukammal natija ko'rsatganlar uchun.",
+
       requirement:
         "Certificate, SAT va Olympiad'dan perfect score oling.",
-      image: "/avatars/perfect-trio.png",
+
+      image:
+        "/avatars/perfect-trio.png",
+
       unlocked:
         perfectTrioUnlocked,
     },
 
     {
       id: "top-3",
+
       title: "Top 3",
+
       description:
         "Only Math leaderboard'ining eng kuchli foydalanuvchilari uchun.",
+
       requirement:
         "Global Leaderboard'da Top 3 o'rinni egallang.",
-      image: "/avatars/top-3.png",
+
+      image:
+        "/avatars/top-3.png",
+
       unlocked:
         top3Unlocked,
     },
   ];
+
+  // =====================================================
+  // COUNTERS
+  // =====================================================
 
   const unlockedCount =
     achievements.filter(
@@ -481,8 +552,6 @@ export default function AchievementsPage() {
 
               </div>
 
-              {/* Progress */}
-
               <div className="shrink-0 rounded-2xl bg-zinc-900 border border-zinc-800 px-6 py-5 min-w-[180px]">
 
                 <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">
@@ -490,10 +559,13 @@ export default function AchievementsPage() {
                 </p>
 
                 <p className="text-4xl font-black text-green-400 mt-1">
+
                   {unlockedCount}
+
                   <span className="text-zinc-600 text-2xl">
                     /{totalAchievements}
                   </span>
+
                 </p>
 
                 <div className="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -567,10 +639,7 @@ export default function AchievementsPage() {
               </p>
 
               <p className="text-3xl font-black text-green-400">
-                {
-                  currentUser.stats
-                    .mathSpirit.highestScore
-                }
+                {highestSprintScore}
               </p>
 
             </div>
@@ -609,6 +678,7 @@ export default function AchievementsPage() {
 
             {achievements.map(
               (achievement) => (
+
                 <div
                   key={achievement.id}
                   className={`
@@ -626,9 +696,7 @@ export default function AchievementsPage() {
                   `}
                 >
 
-                  {/* =================================================
-                      IMAGE
-                  ================================================= */}
+                  {/* IMAGE */}
 
                   <div className="p-5">
 
@@ -654,8 +722,6 @@ export default function AchievementsPage() {
                         `}
                       />
 
-                      {/* LOCK */}
-
                       {!achievement.unlocked && (
                         <div className="absolute inset-0 flex items-center justify-center">
 
@@ -665,8 +731,6 @@ export default function AchievementsPage() {
 
                         </div>
                       )}
-
-                      {/* UNLOCKED */}
 
                       {achievement.unlocked && (
                         <div className="absolute top-3 right-3">
@@ -682,9 +746,7 @@ export default function AchievementsPage() {
 
                   </div>
 
-                  {/* =================================================
-                      INFO
-                  ================================================= */}
+                  {/* INFO */}
 
                   <div className="px-5 pb-6">
 
@@ -695,13 +757,17 @@ export default function AchievementsPage() {
                       </h3>
 
                       {achievement.unlocked ? (
+
                         <span className="text-xs font-black text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full">
                           UNLOCKED
                         </span>
+
                       ) : (
+
                         <span className="text-xs font-black text-zinc-600 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full">
                           LOCKED
                         </span>
+
                       )}
 
                     </div>
@@ -709,10 +775,6 @@ export default function AchievementsPage() {
                     <p className="text-sm text-zinc-500 mt-3 leading-6">
                       {achievement.description}
                     </p>
-
-                    {/* =================================================
-                        REQUIREMENT
-                    ================================================= */}
 
                     <div
                       className={`
@@ -729,9 +791,11 @@ export default function AchievementsPage() {
                     >
 
                       <p className="text-[10px] uppercase tracking-widest font-black text-zinc-600">
+
                         {achievement.unlocked
                           ? "Achievement complete"
                           : "Shart"}
+
                       </p>
 
                       <p
@@ -746,9 +810,11 @@ export default function AchievementsPage() {
                           }
                         `}
                       >
+
                         {achievement.unlocked
                           ? "✓ Siz bu achievementni ochgansiz."
                           : achievement.requirement}
+
                       </p>
 
                     </div>
@@ -756,6 +822,7 @@ export default function AchievementsPage() {
                   </div>
 
                 </div>
+
               )
             )}
 
@@ -764,7 +831,103 @@ export default function AchievementsPage() {
         </section>
 
         {/* =====================================================
-            MATH SPRINT DEBUG / STATUS
+            OLYMPIAD STATUS
+        ===================================================== */}
+
+        <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
+
+          <div className="flex items-center gap-3 mb-5">
+
+            <div className="w-11 h-11 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-xl">
+              🧮
+            </div>
+
+            <div>
+
+              <h3 className="text-xl font-black">
+                Olympiad Achievement Status
+              </h3>
+
+              <p className="text-sm text-zinc-600">
+                Problem Solver uchun Olympiad holati
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Olympiad attempts
+              </p>
+
+              <p className="text-3xl font-black text-white mt-1">
+                {olympiadAttempts}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Genesis attempts
+              </p>
+
+              <p className="text-3xl font-black text-white mt-1">
+                {olympiadGenesisAttempts}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Genesis solved
+              </p>
+
+              <p
+                className={`text-xl font-black mt-2 ${
+                  currentUser.olympiadGenesisSolved
+                    ? "text-green-400"
+                    : "text-zinc-500"
+                }`}
+              >
+                {currentUser.olympiadGenesisSolved
+                  ? "✓ YES"
+                  : "NO"}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Problem Solver
+              </p>
+
+              <p
+                className={`text-xl font-black mt-2 ${
+                  solveAnyQuestionUnlocked
+                    ? "text-green-400"
+                    : "text-zinc-500"
+                }`}
+              >
+                {solveAnyQuestionUnlocked
+                  ? "✓ UNLOCKED"
+                  : "🔒 LOCKED"}
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* =====================================================
+            MATH SPRINT STATUS
         ===================================================== */}
 
         <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
@@ -776,6 +939,7 @@ export default function AchievementsPage() {
             </div>
 
             <div>
+
               <h3 className="text-xl font-black">
                 Math Sprint Achievement
               </h3>
@@ -783,6 +947,7 @@ export default function AchievementsPage() {
               <p className="text-sm text-zinc-600">
                 60+ score achievement status
               </p>
+
             </div>
 
           </div>
@@ -796,10 +961,7 @@ export default function AchievementsPage() {
               </p>
 
               <p className="text-3xl font-black text-white mt-1">
-                {
-                  currentUser.stats
-                    .mathSpirit.highestScore
-                }
+                {highestSprintScore}
               </p>
 
             </div>
