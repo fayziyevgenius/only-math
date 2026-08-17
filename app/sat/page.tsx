@@ -12,6 +12,11 @@ type Question = {
   options: string[];
   points: number;
   image?: string;
+  type?: "image" | "table" | "math";
+  table?: {
+    headers: string[];
+    rows: string[][];
+  };
 };
 
 type Result = {
@@ -30,6 +35,10 @@ type RankData = {
 };
 
 type Cycle = "genesis" | "independence";
+
+/* =========================================================
+   MATH TEXT
+========================================================= */
 
 function MathText({
   text,
@@ -113,7 +122,9 @@ function MathText({
 
     if (start === -1) {
       result.push(
-        <span key={`text-${key++}`}>{remaining}</span>
+        <span key={`text-${key++}`}>
+          {remaining}
+        </span>
       );
       break;
     }
@@ -127,6 +138,7 @@ function MathText({
     }
 
     const closeToken = isBlock ? "\\]" : "\\)";
+
     const closeIndex = remaining.indexOf(
       closeToken,
       start + 2
@@ -174,6 +186,10 @@ function MathText({
   return <>{result}</>;
 }
 
+/* =========================================================
+   OPTION
+========================================================= */
+
 function MathOption({
   option,
 }: {
@@ -187,7 +203,7 @@ function MathOption({
 }
 
 /* =========================================================
-   CYCLE FUNCTIONS
+   CYCLE
 ========================================================= */
 
 function getCurrentCycle(): Cycle | null {
@@ -231,17 +247,9 @@ function getNextCycleDate(): Date {
     return independenceStart;
   }
 
-  /*
-    Independence cycle:
-    31-August -> 13-September
-    Next cycle starts 14-September.
-  */
-
-  const nextCycle = new Date(
+  return new Date(
     "2026-09-14T00:00:00+05:00"
   );
-
-  return nextCycle;
 }
 
 function getCycleName(
@@ -293,6 +301,18 @@ export default function SATPage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
+  /*
+    MUHIM:
+    answers endi option text emas,
+    A/B/C/D saqlaydi.
+
+    Masalan:
+    {
+      1: "C",
+      2: "A",
+      3: "D"
+    }
+  */
   const [answers, setAnswers] =
     useState<Record<number, string>>({});
 
@@ -480,7 +500,7 @@ export default function SATPage() {
   }, []);
 
   /* =======================================================
-     QUESTION
+     CURRENT QUESTION
   ======================================================= */
 
   const question =
@@ -488,6 +508,11 @@ export default function SATPage() {
       ? questions[currentQuestion]
       : null;
 
+  /*
+    MUHIM:
+    selectedAnswer endi "A", "B", "C", "D"
+    bo'ladi.
+  */
   const selectedAnswer =
     question
       ? answers[question.id]
@@ -518,14 +543,27 @@ export default function SATPage() {
      SELECT ANSWER
   ======================================================= */
 
+  /*
+    MUHIM FIX:
+
+    Old:
+      selectAnswer(option)
+
+    New:
+      selectAnswer("A")
+      selectAnswer("B")
+      selectAnswer("C")
+      selectAnswer("D")
+  */
+
   function selectAnswer(
-    answer: string
+    letter: string
   ) {
     if (!question) return;
 
     setAnswers((prev) => ({
       ...prev,
-      [question.id]: answer,
+      [question.id]: letter,
     }));
   }
 
@@ -638,6 +676,28 @@ export default function SATPage() {
     setLoading(true);
 
     try {
+      /*
+        Backendga quyidagidek yuboriladi:
+
+        {
+          username: "...",
+          answers: {
+            1: "C",
+            2: "A",
+            3: "D"
+          },
+          cycle: "genesis"
+        }
+
+        Bu backenddagi answer key bilan
+        to'g'ridan-to'g'ri mos keladi.
+      */
+
+      console.log(
+        "SAT answers being submitted:",
+        answers
+      );
+
       const res = await fetch(
         "/api/sat",
         {
@@ -659,6 +719,11 @@ export default function SATPage() {
 
       const data =
         await res.json();
+
+      console.log(
+        "SAT result:",
+        data
+      );
 
       if (!res.ok) {
         if (
@@ -682,17 +747,27 @@ export default function SATPage() {
 
       setResult({
         points:
-          data.points || 0,
+          Number(
+            data.points
+          ) || 0,
 
         correct:
-          data.correct || 0,
+          Number(
+            data.correct
+          ) || 0,
 
         incorrect:
-          data.incorrect || 0,
+          Number(
+            data.incorrect
+          ) || 0,
 
         total:
-          data.total ||
-          data.totalQuestions ||
+          Number(
+            data.total
+          ) ||
+          Number(
+            data.totalQuestions
+          ) ||
           questions.length,
 
         rankUp:
@@ -704,6 +779,10 @@ export default function SATPage() {
         newRank:
           data.newRank,
       });
+
+      /* =====================================================
+         SOUNDS
+      ===================================================== */
 
       if (
         data.correct ===
@@ -732,6 +811,10 @@ export default function SATPage() {
           .catch(() => {});
       }
 
+      /*
+        Natija chiqqandan keyin
+        eski answersni tozalaymiz.
+      */
       setAnswers({});
       setCurrentQuestion(0);
     } catch (error) {
@@ -756,6 +839,7 @@ export default function SATPage() {
     return (
       <div className="w-full min-h-[500px] flex items-center justify-center px-4">
         <div className="text-center max-w-lg">
+
           <div className="text-5xl mb-5">
             🧮
           </div>
@@ -770,6 +854,7 @@ export default function SATPage() {
           </p>
 
           <div className="mt-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+
             <p className="text-zinc-500 text-sm">
               Genesis Cycle starts in
             </p>
@@ -777,7 +862,9 @@ export default function SATPage() {
             <p className="text-green-400 font-bold text-xl sm:text-2xl mt-2">
               {timeLeft}
             </p>
+
           </div>
+
         </div>
       </div>
     );
@@ -791,11 +878,13 @@ export default function SATPage() {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center px-4">
         <div className="text-center">
+
           <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
 
           <p className="text-gray-400 text-sm sm:text-base">
             Loading SAT...
           </p>
+
         </div>
       </div>
     );
@@ -811,6 +900,7 @@ export default function SATPage() {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
+
           <div className="text-5xl mb-5">
             🧮
           </div>
@@ -825,6 +915,7 @@ export default function SATPage() {
           </p>
 
           <div className="mt-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+
             <p className="text-zinc-500 text-sm">
               Next Cycle
             </p>
@@ -832,7 +923,9 @@ export default function SATPage() {
             <p className="text-green-400 font-bold text-lg mt-2">
               {timeLeft}
             </p>
+
           </div>
+
         </div>
       </div>
     );
@@ -846,6 +939,7 @@ export default function SATPage() {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center px-4">
         <div className="text-center">
+
           <p className="text-red-400 font-bold">
             Unable to load this question.
           </p>
@@ -859,6 +953,7 @@ export default function SATPage() {
           >
             Restart
           </button>
+
         </div>
       </div>
     );
@@ -875,10 +970,13 @@ export default function SATPage() {
     <div className="w-full max-w-5xl mx-auto pb-16 px-3 sm:px-5">
 
       {/* HEADER */}
+
       <div className="mb-5 sm:mb-7">
+
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
 
           <div>
+
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
               SAT
             </h1>
@@ -886,6 +984,7 @@ export default function SATPage() {
             <p className="text-sm sm:text-base text-gray-400">
               Solve the questions below and earn Genius Points.
             </p>
+
           </div>
 
           <span className="self-start sm:self-auto px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs sm:text-sm text-green-400 font-bold uppercase">
@@ -893,9 +992,11 @@ export default function SATPage() {
           </span>
 
         </div>
+
       </div>
 
       {/* PROGRESS */}
+
       <div className="mb-5 sm:mb-7">
 
         <div className="flex justify-between items-center mb-2">
@@ -921,15 +1022,19 @@ export default function SATPage() {
           />
 
         </div>
+
       </div>
 
       {/* QUESTION CARD */}
+
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-7">
 
         {/* QUESTION HEADER */}
+
         <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
 
           <div>
+
             <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">
               Question {currentQuestion + 1}
             </p>
@@ -937,6 +1042,7 @@ export default function SATPage() {
             <h2 className="text-base sm:text-xl font-bold text-white">
               Solve the problem
             </h2>
+
           </div>
 
           <span className="shrink-0 bg-green-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-white">
@@ -946,6 +1052,7 @@ export default function SATPage() {
         </div>
 
         {/* QUESTION */}
+
         <div className="bg-black border border-zinc-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 mb-4">
 
           <div className="text-base sm:text-lg md:text-xl text-white leading-relaxed overflow-x-auto">
@@ -961,6 +1068,7 @@ export default function SATPage() {
         </div>
 
         {/* IMAGE */}
+
         {questionImage &&
           !imageError && (
             <div className="mb-5">
@@ -997,7 +1105,10 @@ export default function SATPage() {
             </div>
           )}
 
-        {/* OPTIONS */}
+        {/* =================================================
+            OPTIONS
+        ================================================= */}
+
         <div className="space-y-2.5 sm:space-y-3">
 
           {question.options.map(
@@ -1006,14 +1117,28 @@ export default function SATPage() {
               index
             ) => {
 
+              /*
+                A = 0
+                B = 1
+                C = 2
+                D = 3
+              */
+
               const letter =
                 String.fromCharCode(
                   65 + index
                 );
 
+              /*
+                MUHIM FIX:
+
+                answers ichida option text emas,
+                A/B/C/D turadi.
+              */
+
               const selected =
                 selectedAnswer ===
-                option;
+                letter;
 
               return (
                 <button
@@ -1021,7 +1146,7 @@ export default function SATPage() {
                   type="button"
                   onClick={() =>
                     selectAnswer(
-                      option
+                      letter
                     )
                   }
                   className={`w-full text-left p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex items-center gap-3 sm:gap-4 overflow-hidden ${
@@ -1030,6 +1155,8 @@ export default function SATPage() {
                       : "border-zinc-800 bg-zinc-950 hover:border-zinc-600 hover:bg-zinc-800"
                   }`}
                 >
+
+                  {/* LETTER */}
 
                   <span
                     className={`shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-sm sm:text-base ${
@@ -1041,13 +1168,19 @@ export default function SATPage() {
                     {letter}
                   </span>
 
+                  {/* OPTION */}
+
                   <span className="min-w-0 flex-1 overflow-x-auto text-white">
+
                     <MathOption
                       option={
                         option
                       }
                     />
+
                   </span>
+
+                  {/* CHECK */}
 
                   {selected && (
                     <span className="shrink-0 text-green-400 text-lg sm:text-xl">
@@ -1063,6 +1196,7 @@ export default function SATPage() {
         </div>
 
         {/* NAVIGATION */}
+
         <div className="flex flex-col-reverse sm:flex-row sm:justify-between mt-6 sm:mt-8 gap-2.5">
 
           <button
@@ -1172,7 +1306,8 @@ export default function SATPage() {
 
             </div>
 
-            {/* NEXT CYCLE COUNTDOWN */}
+            {/* NEXT CYCLE */}
+
             <div className="mt-6 bg-black border border-zinc-800 rounded-2xl p-5 text-center">
 
               <p className="text-zinc-500 text-sm">
@@ -1219,6 +1354,7 @@ export default function SATPage() {
                   setResult(
                     null
                   );
+
                   setCompleted(
                     true
                   );
@@ -1231,6 +1367,7 @@ export default function SATPage() {
             </button>
 
           </div>
+
         </div>
       )}
 
@@ -1313,6 +1450,7 @@ export default function SATPage() {
             </button>
 
           </div>
+
         </div>
       )}
 
@@ -1331,6 +1469,7 @@ export default function SATPage() {
           ""
         }
         onClose={() => {
+
           setShowRankUp(
             false
           );
@@ -1342,6 +1481,7 @@ export default function SATPage() {
           setCompleted(
             true
           );
+
         }}
       />
 
