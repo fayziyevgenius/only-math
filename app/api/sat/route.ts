@@ -16,7 +16,7 @@ const genesisAnswers: Record<number, string> = {
   8: "D",
   9: "A",
   10: "D",
-  11: "B",
+  11: "D",
   12: "C",
   13: "B",
   14: "A",
@@ -24,7 +24,7 @@ const genesisAnswers: Record<number, string> = {
   16: "C",
   17: "D",
   18: "C",
-  19: "A",
+  19: "B",
   20: "C",
 };
 
@@ -37,7 +37,7 @@ const independenceAnswers: Record<number, string> = {
   2: "D",
   3: "C",
   4: "A",
-  5: "D",
+  5: "C",
   6: "A",
   7: "D",
   8: "A",
@@ -50,9 +50,6 @@ const independenceAnswers: Record<number, string> = {
   15: "B",
   16: "B",
   17: "A",
-  18: "B",
-  19: "B",
-  20: "C",
 };
 
 /* =========================================================
@@ -60,22 +57,6 @@ const independenceAnswers: Record<number, string> = {
 ========================================================= */
 
 const POINTS_PER_QUESTION = 10;
-
-/* =========================================================
-   NORMALIZE ANSWER
-========================================================= */
-
-function normalizeAnswer(
-  answer: unknown
-): string {
-  if (answer === undefined || answer === null) {
-    return "";
-  }
-
-  return String(answer)
-    .trim()
-    .toUpperCase();
-}
 
 /* =========================================================
    POST
@@ -90,6 +71,18 @@ export async function POST(req: Request) {
     const cycle = body?.cycle;
 
     /* =====================================================
+       DEBUG
+    ===================================================== */
+
+    console.log("=================================");
+    console.log("SAT SUBMIT");
+    console.log("username:", username);
+    console.log("cycle:", cycle);
+    console.log("answers:", answers);
+    console.log("answers type:", Array.isArray(answers) ? "ARRAY" : "OBJECT");
+    console.log("=================================");
+
+    /* =====================================================
        VALIDATION
     ===================================================== */
 
@@ -98,7 +91,9 @@ export async function POST(req: Request) {
         {
           error: "Invalid request.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -110,7 +105,9 @@ export async function POST(req: Request) {
         {
           error: "Invalid cycle.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -131,7 +128,9 @@ export async function POST(req: Request) {
         {
           error: "User not found.",
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       );
     }
 
@@ -157,7 +156,7 @@ export async function POST(req: Request) {
         : "satIndependenceSolved";
 
     /* =====================================================
-       ALREADY COMPLETED
+       ALREADY SOLVED
     ===================================================== */
 
     if (user[solvedField]) {
@@ -166,21 +165,11 @@ export async function POST(req: Request) {
           error:
             "You have already completed this SAT test.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
-
-    /* =====================================================
-       DEBUG
-    ===================================================== */
-
-    console.log("=================================");
-    console.log("SAT SUBMISSION");
-    console.log("Username:", username);
-    console.log("Cycle:", cycle);
-    console.log("Answers received:", answers);
-    console.log("Correct answers:", correctAnswers);
-    console.log("=================================");
 
     /* =====================================================
        CALCULATE SCORE
@@ -188,38 +177,60 @@ export async function POST(req: Request) {
 
     let correct = 0;
 
-    const checkedAnswers: Record<
-      number,
-      {
-        user: string;
-        correct: string;
-        isCorrect: boolean;
-      }
-    > = {};
+    for (let i = 1; i <= totalQuestions; i++) {
+      let rawAnswer: unknown;
 
-    for (
-      let i = 1;
-      i <= totalQuestions;
-      i++
-    ) {
-      const userAnswer =
-        normalizeAnswer(answers[i]);
+      /*
+       * Agar frontend:
+       *
+       * {
+       *   1: "A",
+       *   2: "B"
+       * }
+       *
+       * yuborsa.
+       */
+
+      if (
+        answers &&
+        typeof answers === "object" &&
+        !Array.isArray(answers)
+      ) {
+        rawAnswer = answers[i];
+      }
+
+      /*
+       * Agar frontend:
+       *
+       * ["A", "B", "C", ...]
+       *
+       * yuborsa.
+       *
+       * Array 0-indexed bo'lgani uchun i - 1.
+       */
+
+      if (Array.isArray(answers)) {
+        rawAnswer = answers[i - 1];
+      }
+
+      const userAnswer = String(
+        rawAnswer ?? ""
+      )
+        .trim()
+        .toUpperCase();
 
       const correctAnswer =
-        normalizeAnswer(correctAnswers[i]);
+        String(correctAnswers[i])
+          .trim()
+          .toUpperCase();
 
-      const isCorrect =
-        userAnswer === correctAnswer;
+      console.log(
+        `Q${i}: user=${userAnswer} correct=${correctAnswer}`
+      );
 
-      if (isCorrect) {
+      if (userAnswer === correctAnswer) {
         correct++;
       }
-
-      checkedAnswers[i] = {
-        user: userAnswer,
-        correct: correctAnswer,
-        isCorrect,
-      };
     }
 
     const incorrect =
@@ -229,31 +240,7 @@ export async function POST(req: Request) {
       correct * POINTS_PER_QUESTION;
 
     /* =====================================================
-       LOG RESULT
-    ===================================================== */
-
-    console.log(
-      "SAT checked answers:",
-      checkedAnswers
-    );
-
-    console.log(
-      "SAT correct:",
-      correct
-    );
-
-    console.log(
-      "SAT incorrect:",
-      incorrect
-    );
-
-    console.log(
-      "SAT points:",
-      points
-    );
-
-    /* =====================================================
-       TITLE
+       RANK
     ===================================================== */
 
     const oldTitle =
@@ -297,25 +284,28 @@ export async function POST(req: Request) {
 
     /* =====================================================
        DATABASE UPDATE
-       
-       MUHIM:
-       stats.sat.attempts
-       stats.sat.correct
-
-       Achievementlar aynan shu fieldlarni
-       tekshiradi.
     ===================================================== */
 
     const update: any = {
       $set: {
         [solvedField]: true,
         title,
-        lastSATCycle: cycle,
-        updatedAt: new Date(),
       },
 
       $inc: {
         geniusPoints: points,
+
+        /*
+         * MUHIM:
+         *
+         * stats.sat.attempts
+         * stats.sat.correct
+         *
+         * ga yozamiz.
+         *
+         * stats.sat.genesis.attempts
+         * kabi alohida field yaratmaymiz.
+         */
 
         "stats.sat.attempts":
           totalQuestions,
@@ -326,7 +316,7 @@ export async function POST(req: Request) {
     };
 
     /* =====================================================
-       STREAK UPDATE
+       STREAK
     ===================================================== */
 
     if (
@@ -339,20 +329,14 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       DATABASE SAVE
+       SAVE
     ===================================================== */
 
-    const updateResult =
-      await users.updateOne(
-        {
-          username,
-        },
-        update
-      );
-
-    console.log(
-      "SAT DB update:",
-      updateResult
+    await users.updateOne(
+      {
+        username,
+      },
+      update
     );
 
     /* =====================================================
@@ -385,9 +369,6 @@ export async function POST(req: Request) {
         correct === totalQuestions
           ? "Perfect! You solved every SAT question correctly."
           : `You received ${points} Genius Points.`,
-
-      /* DEBUG */
-      checkedAnswers,
     });
   } catch (error) {
     console.error(
@@ -399,7 +380,9 @@ export async function POST(req: Request) {
       {
         error: "Server Error.",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
