@@ -30,8 +30,6 @@ const genesisAnswers: Record<number, string> = {
 
 /* =========================================================
    INDEPENDENCE ANSWERS
-
-   Independence savollariga tegilmaydi.
 ========================================================= */
 
 const independenceAnswers: Record<number, string> = {
@@ -65,6 +63,20 @@ const POINTS_PER_QUESTION = 30;
 const TOTAL_QUESTIONS = 20;
 
 /* =========================================================
+   TITLE
+========================================================= */
+
+function getTitle(points: number): string {
+  if (points >= 3000) return "👑 Math Genius";
+  if (points >= 1500) return "💎 Diamond";
+  if (points >= 700) return "🥇 Gold";
+  if (points >= 300) return "🥈 Silver";
+  if (points >= 100) return "🥉 Bronze";
+
+  return "🌱 Beginner";
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
@@ -91,7 +103,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (cycle !== "genesis" && cycle !== "independence") {
+    if (
+      cycle !== "genesis" &&
+      cycle !== "independence"
+    ) {
       return NextResponse.json(
         {
           error: "Invalid cycle.",
@@ -108,7 +123,9 @@ export async function POST(req: Request) {
 
     const db = await connectDB();
 
-    const user = await db.collection("users").findOne({
+    const users = db.collection("users");
+
+    const user = await users.findOne({
       username,
     });
 
@@ -124,7 +141,7 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       SELECT ANSWER KEY
+       ANSWER KEY
     ===================================================== */
 
     const correctAnswers =
@@ -142,7 +159,7 @@ export async function POST(req: Request) {
         : "olympiadIndependenceSolved";
 
     /* =====================================================
-       CHECK IF ALREADY SOLVED
+       ALREADY SOLVED
     ===================================================== */
 
     if (user[solvedField]) {
@@ -164,101 +181,256 @@ export async function POST(req: Request) {
     let correct = 0;
 
     for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
-      const userAnswer = String(answers[i] || "")
+      const userAnswer = String(
+        answers[i] ?? ""
+      )
         .trim()
         .toUpperCase();
 
-      if (userAnswer === correctAnswers[i]) {
+      const correctAnswer =
+        correctAnswers[i];
+
+      if (userAnswer === correctAnswer) {
         correct++;
       }
     }
 
-    const incorrect = TOTAL_QUESTIONS - correct;
+    const incorrect =
+      TOTAL_QUESTIONS - correct;
 
     /* =====================================================
        GENIUS POINTS
     ===================================================== */
 
-    const points = correct * POINTS_PER_QUESTION;
+    const points =
+      correct * POINTS_PER_QUESTION;
 
     /* =====================================================
        RANK
     ===================================================== */
 
-    const oldTitle = user.title || "🌱 Beginner";
+    const oldTitle =
+      user.title || "🌱 Beginner";
 
-    const currentPoints = Number(user.geniusPoints || 0);
+    const currentPoints =
+      Number(user.geniusPoints || 0);
 
-    const totalPoints = currentPoints + points;
+    const totalPoints =
+      currentPoints + points;
 
-    let title = "🌱 Beginner";
-
-    if (totalPoints >= 100) {
-      title = "🥉 Bronze";
-    }
-
-    if (totalPoints >= 300) {
-      title = "🥈 Silver";
-    }
-
-    if (totalPoints >= 700) {
-      title = "🥇 Gold";
-    }
-
-    if (totalPoints >= 1500) {
-      title = "💎 Diamond";
-    }
-
-    if (totalPoints >= 3000) {
-      title = "👑 Math Genius";
-    }
+    const title =
+      getTitle(totalPoints);
 
     /* =====================================================
-       STREAK
+       CURRENT STATS
     ===================================================== */
 
-    const today = new Date().toISOString().split("T")[0];
+    const currentSatAttempts =
+      Number(
+        user.stats?.sat?.attempts || 0
+      );
+
+    const currentCertificateAttempts =
+      Number(
+        user.stats?.national?.attempts || 0
+      );
+
+    const currentOlympiadAttempts =
+      Number(
+        user.stats?.olympiad?.attempts || 0
+      );
+
+    const currentOlympiadCorrect =
+      Number(
+        user.stats?.olympiad?.correct || 0
+      );
 
     /* =====================================================
-       DATABASE UPDATE
+       NEW OLYMPIAD STATS
+    ===================================================== */
+
+    const newOlympiadAttempts =
+      currentOlympiadAttempts +
+      TOTAL_QUESTIONS;
+
+    const newOlympiadCorrect =
+      currentOlympiadCorrect +
+      correct;
+
+    /* =====================================================
+       PERFECT TRIO
+       
+       SAT >= 20
+       Certificate >= 20
+       Olympiad >= 20
+    ===================================================== */
+
+    const perfectTrio =
+      currentSatAttempts >= 20 &&
+      currentCertificateAttempts >= 20 &&
+      newOlympiadAttempts >= 20;
+
+    const alreadyPerfectTrio =
+      user.perfectTrio === true;
+
+    /* =====================================================
+       DATE
+    ===================================================== */
+
+    const today =
+      new Intl.DateTimeFormat(
+        "en-CA",
+        {
+          timeZone: "Asia/Tashkent",
+        }
+      ).format(new Date());
+
+    const now = new Date();
+
+    /* =====================================================
+       UPDATE
     ===================================================== */
 
     const update: any = {
       $set: {
         [solvedField]: true,
+
         title,
+
+        updatedAt: now,
+
+        lastOlympiadCycle:
+          cycle,
+
+        /*
+         * Perfect Trio holati
+         */
+        perfectTrio,
       },
 
       $inc: {
         geniusPoints: points,
 
-        [`stats.olympiad.${cycle}.attempts`]:
+        /*
+         * MUHIM:
+         *
+         * Oldingi kod:
+         *
+         * stats.olympiad.genesis.attempts
+         *
+         * edi.
+         *
+         * Endi:
+         *
+         * stats.olympiad.attempts
+         *
+         * stats.olympiad.correct
+         *
+         * bo'ladi.
+         */
+
+        "stats.olympiad.attempts":
           TOTAL_QUESTIONS,
 
-        [`stats.olympiad.${cycle}.correct`]:
+        "stats.olympiad.correct":
           correct,
       },
     };
 
     /* =====================================================
+       PERFECT TRIO UNLOCK DATE
+    ===================================================== */
+
+    if (
+      perfectTrio &&
+      !alreadyPerfectTrio
+    ) {
+      update.$set.perfectTrioUnlockedAt =
+        now;
+
+      console.log(
+        "🎉 PERFECT TRIO UNLOCKED!"
+      );
+    }
+
+    /* =====================================================
        STREAK
     ===================================================== */
 
-    if (user.lastSolvedDate !== today) {
+    if (
+      user.lastSolvedDate !==
+      today
+    ) {
       update.$inc.streak = 1;
 
-      update.$set.lastSolvedDate = today;
+      update.$set.lastSolvedDate =
+        today;
     }
 
     /* =====================================================
        SAVE
     ===================================================== */
 
-    await db.collection("users").updateOne(
-      {
-        username,
-      },
-      update
+    const updateResult =
+      await users.updateOne(
+        {
+          username,
+        },
+        update
+      );
+
+    console.log(
+      "========== OLYMPIAD SUBMIT =========="
+    );
+
+    console.log(
+      "USERNAME:",
+      username
+    );
+
+    console.log(
+      "CYCLE:",
+      cycle
+    );
+
+    console.log(
+      "CORRECT:",
+      correct
+    );
+
+    console.log(
+      "INCORRECT:",
+      incorrect
+    );
+
+    console.log(
+      "POINTS:",
+      points
+    );
+
+    console.log(
+      "SAT ATTEMPTS:",
+      currentSatAttempts
+    );
+
+    console.log(
+      "CERTIFICATE ATTEMPTS:",
+      currentCertificateAttempts
+    );
+
+    console.log(
+      "OLYMPIAD ATTEMPTS:",
+      newOlympiadAttempts
+    );
+
+    console.log(
+      "PERFECT TRIO:",
+      perfectTrio
+    );
+
+    console.log(
+      "DATABASE UPDATE:",
+      updateResult
     );
 
     /* =====================================================
@@ -278,19 +450,41 @@ export async function POST(req: Request) {
 
       total: TOTAL_QUESTIONS,
 
-      rankUp: oldTitle !== title,
+      rankUp:
+        oldTitle !== title,
 
-      oldRank: oldTitle,
+      oldRank:
+        oldTitle,
 
-      newRank: title,
+      newRank:
+        title,
+
+      olympiadCompleted:
+        newOlympiadAttempts >= 20,
+
+      satCompleted:
+        currentSatAttempts >= 20,
+
+      certificateCompleted:
+        currentCertificateAttempts >= 20,
+
+      perfectTrio,
+
+      perfectTrioUnlocked:
+        perfectTrio &&
+        !alreadyPerfectTrio,
 
       message:
-        correct === TOTAL_QUESTIONS
+        correct ===
+        TOTAL_QUESTIONS
           ? "Perfect! You solved every Olympiad question correctly."
           : `You received ${points} Genius Points.`,
     });
   } catch (error) {
-    console.error("Olympiad submit error:", error);
+    console.error(
+      "Olympiad submit error:",
+      error
+    );
 
     return NextResponse.json(
       {

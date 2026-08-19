@@ -73,16 +73,6 @@ function normalizeAnswer(value: unknown): string {
 
 /* =========================================================
    GET USER ANSWER
-   Supports BOTH:
-
-   {
-     1: "C",
-     2: "A"
-   }
-
-   AND
-
-   ["C", "A"]
 ========================================================= */
 
 function getUserAnswer(
@@ -93,16 +83,23 @@ function getUserAnswer(
     return "";
   }
 
-  // Array format:
-  // ["C", "A", "A", ...]
+  /*
+   * Array format:
+   * ["C", "A", "A", ...]
+   */
   if (Array.isArray(answers)) {
     return normalizeAnswer(
       answers[questionNumber - 1]
     );
   }
 
-  // Object format:
-  // { "1": "C", "2": "A" }
+  /*
+   * Object format:
+   * {
+   *   "1": "C",
+   *   "2": "A"
+   * }
+   */
   if (typeof answers === "object") {
     const answerObject =
       answers as Record<string, unknown>;
@@ -116,6 +113,34 @@ function getUserAnswer(
 }
 
 /* =========================================================
+   GET TITLE
+========================================================= */
+
+function getTitle(points: number): string {
+  if (points >= 3000) {
+    return "👑 Math Genius";
+  }
+
+  if (points >= 1500) {
+    return "💎 Diamond";
+  }
+
+  if (points >= 700) {
+    return "🥇 Gold";
+  }
+
+  if (points >= 300) {
+    return "🥈 Silver";
+  }
+
+  if (points >= 100) {
+    return "🥉 Bronze";
+  }
+
+  return "🌱 Beginner";
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
@@ -124,10 +149,17 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     console.log("========== SAT SUBMIT ==========");
-    console.log("BODY:", JSON.stringify(body, null, 2));
+    console.log(
+      "BODY:",
+      JSON.stringify(body, null, 2)
+    );
 
-    const username = body?.username;
+    const username = String(
+      body?.username || ""
+    ).trim();
+
     const answers = body?.answers;
+
     const cycle = body?.cycle;
 
     /* =====================================================
@@ -139,7 +171,9 @@ export async function POST(req: Request) {
         {
           error: "Username kerak.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -148,7 +182,9 @@ export async function POST(req: Request) {
         {
           error: "Answers kerak.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -157,7 +193,9 @@ export async function POST(req: Request) {
         {
           error: "Cycle kerak.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -169,7 +207,9 @@ export async function POST(req: Request) {
         {
           error: "Invalid cycle.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -186,11 +226,18 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
+      console.log(
+        "SAT USER NOT FOUND:",
+        username
+      );
+
       return NextResponse.json(
         {
           error: "User not found.",
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       );
     }
 
@@ -215,13 +262,19 @@ export async function POST(req: Request) {
         ? "satGenesisSolved"
         : "satIndependenceSolved";
 
+    /* =====================================================
+       CHECK ALREADY SOLVED
+    ===================================================== */
+
     if (user[solvedField]) {
       return NextResponse.json(
         {
           error:
             "You have already completed this SAT test.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -243,10 +296,11 @@ export async function POST(req: Request) {
       questionNumber <= totalQuestions;
       questionNumber++
     ) {
-      const userAnswer = getUserAnswer(
-        answers,
-        questionNumber
-      );
+      const userAnswer =
+        getUserAnswer(
+          answers,
+          questionNumber
+        );
 
       const correctAnswer =
         normalizeAnswer(
@@ -275,37 +329,53 @@ export async function POST(req: Request) {
       correct * POINTS_PER_QUESTION;
 
     /* =====================================================
-       DEBUG
+       CURRENT STATS
     ===================================================== */
 
-    console.log(
-      "CYCLE:",
-      cycle
+    const currentSatAttempts = Number(
+      user.stats?.sat?.attempts || 0
     );
 
-    console.log(
-      "TOTAL QUESTIONS:",
-      totalQuestions
-    );
+    const currentCertificateAttempts =
+      Number(
+        user.stats?.national?.attempts || 0
+      );
 
-    console.log(
-      "CORRECT:",
-      correct
-    );
+    const currentOlympiadAttempts =
+      Number(
+        user.stats?.olympiad?.attempts || 0
+      );
 
-    console.log(
-      "INCORRECT:",
-      incorrect
-    );
+    /* =====================================================
+       NEW STATS AFTER THIS SUBMISSION
+    ===================================================== */
 
-    console.log(
-      "RESULTS:",
-      JSON.stringify(
-        results,
-        null,
-        2
-      )
-    );
+    const newSatAttempts =
+      currentSatAttempts + totalQuestions;
+
+    const newCertificateAttempts =
+      currentCertificateAttempts;
+
+    const newOlympiadAttempts =
+      currentOlympiadAttempts;
+
+    /* =====================================================
+       PERFECT TRIO
+       
+       SAT       >= 20
+       CERTIFICATE >= 20
+       OLYMPIAD  >= 20
+
+       bo'lsa unlock qilamiz.
+    ===================================================== */
+
+    const perfectTrio =
+      newSatAttempts >= 20 &&
+      newCertificateAttempts >= 20 &&
+      newOlympiadAttempts >= 20;
+
+    const alreadyPerfectTrio =
+      user.perfectTrio === true;
 
     /* =====================================================
        RANK
@@ -323,28 +393,8 @@ export async function POST(req: Request) {
     const totalPoints =
       currentPoints + points;
 
-    let title =
-      "🌱 Beginner";
-
-    if (totalPoints >= 100) {
-      title = "🥉 Bronze";
-    }
-
-    if (totalPoints >= 300) {
-      title = "🥈 Silver";
-    }
-
-    if (totalPoints >= 700) {
-      title = "🥇 Gold";
-    }
-
-    if (totalPoints >= 1500) {
-      title = "💎 Diamond";
-    }
-
-    if (totalPoints >= 3000) {
-      title = "👑 Math Genius";
-    }
+    const title =
+      getTitle(totalPoints);
 
     /* =====================================================
        STREAK
@@ -365,36 +415,60 @@ export async function POST(req: Request) {
     const update: any = {
       $set: {
         [solvedField]: true,
+
         title,
+
         updatedAt: new Date(),
+
         lastSATCycle: cycle,
+
+        /*
+         * Bu doimiy ravishda MongoDB'da
+         * saqlanadi.
+         */
+        perfectTrio,
       },
 
       $inc: {
         geniusPoints: points,
 
         /*
-         * MUHIM:
-         * Account page stats.sat.attempts
-         * va stats.sat.correct ni o'qiydi.
-         *
-         * Shuning uchun aynan shu fieldlarga yozamiz.
+         * SAT nechta savol bajarilganini
+         * saqlaymiz.
          */
         "stats.sat.attempts":
           totalQuestions,
 
+        /*
+         * SAT nechta to'g'ri ishlangan.
+         */
         "stats.sat.correct":
           correct,
       },
     };
 
     /* =====================================================
+       PERFECT TRIO UNLOCK DATE
+    ===================================================== */
+
+    if (
+      perfectTrio &&
+      !alreadyPerfectTrio
+    ) {
+      update.$set.perfectTrioUnlockedAt =
+        new Date();
+
+      console.log(
+        "🎉 PERFECT TRIO UNLOCKED!"
+      );
+    }
+
+    /* =====================================================
        STREAK
     ===================================================== */
 
     if (
-      user.lastSolvedDate !==
-      today
+      user.lastSolvedDate !== today
     ) {
       update.$inc.streak = 1;
 
@@ -447,6 +521,24 @@ export async function POST(req: Request) {
 
       results,
 
+      /*
+       * Frontend uchun.
+       */
+      satCompleted:
+        newSatAttempts >= 20,
+
+      certificateCompleted:
+        newCertificateAttempts >= 20,
+
+      olympiadCompleted:
+        newOlympiadAttempts >= 20,
+
+      perfectTrio,
+
+      perfectTrioUnlocked:
+        perfectTrio &&
+        !alreadyPerfectTrio,
+
       message:
         correct === totalQuestions
           ? "Perfect! You solved every SAT question correctly."
@@ -462,7 +554,9 @@ export async function POST(req: Request) {
       {
         error: "Server Error.",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
