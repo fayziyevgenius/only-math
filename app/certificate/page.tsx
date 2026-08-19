@@ -361,7 +361,7 @@ export default function CertificatePage() {
     useState(0);
 
   /*
-    MUHIM:
+    MUHIM:30
 
     Old:
     Record<number, string>
@@ -672,7 +672,7 @@ export default function CertificatePage() {
       number,
       string
     > = {
-      17: "/independence/q17.png",
+      17: "/independence/q175.png",
     };
 
     return (
