@@ -11,7 +11,7 @@ const genesisAnswers: Record<number, string> = {
   3: "B",
   4: "B",
   5: "C",
-  6: "B",
+  6: "C",
   7: "A",
   8: "C",
   9: "B",
@@ -23,9 +23,9 @@ const genesisAnswers: Record<number, string> = {
   15: "D",
   16: "C",
   17: "B",
-  18: "B",
+  18: "A",
   19: "B",
-  20: "B",
+  20: "C",
 };
 
 /* =========================================================
