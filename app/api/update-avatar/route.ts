@@ -3,30 +3,16 @@ import { connectDB } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-
-    const username = String(body?.username || "").trim();
-    const avatar = String(body?.avatar || "").trim();
+    const { username, avatar } = await req.json();
 
     // =====================================================
     // VALIDATION
     // =====================================================
 
-    if (!username) {
+    if (!username || !avatar) {
       return NextResponse.json(
         {
-          error: "Username kerak.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!avatar) {
-      return NextResponse.json(
-        {
-          error: "Avatar kerak.",
+          error: "Username va avatar kerak.",
         },
         {
           status: 400,
@@ -64,6 +50,7 @@ export async function POST(req: Request) {
     // =====================================================
 
     const db = await connectDB();
+
     const users = db.collection("users");
 
     const user = await users.findOne({
@@ -71,8 +58,6 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      console.log("USER NOT FOUND:", username);
-
       return NextResponse.json(
         {
           error: "User not found.",
@@ -90,14 +75,6 @@ export async function POST(req: Request) {
     const stats = user.stats || {};
 
     // =====================================================
-    // DAILY
-    // =====================================================
-
-    const dailyAttempts = Number(
-      stats.daily?.attempts || 0
-    );
-
-    // =====================================================
     // CERTIFICATE
     // =====================================================
 
@@ -108,6 +85,13 @@ export async function POST(req: Request) {
     const nationalCorrect = Number(
       stats.national?.correct || 0
     );
+
+    // Certificate perfect:
+    // Kamida bitta savol/test bo'lishi kerak
+    // va barcha urinishlar to'g'ri bo'lishi kerak.
+    const perfectCertificate =
+      nationalAttempts > 0 &&
+      nationalCorrect === nationalAttempts;
 
     // =====================================================
     // SAT
@@ -121,44 +105,109 @@ export async function POST(req: Request) {
       stats.sat?.correct || 0
     );
 
+    // SAT perfect
+    const perfectSAT =
+      satAttempts > 0 &&
+      satCorrect === satAttempts;
+
     // =====================================================
     // OLYMPIAD
     // =====================================================
 
-    const olympiadGenesisAttempts = Number(
-      stats.olympiad?.genesis?.attempts || 0
+    const olympiad = stats.olympiad || {};
+
+    // -----------------------------------------------------
+    // NEW FORMAT
+    //
+    // stats.olympiad.genesis.attempts
+    // stats.olympiad.genesis.correct
+    //
+    // stats.olympiad.independence.attempts
+    // stats.olympiad.independence.correct
+    // -----------------------------------------------------
+
+    const genesisAttempts = Number(
+      olympiad.genesis?.attempts || 0
     );
 
-    const olympiadGenesisCorrect = Number(
-      stats.olympiad?.genesis?.correct || 0
+    const genesisCorrect = Number(
+      olympiad.genesis?.correct || 0
     );
 
-    const olympiadIndependenceAttempts = Number(
-      stats.olympiad?.independence?.attempts || 0
+    const independenceAttempts = Number(
+      olympiad.independence?.attempts || 0
     );
 
-    const olympiadIndependenceCorrect = Number(
-      stats.olympiad?.independence?.correct || 0
+    const independenceCorrect = Number(
+      olympiad.independence?.correct || 0
     );
 
-    const olympiadAttempts =
-      olympiadGenesisAttempts +
-      olympiadIndependenceAttempts;
+    // -----------------------------------------------------
+    // OLD / FLAT FORMAT
+    //
+    // Agar eski database:
+    //
+    // stats.olympiad.attempts
+    // stats.olympiad.correct
+    //
+    // ko'rinishida bo'lsa ham ishlaydi.
+    // -----------------------------------------------------
 
-    const olympiadCorrect =
-      olympiadGenesisCorrect +
-      olympiadIndependenceCorrect;
+    const flatOlympiadAttempts = Number(
+      olympiad.attempts || 0
+    );
+
+    const flatOlympiadCorrect = Number(
+      olympiad.correct || 0
+    );
 
     // =====================================================
-    // MATH SPRINT
+    // TOTAL OLYMPIAD
     // =====================================================
+
+    let olympiadAttempts =
+      genesisAttempts +
+      independenceAttempts;
+
+    let olympiadCorrect =
+      genesisCorrect +
+      independenceCorrect;
+
+    // Agar cycle formatida ma'lumot bo'lmasa,
+    // eski flat formatdan foydalanamiz.
+    if (
+      olympiadAttempts === 0 &&
+      flatOlympiadAttempts > 0
+    ) {
+      olympiadAttempts =
+        flatOlympiadAttempts;
+
+      olympiadCorrect =
+        flatOlympiadCorrect;
+    }
+
+    // =====================================================
+    // OLYMPIAD PERFECT
+    // =====================================================
+
+    const perfectOlympiad =
+      olympiadAttempts > 0 &&
+      olympiadCorrect === olympiadAttempts;
+
+    // =====================================================
+    // OTHER STATS
+    // =====================================================
+
+    const dailyAttempts = Number(
+      stats.daily?.attempts || 0
+    );
 
     const sprintHighestScore = Number(
       stats.mathSpirit?.highestScore || 0
     );
 
     // =====================================================
-    // BASIC ACHIEVEMENTS
+    // OTHER ACHIEVEMENTS
     // =====================================================
 
     const solvedAnyQuestion =
@@ -169,7 +218,7 @@ export async function POST(req: Request) {
     const genesisCycleUnlocked =
       nationalAttempts > 0 ||
       satAttempts > 0 ||
-      olympiadGenesisAttempts > 0;
+      genesisAttempts > 0;
 
     const daily7Unlocked =
       dailyAttempts >= 7;
@@ -177,165 +226,154 @@ export async function POST(req: Request) {
     const sprint60Unlocked =
       sprintHighestScore >= 60;
 
-    // =====================================================
-    // PERFECT CERTIFICATE
-    //
-    // Masalan:
-    //
-    // attempts = 20
-    // correct  = 20
-    //
-    // yoki:
-    //
-    // attempts = 40
-    // correct  = 40
-    //
-    // Ikkalasi ham PERFECT.
-    // =====================================================
-
-    const perfectCertificate =
-      nationalAttempts > 0 &&
-      nationalCorrect === nationalAttempts;
-
-    // =====================================================
-    // PERFECT SAT
-    // =====================================================
-
-    const perfectSAT =
-      satAttempts > 0 &&
-      satCorrect === satAttempts;
-
-    // =====================================================
-    // PERFECT OLYMPIAD
-    //
-    // Genesis + Independence birga hisoblanadi.
-    //
-    // Masalan:
-    //
-    // Genesis:
-    //  attempts = 20
-    //  correct  = 20
-    //
-    // Independence:
-    //  attempts = 20
-    //  correct  = 20
-    //
-    // Jami:
-    //  attempts = 40
-    //  correct  = 40
-    //
-    // PERFECT.
-    // =====================================================
-
-    const perfectOlympiad =
-      olympiadAttempts > 0 &&
-      olympiadCorrect === olympiadAttempts;
+    const topThreeUnlocked =
+      user.topThree === true;
 
     // =====================================================
     // PERFECT TRIO
     // =====================================================
 
-    const perfectTrio =
-      perfectCertificate &&
-      perfectSAT &&
-      perfectOlympiad;
+    /*
+     * MUHIM:
+     *
+     * Agar database'da perfectTrio allaqachon true bo'lsa,
+     * qayta hisoblash shart emas.
+     *
+     * Yoki:
+     *
+     * Certificate PERFECT
+     * +
+     * SAT PERFECT
+     * +
+     * Olympiad PERFECT
+     *
+     * bo'lsa avatar unlock qilinadi.
+     */
 
-    // =====================================================
-    // TOP 3
-    // =====================================================
-
-    const topThreeUnlocked =
-      user.topThree === true;
+    const perfectThreeUnlocked =
+      user.perfectTrio === true ||
+      (
+        perfectCertificate &&
+        perfectSAT &&
+        perfectOlympiad
+      );
 
     // =====================================================
     // DEBUG
     // =====================================================
 
-    console.log("======================================");
-    console.log("          AVATAR CHECK");
-    console.log("======================================");
-
-    console.log("USERNAME:", username);
-    console.log("AVATAR:", avatar);
-
-    console.log("--------------------------------------");
-    console.log("CERTIFICATE");
-    console.log("Attempts:", nationalAttempts);
-    console.log("Correct:", nationalCorrect);
     console.log(
-      "Perfect:",
+      "=========================================="
+    );
+
+    console.log(
+      "========== PERFECT TRIO AVATAR =========="
+    );
+
+    console.log(
+      "Username:",
+      username
+    );
+
+    console.log(
+      "Avatar:",
+      avatar
+    );
+
+    console.log(
+      "------------------------------------------"
+    );
+
+    console.log(
+      "Certificate attempts:",
+      nationalAttempts
+    );
+
+    console.log(
+      "Certificate correct:",
+      nationalCorrect
+    );
+
+    console.log(
+      "Certificate perfect:",
       perfectCertificate
     );
 
-    console.log("--------------------------------------");
-    console.log("SAT");
-    console.log("Attempts:", satAttempts);
-    console.log("Correct:", satCorrect);
     console.log(
-      "Perfect:",
+      "------------------------------------------"
+    );
+
+    console.log(
+      "SAT attempts:",
+      satAttempts
+    );
+
+    console.log(
+      "SAT correct:",
+      satCorrect
+    );
+
+    console.log(
+      "SAT perfect:",
       perfectSAT
     );
 
-    console.log("--------------------------------------");
-    console.log("OLYMPIAD GENESIS");
     console.log(
-      "Attempts:",
-      olympiadGenesisAttempts
-    );
-    console.log(
-      "Correct:",
-      olympiadGenesisCorrect
+      "------------------------------------------"
     );
 
-    console.log("--------------------------------------");
-    console.log("OLYMPIAD INDEPENDENCE");
     console.log(
-      "Attempts:",
-      olympiadIndependenceAttempts
-    );
-    console.log(
-      "Correct:",
-      olympiadIndependenceCorrect
+      "Olympiad Genesis attempts:",
+      genesisAttempts
     );
 
-    console.log("--------------------------------------");
-    console.log("OLYMPIAD TOTAL");
     console.log(
-      "Attempts:",
+      "Olympiad Genesis correct:",
+      genesisCorrect
+    );
+
+    console.log(
+      "Olympiad Independence attempts:",
+      independenceAttempts
+    );
+
+    console.log(
+      "Olympiad Independence correct:",
+      independenceCorrect
+    );
+
+    console.log(
+      "Olympiad total attempts:",
       olympiadAttempts
     );
+
     console.log(
-      "Correct:",
+      "Olympiad total correct:",
       olympiadCorrect
     );
+
     console.log(
-      "Perfect:",
+      "Olympiad perfect:",
       perfectOlympiad
     );
 
-    console.log("--------------------------------------");
-    console.log("PERFECT TRIO");
     console.log(
-      "Certificate:",
-      perfectCertificate
-    );
-    console.log(
-      "SAT:",
-      perfectSAT
-    );
-    console.log(
-      "Olympiad:",
-      perfectOlympiad
-    );
-    console.log(
-      "Perfect Trio:",
-      perfectTrio
+      "------------------------------------------"
     );
 
-    console.log("--------------------------------------");
-    console.log("Stored perfectTrio:", user.perfectTrio);
+    console.log(
+      "DB perfectTrio:",
+      user.perfectTrio
+    );
 
-    console.log("======================================");
+    console.log(
+      "FINAL Perfect Trio:",
+      perfectThreeUnlocked
+    );
+
+    console.log(
+      "=========================================="
+    );
 
     // =====================================================
     // CHECK SELECTED AVATAR
@@ -357,7 +395,8 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "genesis-cycle":
-        unlocked = genesisCycleUnlocked;
+        unlocked =
+          genesisCycleUnlocked;
         break;
 
       // ---------------------------------------------------
@@ -365,7 +404,8 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "daily-7":
-        unlocked = daily7Unlocked;
+        unlocked =
+          daily7Unlocked;
         break;
 
       // ---------------------------------------------------
@@ -373,7 +413,8 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "solve-question":
-        unlocked = solvedAnyQuestion;
+        unlocked =
+          solvedAnyQuestion;
         break;
 
       // ---------------------------------------------------
@@ -381,7 +422,8 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "sprint-60":
-        unlocked = sprint60Unlocked;
+        unlocked =
+          sprint60Unlocked;
         break;
 
       // ---------------------------------------------------
@@ -389,7 +431,8 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "perfect-trio":
-        unlocked = perfectTrio;
+        unlocked =
+          perfectThreeUnlocked;
         break;
 
       // ---------------------------------------------------
@@ -397,14 +440,13 @@ export async function POST(req: Request) {
       // ---------------------------------------------------
 
       case "top-3":
-        unlocked = topThreeUnlocked;
+        unlocked =
+          topThreeUnlocked;
         break;
 
       default:
         unlocked = false;
     }
-
-    console.log("FINAL UNLOCKED:", unlocked);
 
     // =====================================================
     // NOT UNLOCKED
@@ -413,9 +455,8 @@ export async function POST(req: Request) {
     if (!unlocked) {
       return NextResponse.json(
         {
-          success: false,
-          unlocked: false,
-          error: "Bu avatar hali unlock qilinmagan.",
+          error:
+            "Bu avatar hali unlock qilinmagan.",
         },
         {
           status: 403,
@@ -424,27 +465,42 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // SAVE AVATAR
-    //
-    // Agar Perfect Trio haqiqatan ochilgan bo'lsa,
-    // DB'dagi eski false qiymatni ham true qilamiz.
+    // SAVE PERFECT TRIO
     // =====================================================
 
-    const updateSet: Record<string, unknown> = {
+    /*
+     * Agar Perfect Trio shartlari bajarilgan bo'lsa,
+     * database'ga true qilib yozib qo'yamiz.
+     *
+     * Keyingi safar stats qayta hisoblanmasa ham
+     * avatar ochiq qoladi.
+     */
+
+    const updateFields: Record<
+      string,
+      unknown
+    > = {
       avatar,
       updatedAt: new Date(),
     };
 
-    if (perfectTrio) {
-      updateSet.perfectTrio = true;
+    if (
+      perfectThreeUnlocked
+    ) {
+      updateFields.perfectTrio =
+        true;
     }
+
+    // =====================================================
+    // SAVE AVATAR
+    // =====================================================
 
     await users.updateOne(
       {
         username,
       },
       {
-        $set: updateSet,
+        $set: updateFields,
       }
     );
 
@@ -454,32 +510,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      unlocked: true,
+
       avatar,
 
-      achievements: {
-        certificate: perfectCertificate,
-        sat: perfectSAT,
-        olympiad: perfectOlympiad,
-        perfectTrio,
-      },
+      unlocked: true,
 
-      stats: {
-        certificate: {
-          attempts: nationalAttempts,
-          correct: nationalCorrect,
-        },
+      perfectTrio:
+        perfectThreeUnlocked,
 
-        sat: {
-          attempts: satAttempts,
-          correct: satCorrect,
-        },
-
-        olympiad: {
-          attempts: olympiadAttempts,
-          correct: olympiadCorrect,
-        },
-      },
+      message:
+        "Avatar muvaffaqiyatli tanlandi.",
     });
   } catch (error) {
     console.error(
@@ -489,8 +529,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        success: false,
-        error: "Server Error.",
+        error:
+          "Server Error.",
       },
       {
         status: 500,
