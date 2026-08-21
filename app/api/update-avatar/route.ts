@@ -41,31 +41,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // =====================================================
-    // DATABASE
-    // =====================================================
-
-    const db = await connectDB();
-
-    const users = db.collection("users");
-
-    const user = await users.findOne({
-      username,
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: "User not found.",
-        },
-        { status: 404 }
-      );
-    }
-
-    // =====================================================
-    // ALLOWED AVATARS
-    // =====================================================
-
     const allowedAvatars = [
       "only-math",
       "genesis-cycle",
@@ -86,17 +61,35 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
+    // DATABASE
+    // =====================================================
+
+    const db = await connectDB();
+    const users = db.collection("users");
+
+    const user = await users.findOne({
+      username,
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "User not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    // =====================================================
     // STATS
     // =====================================================
 
     const stats = user.stats || {};
 
-    // DAILY
-    const dailyAttempts = Number(
-      stats.daily?.attempts || 0
-    );
+    // =====================================================
+    // CERTIFICATE
+    // =====================================================
 
-    // NATIONAL / CERTIFICATE
     const nationalAttempts = Number(
       stats.national?.attempts || 0
     );
@@ -105,7 +98,14 @@ export async function POST(req: Request) {
       stats.national?.correct || 0
     );
 
+    const perfectCertificate =
+      nationalAttempts > 0 &&
+      nationalCorrect === nationalAttempts;
+
+    // =====================================================
     // SAT
+    // =====================================================
+
     const satAttempts = Number(
       stats.sat?.attempts || 0
     );
@@ -114,21 +114,30 @@ export async function POST(req: Request) {
       stats.sat?.correct || 0
     );
 
+    const perfectSAT =
+      satAttempts > 0 &&
+      satCorrect === satAttempts;
+
+    // =====================================================
     // OLYMPIAD
+    // =====================================================
+
+    const olympiad = stats.olympiad || {};
+
     const olympiadGenesisAttempts = Number(
-      stats.olympiad?.genesis?.attempts || 0
+      olympiad.genesis?.attempts || 0
     );
 
     const olympiadGenesisCorrect = Number(
-      stats.olympiad?.genesis?.correct || 0
+      olympiad.genesis?.correct || 0
     );
 
     const olympiadIndependenceAttempts = Number(
-      stats.olympiad?.independence?.attempts || 0
+      olympiad.independence?.attempts || 0
     );
 
     const olympiadIndependenceCorrect = Number(
-      stats.olympiad?.independence?.correct || 0
+      olympiad.independence?.correct || 0
     );
 
     const olympiadAttempts =
@@ -139,44 +148,39 @@ export async function POST(req: Request) {
       olympiadGenesisCorrect +
       olympiadIndependenceCorrect;
 
-    // MATH SPRINT
+    const perfectOlympiad =
+      olympiadAttempts > 0 &&
+      olympiadCorrect === olympiadAttempts;
+
+    // =====================================================
+    // PERFECT TRIO
+    //
+    // MUHIM:
+    // BU QISMGA TEGILMAYDI.
+    //
+    // Agar DB'da perfectTrio true bo'lsa,
+    // u doim unlock hisoblanadi.
+    // =====================================================
+
+    const perfectThreeUnlocked =
+      user.perfectTrio === true ||
+      (
+        perfectCertificate &&
+        perfectSAT &&
+        perfectOlympiad
+      );
+
+    // =====================================================
+    // OTHER STATS
+    // =====================================================
+
+    const dailyAttempts = Number(
+      stats.daily?.attempts || 0
+    );
+
     const sprintHighestScore = Number(
       stats.mathSpirit?.highestScore || 0
     );
-
-    // =====================================================
-    // CURRENT CYCLE
-    // =====================================================
-
-    const currentCycle = getCurrentCycle();
-
-    const cycleLoginDays =
-      currentCycle &&
-      user.cycleLoginDays?.[currentCycle]
-        ? user.cycleLoginDays[currentCycle]
-        : [];
-
-    const loginDays: string[] = Array.isArray(cycleLoginDays)
-      ? cycleLoginDays
-      : [];
-
-    /*
-     * 7 KUNLIK ACHIEVEMENT
-     *
-     * Streak kerak emas.
-     *
-     * Ketma-ket bo'lishi shart emas.
-     *
-     * Faqat current 14-day cycle ichida
-     * 7 xil kunda kirgan bo'lishi kerak.
-     */
-
-    const daily7Unlocked =
-      loginDays.length >= 7;
-
-    // =====================================================
-    // OTHER ACHIEVEMENTS
-    // =====================================================
 
     const solvedAnyQuestion =
       nationalAttempts > 0 ||
@@ -191,28 +195,35 @@ export async function POST(req: Request) {
     const sprint60Unlocked =
       sprintHighestScore >= 60;
 
-    const perfectCertificate =
-      nationalAttempts > 0 &&
-      nationalCorrect === nationalAttempts;
-
-    const perfectSAT =
-      satAttempts > 0 &&
-      satCorrect === satAttempts;
-
-    const perfectOlympiad =
-      olympiadAttempts > 0 &&
-      olympiadCorrect === olympiadAttempts;
-
-    const perfectThreeUnlocked =
-      perfectCertificate &&
-      perfectSAT &&
-      perfectOlympiad;
-
     const topThreeUnlocked =
       user.topThree === true;
 
     // =====================================================
-    // CHECK SELECTED AVATAR
+    // CURRENT CYCLE LOGIN DAYS
+    //
+    // FAQAT DAILY-7 UCHUN.
+    //
+    // PERFECT TRIO BUNGA BOG'LANMAYDI.
+    // =====================================================
+
+    const currentCycle = getCurrentCycle();
+
+    let loginDays: string[] = [];
+
+    if (currentCycle) {
+      const savedDays =
+        user.cycleLoginDays?.[currentCycle];
+
+      if (Array.isArray(savedDays)) {
+        loginDays = savedDays;
+      }
+    }
+
+    const daily7Unlocked =
+      loginDays.length >= 7;
+
+    // =====================================================
+    // CHECK AVATAR
     // =====================================================
 
     let unlocked = false;
@@ -223,27 +234,33 @@ export async function POST(req: Request) {
         break;
 
       case "genesis-cycle":
-        unlocked = genesisCycleUnlocked;
+        unlocked =
+          genesisCycleUnlocked;
         break;
 
       case "daily-7":
-        unlocked = daily7Unlocked;
+        unlocked =
+          daily7Unlocked;
         break;
 
       case "solve-question":
-        unlocked = solvedAnyQuestion;
+        unlocked =
+          solvedAnyQuestion;
         break;
 
       case "sprint-60":
-        unlocked = sprint60Unlocked;
+        unlocked =
+          sprint60Unlocked;
         break;
 
       case "perfect-trio":
-        unlocked = perfectThreeUnlocked;
+        unlocked =
+          perfectThreeUnlocked;
         break;
 
       case "top-3":
-        unlocked = topThreeUnlocked;
+        unlocked =
+          topThreeUnlocked;
         break;
 
       default:
@@ -254,51 +271,71 @@ export async function POST(req: Request) {
     // DEBUG
     // =====================================================
 
-    console.log("========== AVATAR CHECK ==========");
-
-    console.log("Username:", username);
-    console.log("Avatar:", avatar);
-
-    console.log("Current cycle:", currentCycle);
+    console.log(
+      "========== UPDATE AVATAR =========="
+    );
 
     console.log(
-      "Cycle login days:",
+      "Username:",
+      username
+    );
+
+    console.log(
+      "Avatar:",
+      avatar
+    );
+
+    console.log(
+      "Current cycle:",
+      currentCycle
+    );
+
+    console.log(
+      "Login days:",
       loginDays
     );
 
     console.log(
-      "Cycle login days count:",
+      "Login days count:",
       loginDays.length
     );
 
     console.log(
-      "Daily 7 unlocked:",
+      "Daily 7:",
       daily7Unlocked
     );
 
     console.log(
-      "National attempts:",
-      nationalAttempts
+      "-----------------------------------"
     );
 
     console.log(
-      "SAT attempts:",
-      satAttempts
+      "Certificate perfect:",
+      perfectCertificate
     );
 
     console.log(
-      "Olympiad attempts:",
-      olympiadAttempts
+      "SAT perfect:",
+      perfectSAT
     );
 
     console.log(
-      "Sprint 60 unlocked:",
-      sprint60Unlocked
+      "Olympiad perfect:",
+      perfectOlympiad
     );
 
     console.log(
-      "Perfect Trio unlocked:",
+      "Database perfectTrio:",
+      user.perfectTrio
+    );
+
+    console.log(
+      "Perfect Trio:",
       perfectThreeUnlocked
+    );
+
+    console.log(
+      "-----------------------------------"
     );
 
     console.log(
@@ -306,7 +343,9 @@ export async function POST(req: Request) {
       unlocked
     );
 
-    console.log("=================================");
+    console.log(
+      "==================================="
+    );
 
     // =====================================================
     // NOT UNLOCKED
@@ -315,11 +354,20 @@ export async function POST(req: Request) {
     if (!unlocked) {
       return NextResponse.json(
         {
-          error: "Bu avatar hali unlock qilinmagan.",
-          unlocked: false,
+          error:
+            "Bu avatar hali unlock qilinmagan.",
+
           avatar,
+
+          unlocked: false,
+
           cycle: currentCycle,
-          daysCount: loginDays.length,
+
+          daysCount:
+            loginDays.length,
+
+          perfectTrio:
+            perfectThreeUnlocked,
         },
         { status: 403 }
       );
@@ -327,6 +375,8 @@ export async function POST(req: Request) {
 
     // =====================================================
     // SAVE AVATAR
+    //
+    // PERFECT TRIO GA TEGILMAYDI.
     // =====================================================
 
     await users.updateOne(
@@ -347,10 +397,18 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      unlocked: true,
+
       avatar,
+
+      unlocked: true,
+
       cycle: currentCycle,
-      daysCount: loginDays.length,
+
+      daysCount:
+        loginDays.length,
+
+      perfectTrio:
+        perfectThreeUnlocked,
     });
   } catch (error) {
     console.error(
@@ -360,7 +418,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        error: "Server Error",
+        error: "Server Error.",
       },
       { status: 500 }
     );
