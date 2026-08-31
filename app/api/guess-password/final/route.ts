@@ -7,47 +7,158 @@ export const dynamic = "force-dynamic";
 
 /*
 =========================================================
-  VERIFY 4-DIGIT SESSION TOKEN
+  VERIFY SESSION TOKEN
 =========================================================
 */
 
-function verifyToken(token: string): boolean {
-  const secret = process.env.GUESS_PASSWORD_SESSION_SECRET;
+function verifyToken(
+  token: string,
+  identifier: string
+): boolean {
+  const secret =
+    process.env.GUESS_PASSWORD_SESSION_SECRET;
 
   if (!secret) {
-    console.error("GUESS_PASSWORD_SESSION_SECRET is missing.");
+    console.error(
+      "GUESS_PASSWORD_SESSION_SECRET is missing."
+    );
+
     return false;
   }
 
-  const parts = token.split(".");
+  /*
+  =======================================================
+    TOKEN FORMAT
 
-  if (parts.length !== 2) {
+    timestamp.identifier.signature
+  =======================================================
+  */
+
+  const parts =
+    token.split(".");
+
+  if (parts.length !== 3) {
     return false;
   }
 
-  const [timestamp, signature] = parts;
+  const [
+    timestamp,
+    encodedIdentifier,
+    signature,
+  ] = parts;
 
-  const timestampNumber = Number(timestamp);
+  /*
+  =======================================================
+    TIMESTAMP
+  =======================================================
+  */
 
-  if (!Number.isFinite(timestampNumber)) {
+  const timestampNumber =
+    Number(timestamp);
+
+  if (
+    !Number.isFinite(
+      timestampNumber
+    )
+  ) {
     return false;
   }
 
-  const age = Date.now() - timestampNumber;
+  /*
+  =======================================================
+    TOKEN AGE
+    30 MINUTES
+  =======================================================
+  */
 
-  if (age < 0 || age > 30 * 60 * 1000) {
+  const age =
+    Date.now() -
+    timestampNumber;
+
+  if (
+    age < 0 ||
+    age > 30 * 60 * 1000
+  ) {
     return false;
   }
 
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(`guess-password:${timestamp}`)
-    .digest("hex");
+  /*
+  =======================================================
+    DECODE IDENTIFIER
+  =======================================================
+  */
 
-  const signatureBuffer = Buffer.from(signature, "utf8");
-  const expectedBuffer = Buffer.from(expected, "utf8");
+  let tokenIdentifier = "";
 
-  if (signatureBuffer.length !== expectedBuffer.length) {
+  try {
+    tokenIdentifier =
+      Buffer.from(
+        encodedIdentifier,
+        "base64url"
+      ).toString("utf8");
+  } catch {
+    return false;
+  }
+
+  if (!tokenIdentifier) {
+    return false;
+  }
+
+  /*
+  =======================================================
+    IDENTIFIER MATCH
+  =======================================================
+  */
+
+  if (
+    tokenIdentifier.toLowerCase() !==
+    identifier.toLowerCase()
+  ) {
+    return false;
+  }
+
+  /*
+  =======================================================
+    CREATE EXPECTED SIGNATURE
+  =======================================================
+  */
+
+  const payload =
+    `${timestamp}:${tokenIdentifier}`;
+
+  const expected =
+    crypto
+      .createHmac(
+        "sha256",
+        secret
+      )
+      .update(
+        `guess-password:${payload}`
+      )
+      .digest("hex");
+
+  /*
+  =======================================================
+    SECURE SIGNATURE COMPARISON
+  =======================================================
+  */
+
+  const signatureBuffer =
+    Buffer.from(
+      signature,
+      "utf8"
+    );
+
+  const expectedBuffer =
+    Buffer.from(
+      expected,
+      "utf8"
+    );
+
+  if (
+    signatureBuffer.length !==
+    expectedBuffer.length
+  ) {
     return false;
   }
 
@@ -59,13 +170,37 @@ function verifyToken(token: string): boolean {
 
 /*
 =========================================================
+  ESCAPE REGEX
+=========================================================
+*/
+
+function escapeRegex(
+  value: string
+): string {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+}
+
+/*
+=========================================================
   POST
 =========================================================
 */
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request
+) {
   try {
-    const body = await request.json();
+    /*
+    =====================================================
+      BODY
+    =====================================================
+    */
+
+    const body =
+      await request.json();
 
     /*
     =====================================================
@@ -75,7 +210,9 @@ export async function POST(request: Request) {
 
     const password =
       typeof body?.password === "string"
-        ? body.password.trim().toUpperCase()
+        ? body.password
+            .trim()
+            .toUpperCase()
         : "";
 
     /*
@@ -91,8 +228,7 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      USER IDENTIFIER
-      Login'dan username yoki email kelishi mumkin.
+      USERNAME
     =====================================================
     */
 
@@ -101,34 +237,29 @@ export async function POST(request: Request) {
         ? body.username.trim()
         : "";
 
+    /*
+    =====================================================
+      EMAIL
+    =====================================================
+    */
+
     const email =
       typeof body?.email === "string"
         ? body.email.trim()
         : "";
 
-    const identifier = username || email;
-
     /*
     =====================================================
-      1. TOKENNI TEKSHIRISH
+      IDENTIFIER
     =====================================================
     */
 
-    if (!verifyToken(token)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Avval 4 belgili kodni to'g'ri toping.",
-        },
-        {
-          status: 401,
-        }
-      );
-    }
+    const identifier =
+      username || email;
 
     /*
     =====================================================
-      2. USER IDENTIFIER
+      CHECK IDENTIFIER
     =====================================================
     */
 
@@ -147,20 +278,49 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      3. SERVER PASSWORD
+      CHECK TOKEN
+    =====================================================
+    */
+
+    if (
+      !verifyToken(
+        token,
+        identifier
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Session token noto'g'ri yoki muddati tugagan.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      SERVER PASSWORD
     =====================================================
     */
 
     const correctPassword =
-      process.env.GUESS_PASSWORD?.trim().toUpperCase();
+      process.env.GUESS_PASSWORD
+        ?.trim()
+        .toUpperCase();
 
     if (!correctPassword) {
-      console.error("GUESS_PASSWORD is missing.");
+      console.error(
+        "GUESS_PASSWORD is missing."
+      );
 
       return NextResponse.json(
         {
           success: false,
-          error: "Server configuration error.",
+          error:
+            "Server configuration error.",
         },
         {
           status: 500,
@@ -170,11 +330,15 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      PASSWORD CONFIGURATION
+      SERVER PASSWORD VALIDATION
     =====================================================
     */
 
-    if (!/^[A-Z0-9]{8}$/.test(correctPassword)) {
+    if (
+      !/^[A-Z0-9]{8}$/.test(
+        correctPassword
+      )
+    ) {
       console.error(
         "GUESS_PASSWORD must contain exactly 8 letters/numbers."
       );
@@ -182,7 +346,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "Server password configuration error.",
+          error:
+            "Server password configuration error.",
         },
         {
           status: 500,
@@ -192,11 +357,13 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      4. PASSWORD LENGTH
+      USER PASSWORD LENGTH
     =====================================================
     */
 
-    if (password.length !== 8) {
+    if (
+      password.length !== 8
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -211,11 +378,15 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      5. PASSWORD CHARACTERS
+      PASSWORD CHARACTERS
     =====================================================
     */
 
-    if (!/^[A-Z0-9]{8}$/.test(password)) {
+    if (
+      !/^[A-Z0-9]{8}$/.test(
+        password
+      )
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -230,24 +401,33 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      6. SECURE PASSWORD COMPARISON
+      SECURE PASSWORD COMPARISON
     =====================================================
     */
 
-    const passwordBuffer = Buffer.from(password, "utf8");
-    const correctBuffer = Buffer.from(
-      correctPassword,
-      "utf8"
-    );
+    const passwordBuffer =
+      Buffer.from(
+        password,
+        "utf8"
+      );
 
-    const isCorrect = crypto.timingSafeEqual(
-      passwordBuffer,
-      correctBuffer
-    );
+    const correctBuffer =
+      Buffer.from(
+        correctPassword,
+        "utf8"
+      );
+
+    const isCorrect =
+      passwordBuffer.length ===
+        correctBuffer.length &&
+      crypto.timingSafeEqual(
+        passwordBuffer,
+        correctBuffer
+      );
 
     /*
     =====================================================
-      7. WRONG PASSWORD
+      WRONG PASSWORD
     =====================================================
     */
 
@@ -255,7 +435,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "8 belgili password noto'g'ri.",
+          error:
+            "8 belgili password noto'g'ri.",
         },
         {
           status: 401,
@@ -265,37 +446,46 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      8. DATABASE
+      DATABASE
     =====================================================
     */
 
-    const db = await connectDB();
-    const users = db.collection("users");
+    const db =
+      await connectDB();
+
+    const users =
+      db.collection("users");
 
     /*
     =====================================================
-      9. FIND USER
-      Username yoki email bilan.
-      Case-insensitive.
+      FIND USER
     =====================================================
     */
 
-    const user = await users.findOne({
-      $or: [
-        {
-          username: {
-            $regex: `^${escapeRegex(identifier)}$`,
-            $options: "i",
+    const safeIdentifier =
+      escapeRegex(
+        identifier
+      );
+
+    const user =
+      await users.findOne({
+        $or: [
+          {
+            username: {
+              $regex:
+                `^${safeIdentifier}$`,
+              $options: "i",
+            },
           },
-        },
-        {
-          email: {
-            $regex: `^${escapeRegex(identifier)}$`,
-            $options: "i",
+          {
+            email: {
+              $regex:
+                `^${safeIdentifier}$`,
+              $options: "i",
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
 
     /*
     =====================================================
@@ -312,7 +502,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "User topilmadi.",
+          error:
+            "User topilmadi.",
         },
         {
           status: 404,
@@ -322,58 +513,110 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      10. ATOMIC +700 GP
+      ATOMIC +700 GP
     =====================================================
+
+      Reward faqat bir marta beriladi.
+
+      guessPasswordRewardClaimed !== true
     */
 
-    const updateResult = await users.updateOne(
-      {
-        _id: user._id,
-        guessPasswordRewardClaimed: {
-          $ne: true,
+    const updateResult =
+      await users.updateOne(
+        {
+          _id: user._id,
+
+          guessPasswordRewardClaimed: {
+            $ne: true,
+          },
         },
-      },
-      {
-        $inc: {
-          geniusPoints: 700,
-        },
-        $set: {
-          guessPasswordRewardClaimed: true,
-          guessPasswordRewardAt: new Date(),
-        },
-      }
-    );
+        {
+          $inc: {
+            geniusPoints: 700,
+          },
+
+          $set: {
+            guessPasswordRewardClaimed:
+              true,
+
+            guessPasswordRewardAt:
+              new Date(),
+          },
+        }
+      );
 
     /*
     =====================================================
-      11. REWARD BERILDI
+      REWARD GIVEN
     =====================================================
     */
 
-    if (updateResult.modifiedCount === 1) {
-      const newGP =
-        Number(user.geniusPoints ?? 0) + 700;
+    if (
+      updateResult.modifiedCount ===
+      1
+    ) {
+      const oldGP =
+        Number(
+          user.geniusPoints ?? 0
+        );
 
-      console.log("=================================");
-      console.log("GUESS PASSWORD SUCCESS");
-      console.log("User:", user.username || user.email);
-      console.log("User ID:", String(user._id));
-      console.log("Old GP:", Number(user.geniusPoints ?? 0));
-      console.log("Reward:", 700);
-      console.log("New GP:", newGP);
-      console.log("=================================");
+      const newGP =
+        oldGP + 700;
+
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "GUESS PASSWORD SUCCESS"
+      );
+
+      console.log(
+        "User:",
+        user.username ||
+          user.email
+      );
+
+      console.log(
+        "User ID:",
+        String(user._id)
+      );
+
+      console.log(
+        "Old GP:",
+        oldGP
+      );
+
+      console.log(
+        "Reward:",
+        700
+      );
+
+      console.log(
+        "New GP:",
+        newGP
+      );
+
+      console.log(
+        "================================="
+      );
 
       return NextResponse.json(
         {
           success: true,
+
           alreadyClaimed: false,
+
           reward: 700,
+
           geniusPoints: newGP,
+
           message:
             "🎉 Tabriklaymiz! Password buzildi! +700 GP",
         },
         {
           status: 200,
+
           headers: {
             "Cache-Control":
               "no-store, no-cache, must-revalidate",
@@ -384,36 +627,47 @@ export async function POST(request: Request) {
 
     /*
     =====================================================
-      12. REWARD OLDIN OLINGAN
+      ALREADY CLAIMED
     =====================================================
     */
 
-    const currentUser = await users.findOne(
-      {
-        _id: user._id,
-      },
-      {
-        projection: {
-          geniusPoints: 1,
-          guessPasswordRewardClaimed: 1,
+    const currentUser =
+      await users.findOne(
+        {
+          _id: user._id,
         },
-      }
-    );
+        {
+          projection: {
+            geniusPoints: 1,
+
+            guessPasswordRewardClaimed:
+              1,
+          },
+        }
+      );
 
     const currentGP =
-      Number(currentUser?.geniusPoints ?? 0);
+      Number(
+        currentUser?.geniusPoints ??
+          0
+      );
 
     return NextResponse.json(
       {
         success: true,
+
         alreadyClaimed: true,
+
         reward: 0,
+
         geniusPoints: currentGP,
+
         message:
           "🎉 Password ochildi! 700 GP reward avval berilgan.",
       },
       {
         status: 200,
+
         headers: {
           "Cache-Control":
             "no-store, no-cache, must-revalidate",
@@ -421,10 +675,19 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    console.error("=================================");
-    console.error("FINAL PASSWORD API ERROR:");
+    console.error(
+      "================================="
+    );
+
+    console.error(
+      "FINAL PASSWORD API ERROR:"
+    );
+
     console.error(error);
-    console.error("=================================");
+
+    console.error(
+      "================================="
+    );
 
     return NextResponse.json(
       {
@@ -436,14 +699,4 @@ export async function POST(request: Request) {
       }
     );
   }
-}
-
-/*
-=========================================================
-  ESCAPE REGEX
-=========================================================
-*/
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

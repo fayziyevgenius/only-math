@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 /*
 =========================================================
   CREATE SESSION TOKEN
 =========================================================
 */
 
-function createToken(identifier: string) {
+function createToken(identifier: string): string {
   const secret =
     process.env.GUESS_PASSWORD_SESSION_SECRET;
 
@@ -28,9 +30,10 @@ function createToken(identifier: string) {
     .digest("hex");
 
   const encodedIdentifier =
-    Buffer.from(identifier, "utf8").toString(
-      "base64url"
-    );
+    Buffer.from(
+      identifier,
+      "utf8"
+    ).toString("base64url");
 
   return `${timestamp}.${encodedIdentifier}.${signature}`;
 }
@@ -82,11 +85,50 @@ export async function POST(
     if (!identifier) {
       return NextResponse.json(
         {
+          success: false,
           error:
             "User aniqlanmadi. Iltimos, qayta login qiling.",
         },
         {
           status: 401,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      GUESS LENGTH
+    =====================================================
+    */
+
+    if (guess.length !== 4) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "4 ta belgidan iborat kod kiriting.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      GUESS CHARACTERS
+    =====================================================
+    */
+
+    if (!/^[A-Z0-9]{4}$/.test(guess)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Faqat harf va raqamlardan foydalaning.",
+        },
+        {
+          status: 400,
         }
       );
     }
@@ -109,6 +151,7 @@ export async function POST(
 
       return NextResponse.json(
         {
+          success: false,
           error:
             "Server configuration error.",
         },
@@ -120,53 +163,22 @@ export async function POST(
 
     /*
     =====================================================
-      LENGTH
+      SERVER FIRST 4 VALIDATION
     =====================================================
     */
 
-    if (guess.length !== 4) {
-      return NextResponse.json(
-        {
-          error:
-            "4 ta belgidan iborat kod kiriting.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    /*
-    =====================================================
-      CHARACTER VALIDATION
-    =====================================================
-    */
-
-    if (!/^[A-Z0-9]{4}$/.test(guess)) {
-      return NextResponse.json(
-        {
-          error:
-            "Faqat harf va raqamlardan foydalaning.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    /*
-    =====================================================
-      SERVER PASSWORD VALIDATION
-    =====================================================
-    */
-
-    if (!/^[A-Z0-9]{4}$/.test(correctGuess)) {
+    if (
+      !/^[A-Z0-9]{4}$/.test(
+        correctGuess
+      )
+    ) {
       console.error(
         "GUESS_PASSWORD_FIRST4 must contain exactly 4 letters/numbers."
       );
 
       return NextResponse.json(
         {
+          success: false,
           error:
             "Server password configuration error.",
         },
@@ -183,12 +195,20 @@ export async function POST(
     */
 
     const guessBuffer =
-      Buffer.from(guess);
+      Buffer.from(
+        guess,
+        "utf8"
+      );
 
     const correctBuffer =
-      Buffer.from(correctGuess);
+      Buffer.from(
+        correctGuess,
+        "utf8"
+      );
 
     const isCorrect =
+      guessBuffer.length ===
+        correctBuffer.length &&
       crypto.timingSafeEqual(
         guessBuffer,
         correctBuffer
@@ -268,8 +288,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error:
-          "Server Error.",
+        success: false,
+        error: "Server Error.",
       },
       {
         status: 500,

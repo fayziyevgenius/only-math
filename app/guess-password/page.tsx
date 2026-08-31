@@ -35,33 +35,15 @@ type CurrentUser = {
 };
 
 export default function GuessPasswordPage() {
-  /*
-  =========================================================
-    STEP
-  =========================================================
-  */
-
   const [step, setStep] = useState<
     "guess" | "password" | "won"
   >("guess");
-
-  /*
-  =========================================================
-    CURRENT USER
-  =========================================================
-  */
 
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null);
 
   const [userLoading, setUserLoading] =
     useState(true);
-
-  /*
-  =========================================================
-    FIRST 4
-  =========================================================
-  */
 
   const [guess, setGuess] = useState<string[]>(
     Array(GUESS_LENGTH).fill("")
@@ -73,12 +55,6 @@ export default function GuessPasswordPage() {
   const [guessLoading, setGuessLoading] =
     useState(false);
 
-  /*
-  =========================================================
-    FINAL 8
-  =========================================================
-  */
-
   const [finalPassword, setFinalPassword] =
     useState<string[]>(
       Array(FULL_PASSWORD_LENGTH).fill("")
@@ -87,20 +63,8 @@ export default function GuessPasswordPage() {
   const [finalLoading, setFinalLoading] =
     useState(false);
 
-  /*
-  =========================================================
-    SESSION TOKEN
-  =========================================================
-  */
-
   const [unlockToken, setUnlockToken] =
     useState("");
-
-  /*
-  =========================================================
-    MESSAGE
-  =========================================================
-  */
 
   const [message, setMessage] =
     useState("");
@@ -120,37 +84,18 @@ export default function GuessPasswordPage() {
         setUserLoading(true);
         setError("");
 
-        /*
-        =====================================================
-          LOGIN TIZIMIDAGI ASOSIY KEY
-        =====================================================
-
-          DashboardPage ham aynan:
-          localStorage.getItem("currentUser")
-
-          dan foydalanadi.
-        */
-
         const currentUserData =
-          localStorage.getItem("currentUser");
-
-        if (!currentUserData) {
-          console.error(
-            "currentUser localStorage'da topilmadi."
+          localStorage.getItem(
+            "currentUser"
           );
 
+        if (!currentUserData) {
           setError(
             "User aniqlanmadi. Iltimos, qayta login qiling."
           );
 
           return;
         }
-
-        /*
-        =====================================================
-          PARSE CURRENT USER
-        =====================================================
-        */
 
         let parsedUser: {
           username?: string;
@@ -159,25 +104,16 @@ export default function GuessPasswordPage() {
 
         try {
           parsedUser =
-            JSON.parse(currentUserData);
-        } catch (parseError) {
-          console.error(
-            "currentUser JSON parse error:",
-            parseError
-          );
-
+            JSON.parse(
+              currentUserData
+            );
+        } catch {
           setError(
             "Login ma'lumotlari noto'g'ri. Iltimos, qayta login qiling."
           );
 
           return;
         }
-
-        /*
-        =====================================================
-          USERNAME / EMAIL
-        =====================================================
-        */
 
         const username =
           typeof parsedUser?.username ===
@@ -191,12 +127,10 @@ export default function GuessPasswordPage() {
             ? parsedUser.email.trim()
             : "";
 
-        if (!username && !email) {
-          console.error(
-            "currentUser ichida username yoki email topilmadi:",
-            parsedUser
-          );
-
+        if (
+          !username &&
+          !email
+        ) {
           setError(
             "User aniqlanmadi. Iltimos, qayta login qiling."
           );
@@ -204,17 +138,9 @@ export default function GuessPasswordPage() {
           return;
         }
 
-        console.log(
-          "Guess Password Current User:",
-          {
-            username,
-            email,
-          }
-        );
-
         /*
         =====================================================
-          /api/me
+          VERIFY USER THROUGH /api/me
         =====================================================
         */
 
@@ -246,18 +172,7 @@ export default function GuessPasswordPage() {
         const data =
           await response.json();
 
-        /*
-        =====================================================
-          API ERROR
-        =====================================================
-        */
-
         if (!response.ok) {
-          console.error(
-            "ME API ERROR:",
-            data
-          );
-
           setError(
             data.error ||
               "Userni aniqlab bo'lmadi."
@@ -265,12 +180,6 @@ export default function GuessPasswordPage() {
 
           return;
         }
-
-        /*
-        =====================================================
-          USER SAQLASH
-        =====================================================
-        */
 
         setCurrentUser({
           username:
@@ -285,19 +194,6 @@ export default function GuessPasswordPage() {
         });
 
         setError("");
-
-        console.log(
-          "Guess Password User Loaded:",
-          {
-            username:
-              data.username ||
-              username,
-
-            email:
-              data.email ||
-              email,
-          }
-        );
       } catch (error) {
         console.error(
           "Load user error:",
@@ -317,7 +213,7 @@ export default function GuessPasswordPage() {
 
   /*
   =========================================================
-    FIRST 4 VALUE
+    VALUES
   =========================================================
   */
 
@@ -329,12 +225,6 @@ export default function GuessPasswordPage() {
       GUESS_LENGTH &&
     guess.every(Boolean);
 
-  /*
-  =========================================================
-    FINAL 8 VALUE
-  =========================================================
-  */
-
   const finalPasswordValue =
     finalPassword.join("");
 
@@ -345,11 +235,13 @@ export default function GuessPasswordPage() {
 
   /*
   =========================================================
-    SECRET REVEAL
+    REVEAL SECRET
   =========================================================
   */
 
-  function revealSecret(id: number) {
+  function revealSecret(
+    id: number
+  ) {
     const secret =
       secrets.find(
         (item) =>
@@ -369,7 +261,7 @@ export default function GuessPasswordPage() {
 
   /*
   =========================================================
-    FIRST 4 INPUT
+    GUESS INPUT
   =========================================================
   */
 
@@ -399,7 +291,6 @@ export default function GuessPasswordPage() {
       character;
 
     setGuess(updated);
-
     setMessage("");
     setError("");
 
@@ -415,12 +306,6 @@ export default function GuessPasswordPage() {
         ?.focus();
     }
   }
-
-  /*
-  =========================================================
-    FIRST 4 BACKSPACE
-  =========================================================
-  */
 
   function handleGuessKeyDown(
     index: number,
@@ -447,6 +332,14 @@ export default function GuessPasswordPage() {
   */
 
   async function submitGuess() {
+    if (!currentUser) {
+      setError(
+        "User aniqlanmadi. Iltimos, sahifani yangilang."
+      );
+
+      return;
+    }
+
     if (!guessComplete) {
       setError(
         "Avval 4 ta belgini kiriting."
@@ -456,7 +349,6 @@ export default function GuessPasswordPage() {
     }
 
     setGuessLoading(true);
-
     setError("");
     setMessage("");
 
@@ -475,7 +367,15 @@ export default function GuessPasswordPage() {
             body: JSON.stringify({
               guess:
                 guessValue,
+
+              username:
+                currentUser.username,
+
+              email:
+                currentUser.email,
             }),
+
+            cache: "no-store",
           }
         );
 
@@ -554,16 +454,30 @@ export default function GuessPasswordPage() {
       );
 
       /*
-        Tokenni saqlaymiz.
+      =====================================================
+        SAVE TOKEN
+      =====================================================
       */
+
+      if (
+        typeof data.token !==
+        "string"
+      ) {
+        setError(
+          "Server token yubormadi."
+        );
+
+        return;
+      }
 
       setUnlockToken(
         data.token
       );
 
       /*
-        Birinchi 4 ta belgini
-        final passwordga joylaymiz.
+      =====================================================
+        FIRST 4 → FINAL PASSWORD
+      =====================================================
       */
 
       setFinalPassword([
@@ -608,10 +522,6 @@ export default function GuessPasswordPage() {
     index: number,
     value: string
   ) {
-    /*
-      Birinchi 4 ta locked.
-    */
-
     if (index < 4) {
       return;
     }
@@ -647,8 +557,7 @@ export default function GuessPasswordPage() {
     if (
       character &&
       index <
-        FULL_PASSWORD_LENGTH -
-          1
+        FULL_PASSWORD_LENGTH - 1
     ) {
       document
         .getElementById(
@@ -657,12 +566,6 @@ export default function GuessPasswordPage() {
         ?.focus();
     }
   }
-
-  /*
-  =========================================================
-    FINAL BACKSPACE
-  =========================================================
-  */
 
   function handleFinalKeyDown(
     index: number,
@@ -693,7 +596,9 @@ export default function GuessPasswordPage() {
   */
 
   async function submitFinalPassword() {
-    if (!finalPasswordComplete) {
+    if (
+      !finalPasswordComplete
+    ) {
       setError(
         "Avval 8 ta belgini to'liq kiriting."
       );
@@ -718,7 +623,6 @@ export default function GuessPasswordPage() {
     }
 
     setFinalLoading(true);
-
     setError("");
     setMessage("");
 
@@ -747,6 +651,8 @@ export default function GuessPasswordPage() {
               email:
                 currentUser.email,
             }),
+
+            cache: "no-store",
           }
         );
 
@@ -764,10 +670,6 @@ export default function GuessPasswordPage() {
           data.error ||
             "Password noto'g'ri."
         );
-
-        /*
-          Faqat oxirgi 4 ni tozalaymiz.
-        */
 
         setFinalPassword([
           finalPassword[0],
@@ -853,7 +755,6 @@ export default function GuessPasswordPage() {
     setUnlockToken("");
 
     setMessage("");
-
     setError("");
 
     setTimeout(() => {
@@ -867,7 +768,7 @@ export default function GuessPasswordPage() {
 
   /*
   =========================================================
-    LOADING USER
+    USER LOADING
   =========================================================
   */
 
@@ -875,16 +776,20 @@ export default function GuessPasswordPage() {
     return (
       <main className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="text-center">
+
           <div className="w-12 h-12 mx-auto mb-4 rounded-2xl border border-green-500/30 bg-green-500/10 flex items-center justify-center">
+
             <KeyRound
               size={22}
               className="text-green-400 animate-pulse"
             />
+
           </div>
 
           <p className="text-zinc-400 font-bold">
             User aniqlanmoqda...
           </p>
+
         </div>
       </main>
     );
@@ -899,12 +804,12 @@ export default function GuessPasswordPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white overflow-hidden">
 
-      {/* BACKGROUND */}
-
       <div className="fixed inset-0 pointer-events-none">
+
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-green-500/10 blur-[130px]" />
 
         <div className="absolute bottom-[-200px] right-[-100px] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
+
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 md:py-14">
@@ -914,12 +819,15 @@ export default function GuessPasswordPage() {
         <section className="text-center mb-12">
 
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/20 bg-green-500/10 text-green-400 text-xs font-black uppercase tracking-[0.2em] mb-5">
+
             <Sparkles size={14} />
 
             Faqat eng zukkolargina uddalaydi
+
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-5">
+
             <span className="text-white">
               KODNI{" "}
             </span>
@@ -927,6 +835,7 @@ export default function GuessPasswordPage() {
             <span className="text-green-400">
               BUZA OLASIZMI?
             </span>
+
           </h1>
 
           <p className="max-w-2xl mx-auto text-zinc-400 text-base md:text-lg leading-relaxed">
@@ -939,7 +848,7 @@ export default function GuessPasswordPage() {
 
         </section>
 
-        {/* STEP INDICATOR */}
+        {/* STEP */}
 
         <section className="max-w-3xl mx-auto mb-8">
 
@@ -955,6 +864,7 @@ export default function GuessPasswordPage() {
                 }
               `}
             >
+
               <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">
                 1-BOSQICH
               </p>
@@ -962,20 +872,21 @@ export default function GuessPasswordPage() {
               <p className="font-black mt-1">
                 4 ta belgini guess qilish
               </p>
+
             </div>
 
             <div
               className={`
                 rounded-2xl border p-4
                 ${
-                  step ===
-                    "password" ||
+                  step === "password" ||
                   step === "won"
                     ? "border-green-500/40 bg-green-500/10"
                     : "border-zinc-800 bg-zinc-900/60"
                 }
               `}
             >
+
               <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">
                 2-BOSQICH
               </p>
@@ -983,6 +894,7 @@ export default function GuessPasswordPage() {
               <p className="font-black mt-1">
                 8 ta passwordni to'ldirish
               </p>
+
             </div>
 
           </div>
@@ -993,15 +905,18 @@ export default function GuessPasswordPage() {
 
         {step === "guess" && (
           <>
+
             <section className="max-w-3xl mx-auto mb-10 rounded-3xl border border-zinc-800 bg-zinc-900/70 backdrop-blur-xl p-6 md:p-8">
 
               <div className="text-center mb-8">
 
                 <div className="mx-auto mb-5 w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-950 border border-zinc-800">
+
                   <KeyRound
                     size={30}
                     className="text-green-400"
                   />
+
                 </div>
 
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-bold mb-2">
@@ -1013,38 +928,26 @@ export default function GuessPasswordPage() {
                 </h2>
 
                 <p className="text-zinc-500 text-sm mt-2">
-                  4 belgili kodni topishga
-                  harakat qiling.
+                  4 belgili kodni topishga harakat qiling.
                 </p>
 
               </div>
 
-              {/* INPUTS */}
-
               <div className="flex justify-center gap-3 md:gap-5 mb-7">
 
                 {guess.map(
-                  (
-                    character,
-                    index
-                  ) => (
+                  (character, index) => (
                     <input
                       key={index}
                       id={`guess-${index}`}
-                      value={
-                        character
-                      }
-                      onChange={(
-                        event
-                      ) =>
+                      value={character}
+                      onChange={(event) =>
                         handleGuessChange(
                           index,
                           event.target.value
                         )
                       }
-                      onKeyDown={(
-                        event
-                      ) =>
+                      onKeyDown={(event) =>
                         handleGuessKeyDown(
                           index,
                           event
@@ -1069,9 +972,6 @@ export default function GuessPasswordPage() {
                         transition
                         uppercase
                       "
-                      aria-label={`Guess ${
-                        index + 1
-                      }`}
                     />
                   )
                 )}
@@ -1092,12 +992,11 @@ export default function GuessPasswordPage() {
 
               <button
                 type="button"
-                onClick={
-                  submitGuess
-                }
+                onClick={submitGuess}
                 disabled={
                   !guessComplete ||
-                  guessLoading
+                  guessLoading ||
+                  !currentUser
                 }
                 className="
                   w-full max-w-md mx-auto
@@ -1113,24 +1012,26 @@ export default function GuessPasswordPage() {
                   transition
                 "
               >
+
                 <KeyRound size={19} />
 
                 {guessLoading
                   ? "TEKSHIRILMOQDA..."
                   : "GUESS QILISH"}
+
               </button>
 
             </section>
 
             {/* HISTORY */}
 
-            {guesses.length >
-              0 && (
+            {guesses.length > 0 && (
               <section className="max-w-3xl mx-auto mb-10">
 
                 <div className="flex items-center justify-between mb-5">
 
                   <div>
+
                     <p className="text-xs uppercase tracking-widest text-zinc-600 font-bold">
                       Urinishlar
                     </p>
@@ -1138,13 +1039,11 @@ export default function GuessPasswordPage() {
                     <h2 className="text-xl font-black">
                       Sizning taxminlaringiz
                     </h2>
+
                   </div>
 
                   <span className="text-sm text-zinc-600">
-                    {
-                      guesses.length
-                    }{" "}
-                    ta urinish
+                    {guesses.length} ta urinish
                   </span>
 
                 </div>
@@ -1152,31 +1051,23 @@ export default function GuessPasswordPage() {
                 <div className="space-y-3">
 
                   {guesses.map(
-                    (
-                      item,
-                      guessIndex
-                    ) => (
+                    (item, guessIndex) => (
                       <div
-                        key={
-                          guessIndex
-                        }
+                        key={guessIndex}
                         className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4"
                       >
+
                         <div className="flex gap-2">
 
                           {item.guess
-                            .split(
-                              ""
-                            )
+                            .split("")
                             .map(
                               (
                                 character,
                                 index
                               ) => (
                                 <div
-                                  key={
-                                    index
-                                  }
+                                  key={index}
                                   className={`
                                     flex-1
                                     rounded-xl
@@ -1184,26 +1075,24 @@ export default function GuessPasswordPage() {
                                     p-3
                                     text-center
                                     ${
-                                      item
-                                        .result[
-                                        index
-                                      ] ===
+                                      item.result[index] ===
                                       "correct"
                                         ? "border-green-500/40 bg-green-500/10"
                                         : "border-red-500/20 bg-red-500/10"
                                     }
                                   `}
                                 >
+
                                   <div className="text-xl font-black">
-                                    {
-                                      character
-                                    }
+                                    {character}
                                   </div>
+
                                 </div>
                               )
                             )}
 
                         </div>
+
                       </div>
                     )
                   )}
@@ -1218,19 +1107,18 @@ export default function GuessPasswordPage() {
 
         {/* PASSWORD STEP */}
 
-        {(step ===
-          "password" ||
+        {(step === "password" ||
           step === "won") && (
           <>
-
-            {/* SUCCESS */}
 
             <section className="max-w-3xl mx-auto mb-10 rounded-3xl border border-green-500/20 bg-green-500/5 p-6 md:p-8">
 
               <div className="flex items-start gap-4">
 
                 <div className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center bg-green-500/10 border border-green-500/20">
+
                   <CheckCircle2 className="text-green-400" />
+
                 </div>
 
                 <div>
@@ -1281,16 +1169,9 @@ export default function GuessPasswordPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                 {passwordSources.map(
-                  (
-                    source
-                  ) => (
-                    <a
-                      key={
-                        source.position
-                      }
-                      href={
-                        source.route
-                      }
+                  (source) => (
+                    <div
+                      key={source.position}
                       className="group rounded-2xl border border-zinc-800 bg-zinc-950/70 hover:border-zinc-600 hover:bg-zinc-900 p-5 transition"
                     >
 
@@ -1299,30 +1180,21 @@ export default function GuessPasswordPage() {
                         <div className="flex items-start gap-3">
 
                           <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl">
-                            {
-                              source.icon
-                            }
+                            {source.icon}
                           </div>
 
                           <div>
 
                             <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold">
-                              {
-                                source.position
-                              }
-                              -belgi
+                              {source.position}-belgi
                             </p>
 
                             <h3 className="font-black mt-1">
-                              {
-                                source.title
-                              }
+                              {source.title}
                             </h3>
 
                             <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                              {
-                                source.description
-                              }
+                              {source.description}
                             </p>
 
                           </div>
@@ -1330,27 +1202,36 @@ export default function GuessPasswordPage() {
                         </div>
 
                         <ExternalLink
-                          size={
-                            17
-                          }
+                          size={17}
                           className="text-zinc-600 group-hover:text-green-400 transition shrink-0"
                         />
 
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          revealSecret(
-                            source.position
-                          )
-                        }
-                        className="mt-4 text-xs text-green-500 font-bold"
-                      >
-                        Ko'rish
-                      </button>
+                      <div className="mt-4 flex items-center justify-between">
 
-                    </a>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            revealSecret(
+                              source.position
+                            )
+                          }
+                          className="text-xs text-green-500 font-bold hover:text-green-400"
+                        >
+                          Ko'rish
+                        </button>
+
+                        <a
+                          href={source.route}
+                          className="text-xs text-zinc-500 hover:text-white transition"
+                        >
+                          Bo'limga o'tish →
+                        </a>
+
+                      </div>
+
+                    </div>
                   )
                 )}
 
@@ -1366,19 +1247,14 @@ export default function GuessPasswordPage() {
 
                 <div className="mx-auto mb-5 w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-950 border border-zinc-800">
 
-                  {step ===
-                  "won" ? (
+                  {step === "won" ? (
                     <Unlock
-                      size={
-                        30
-                      }
+                      size={30}
                       className="text-green-400"
                     />
                   ) : (
                     <Lock
-                      size={
-                        30
-                      }
+                      size={30}
                       className="text-green-400"
                     />
                   )}
@@ -1390,8 +1266,7 @@ export default function GuessPasswordPage() {
                 </p>
 
                 <h2 className="text-2xl md:text-3xl font-black">
-                  {step ===
-                  "won"
+                  {step === "won"
                     ? "KOD BUZILDI!"
                     : "8 TA PASSWORDNI KIRITING"}
                 </h2>
@@ -1404,8 +1279,6 @@ export default function GuessPasswordPage() {
                 </p>
 
               </div>
-
-              {/* 8 INPUTS */}
 
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3 mb-7">
 
@@ -1420,40 +1293,29 @@ export default function GuessPasswordPage() {
 
                     return (
                       <div
-                        key={
-                          index
-                        }
+                        key={index}
                         className="relative"
                       >
 
                         <input
                           id={`final-${index}`}
-                          value={
-                            character
-                          }
-                          onChange={(
-                            event
-                          ) =>
+                          value={character}
+                          onChange={(event) =>
                             handleFinalChange(
                               index,
                               event.target.value
                             )
                           }
-                          onKeyDown={(
-                            event
-                          ) =>
+                          onKeyDown={(event) =>
                             handleFinalKeyDown(
                               index,
                               event
                             )
                           }
-                          maxLength={
-                            1
-                          }
+                          maxLength={1}
                           disabled={
                             locked ||
-                            step ===
-                              "won"
+                            step === "won"
                           }
                           autoComplete="off"
                           className={`
@@ -1474,17 +1336,11 @@ export default function GuessPasswordPage() {
                                 : "bg-zinc-950 border border-zinc-700 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             }
                           `}
-                          aria-label={`Password ${
-                            index +
-                            1
-                          }`}
                         />
 
                         {locked && (
                           <Lock
-                            size={
-                              11
-                            }
+                            size={11}
                             className="absolute top-2 right-2 text-green-500/50"
                           />
                         )}
@@ -1496,15 +1352,11 @@ export default function GuessPasswordPage() {
 
               </div>
 
-              {/* ERROR */}
-
               {error && (
                 <div className="max-w-md mx-auto mb-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm text-red-400">
                   {error}
                 </div>
               )}
-
-              {/* MESSAGE */}
 
               {message && (
                 <div className="max-w-md mx-auto mb-5 rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-center text-sm text-green-400">
@@ -1512,10 +1364,7 @@ export default function GuessPasswordPage() {
                 </div>
               )}
 
-              {/* SUBMIT */}
-
-              {step !==
-              "won" ? (
+              {step !== "won" ? (
                 <button
                   type="button"
                   onClick={
@@ -1528,16 +1377,14 @@ export default function GuessPasswordPage() {
                   className="
                     w-full max-w-md mx-auto
                     flex items-center justify-center
-                    gap-2
-                    px-6 py-4
+                    gap-2 px-6 py-4
                     rounded-2xl
                     bg-green-600
                     hover:bg-green-500
                     disabled:bg-zinc-800
                     disabled:text-zinc-600
                     disabled:cursor-not-allowed
-                    text-white
-                    font-black
+                    text-white font-black
                     transition
                   "
                 >
@@ -1554,11 +1401,7 @@ export default function GuessPasswordPage() {
 
                   <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 font-black">
 
-                    <Unlock
-                      size={
-                        19
-                      }
-                    />
+                    <Unlock size={19} />
 
                     PASSWORD OCHILDI
 
@@ -1575,11 +1418,7 @@ export default function GuessPasswordPage() {
                 className="flex items-center justify-center gap-2 mx-auto mt-5 text-xs text-zinc-600 hover:text-zinc-300 transition"
               >
 
-                <RotateCcw
-                  size={
-                    13
-                  }
-                />
+                <RotateCcw size={13} />
 
                 QAYTA BOSHLASH
 
@@ -1597,9 +1436,7 @@ export default function GuessPasswordPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
 
             <Eye
-              size={
-                19
-              }
+              size={19}
               className="text-green-400 mb-3"
             />
 
@@ -1617,9 +1454,7 @@ export default function GuessPasswordPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
 
             <Search
-              size={
-                19
-              }
+              size={19}
               className="text-blue-400 mb-3"
             />
 
@@ -1638,9 +1473,7 @@ export default function GuessPasswordPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
 
             <Lock
-              size={
-                19
-              }
+              size={19}
               className="text-yellow-400 mb-3"
             />
 
