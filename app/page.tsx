@@ -20,7 +20,7 @@ export default function LoginPage() {
   }, [router]);
 
   async function handleLogin() {
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       alert("Please fill in all fields.");
       return;
     }
@@ -34,7 +34,7 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
+          username: username.trim(),
           password,
         }),
       });
@@ -42,7 +42,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error);
+        alert(data.error || "Invalid username or password.");
         setLoading(false);
         return;
       }
@@ -51,21 +51,21 @@ export default function LoginPage() {
 
       router.replace("/afterregister");
     } catch (error) {
-      console.error(error);
-      alert("Server error.");
+      console.error("Login error:", error);
+      alert("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* =====================================================
-          GENESIS BACKGROUND
-      ====================================================== */}
+    <main className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* ================================
+          BACKGROUND GLOW
+      ================================= */}
 
-      {/* Main radial glow */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Main purple glow */}
         <div
           className="
             absolute
@@ -81,6 +81,7 @@ export default function LoginPage() {
           "
         />
 
+        {/* Top left glow */}
         <div
           className="
             absolute
@@ -94,6 +95,7 @@ export default function LoginPage() {
           "
         />
 
+        {/* Bottom right glow */}
         <div
           className="
             absolute
@@ -108,7 +110,10 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* Background dots */}
+      {/* ================================
+          BACKGROUND DOTS
+      ================================= */}
+
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
@@ -118,33 +123,185 @@ export default function LoginPage() {
         }}
       />
 
-      {/* =====================================================
-          GENESIS FLOATING PARTICLES
-      ====================================================== */}
+      {/* ================================
+          FLOATING STARS
+      ================================= */}
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="genesis-star star-1">✦</div>
-        <div className="genesis-star star-2">✧</div>
-        <div className="genesis-star star-3">✦</div>
-        <div className="genesis-star star-4">◇</div>
-        <div className="genesis-star star-5">✧</div>
-        <div className="genesis-star star-6">✦</div>
-        <div className="genesis-star star-7">◇</div>
-        <div className="genesis-star star-8">✧</div>
-
-        {/* Orbit */}
-        <div className="genesis-orbit orbit-1">
-          <div className="orbit-point" />
+        <div
+          className="
+            absolute
+            left-[8%]
+            top-[18%]
+            text-purple-400/40
+            text-2xl
+            animate-pulse
+          "
+        >
+          ✦
         </div>
 
-        <div className="genesis-orbit orbit-2">
-          <div className="orbit-point" />
+        <div
+          className="
+            absolute
+            left-[18%]
+            top-[72%]
+            text-purple-400/30
+            text-xl
+            animate-pulse
+          "
+        >
+          ✧
+        </div>
+
+        <div
+          className="
+            absolute
+            right-[10%]
+            top-[16%]
+            text-purple-400/40
+            text-2xl
+            animate-pulse
+          "
+        >
+          ✦
+        </div>
+
+        <div
+          className="
+            absolute
+            right-[18%]
+            top-[70%]
+            text-purple-400/30
+            text-2xl
+            animate-pulse
+          "
+        >
+          ◇
+        </div>
+
+        <div
+          className="
+            absolute
+            left-[30%]
+            top-[12%]
+            text-purple-400/30
+            text-lg
+            animate-pulse
+          "
+        >
+          ✧
+        </div>
+
+        <div
+          className="
+            absolute
+            right-[32%]
+            bottom-[12%]
+            text-purple-400/40
+            text-xl
+            animate-pulse
+          "
+        >
+          ✦
+        </div>
+
+        <div
+          className="
+            absolute
+            left-[5%]
+            bottom-[20%]
+            text-purple-400/30
+            text-lg
+            animate-pulse
+          "
+        >
+          ◇
+        </div>
+
+        <div
+          className="
+            absolute
+            right-[5%]
+            bottom-[30%]
+            text-purple-400/30
+            text-lg
+            animate-pulse
+          "
+        >
+          ✧
         </div>
       </div>
 
-      {/* =====================================================
-          LOGIN
-      ====================================================== */}
+      {/* ================================
+          ORBITS
+      ================================= */}
+
+      <div className="absolute inset-0 pointer-events-none overflow-hidden hidden sm:block">
+        <div
+          className="
+            absolute
+            left-1/2
+            top-1/2
+            h-[520px]
+            w-[520px]
+            -translate-x-1/2
+            -translate-y-1/2
+            rounded-full
+            border
+            border-purple-500/10
+          "
+        >
+          <div
+            className="
+              absolute
+              left-1/2
+              top-0
+              h-2
+              w-2
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              bg-purple-400/60
+              shadow-[0_0_20px_rgba(168,85,247,0.7)]
+            "
+          />
+        </div>
+
+        <div
+          className="
+            absolute
+            left-1/2
+            top-1/2
+            h-[760px]
+            w-[760px]
+            -translate-x-1/2
+            -translate-y-1/2
+            rounded-full
+            border
+            border-purple-500/5
+          "
+        >
+          <div
+            className="
+              absolute
+              left-1/2
+              bottom-0
+              h-2
+              w-2
+              -translate-x-1/2
+              translate-y-1/2
+              rounded-full
+              bg-purple-400/40
+              shadow-[0_0_20px_rgba(168,85,247,0.5)]
+            "
+          />
+        </div>
+      </div>
+
+      {/* ================================
+          LOGIN CONTENT
+      ================================= */}
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-[420px] flex flex-col items-center">
@@ -177,20 +334,34 @@ export default function LoginPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mt-2 mb-8">
+          <h1
+            className="
+              mt-2
+              mb-8
+              text-4xl
+              md:text-6xl
+              font-bold
+              text-center
+            "
+          >
             Sign in
           </h1>
 
           {/* Username */}
           <div className="w-full mb-8">
-            <label className="text-xl md:text-3xl font-bold">
+            <label
+              htmlFor="username"
+              className="text-xl md:text-3xl font-bold"
+            >
               Email or Username:
             </label>
 
             <input
+              id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
               className="
                 w-full
                 h-14
@@ -203,6 +374,7 @@ export default function LoginPage() {
                 px-5
                 text-lg
                 md:text-2xl
+                text-white
                 outline-none
                 focus:border-purple-400
                 transition
@@ -212,19 +384,24 @@ export default function LoginPage() {
 
           {/* Password */}
           <div className="w-full">
-            <label className="text-xl md:text-3xl font-bold">
+            <label
+              htmlFor="password"
+              className="text-xl md:text-3xl font-bold"
+            >
               Password:
             </label>
 
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !loading) {
                   handleLogin();
                 }
               }}
+              autoComplete="current-password"
               className="
                 w-full
                 h-14
@@ -237,6 +414,7 @@ export default function LoginPage() {
                 px-5
                 text-lg
                 md:text-2xl
+                text-white
                 outline-none
                 focus:border-purple-400
                 transition
@@ -244,8 +422,9 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Sign in */}
+          {/* Sign in button */}
           <button
+            type="button"
             onClick={handleLogin}
             disabled={loading}
             className="
@@ -262,12 +441,13 @@ export default function LoginPage() {
               transition
               disabled:opacity-60
               disabled:hover:scale-100
+              disabled:cursor-not-allowed
             "
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
 
-          {/* Links */}
+          {/* Forgot password */}
           <Link
             href="/forgot"
             className="
@@ -281,6 +461,7 @@ export default function LoginPage() {
             Forgot your password?
           </Link>
 
+          {/* Registration */}
           <Link
             href="/registration"
             className="
@@ -295,137 +476,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
-
-      {/* =====================================================
-          GENESIS ANIMATION CSS
-      ====================================================== */}
-
-      <style jsx>{`
-        .genesis-star {
-          position: absolute;
-          color: rgba(168, 85, 247, 0.45);
-          font-size: 24px;
-          animation: genesisFloat 7s ease-in-out infinite;
-        }
-
-        .star-1 {
-          left: 8%;
-          top: 18%;
-          animation-delay: 0s;
-        }
-
-        .star-2 {
-          left: 18%;
-          top: 72%;
-          animation-delay: 1.2s;
-        }
-
-        .star-3 {
-          right: 10%;
-          top: 16%;
-          animation-delay: 2s;
-        }
-
-        .star-4 {
-          right: 18%;
-          top: 70%;
-          animation-delay: 3s;
-        }
-
-        .star-5 {
-          left: 30%;
-          top: 12%;
-          font-size: 18px;
-          animation-delay: 2.5s;
-        }
-
-        .star-6 {
-          right: 32%;
-          bottom: 12%;
-          font-size: 20px;
-          animation-delay: 4s;
-        }
-
-        .star-7 {
-          left: 5%;
-          bottom: 20%;
-          font-size: 18px;
-          animation-delay: 3.5s;
-        }
-
-        .star-8 {
-          right: 5%;
-          bottom: 30%;
-          font-size: 18px;
-          animation-delay: 1.8s;
-        }
-
-        .genesis-orbit {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          border: 1px solid rgba(168, 85, 247, 0.08);
-          border-radius: 9999px;
-          transform: translate(-50%, -50%);
-          animation: orbitRotate 18s linear infinite;
-        }
-
-        .orbit-1 {
-          width: 520px;
-          height: 520px;
-        }
-
-        .orbit-2 {
-          width: 760px;
-          height: 760px;
-          animation-duration: 28s;
-          animation-direction: reverse;
-        }
-
-        .orbit-point {
-          position: absolute;
-          top: -4px;
-          left: 50%;
-          width: 8px;
-          height: 8px;
-          border-radius: 9999px;
-          background: rgba(168, 85, 247, 0.6);
-          box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
-        }
-
-        @keyframes genesisFloat {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-            opacity: 0.25;
-          }
-
-          50% {
-            transform: translateY(-25px) rotate(180deg);
-            opacity: 0.7;
-          }
-        }
-
-        @keyframes orbitRotate {
-          from {
-            transform: translate(-50%, -50%) rotate(0deg);
-          }
-
-          to {
-            transform: translate(-50%, -50%) rotate(360deg);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .genesis-orbit {
-            display: none;
-          }
-
-          .genesis-star {
-            font-size: 18px;
-          }
-        }
-      `}</style>
-    </div>
+    </main>
   );
 }
