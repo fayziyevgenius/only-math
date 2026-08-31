@@ -19,6 +19,24 @@ const CYCLES = [
 ];
 
 /* =========================================================
+   GET CURRENT CYCLE
+========================================================= */
+
+function getCurrentCycle() {
+  const now = new Date();
+
+  let currentCycle = CYCLES[0];
+
+  for (const cycle of CYCLES) {
+    if (now >= cycle.resetDate) {
+      currentCycle = cycle;
+    }
+  }
+
+  return currentCycle;
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
@@ -26,35 +44,48 @@ export async function POST() {
   try {
     const now = new Date();
 
-    /* =======================================================
-       FIND LATEST CYCLE THAT SHOULD HAVE STARTED
-    ======================================================= */
+    /* =====================================================
+       CURRENT CYCLE
+    ===================================================== */
 
-    let currentCycle = CYCLES[0];
+    const currentCycle = getCurrentCycle();
 
-    for (const cycle of CYCLES) {
-      if (now >= cycle.resetDate) {
-        currentCycle = cycle;
-      }
-    }
+    console.log("=================================");
+    console.log("CYCLE RESET CHECK");
+    console.log("Current time:", now.toISOString());
+    console.log("Current cycle:", currentCycle.cycle);
+    console.log("Cycle name:", currentCycle.name);
+    console.log(
+      "Scheduled reset:",
+      currentCycle.resetDate.toISOString()
+    );
+    console.log("=================================");
 
-    /* =======================================================
+    /* =====================================================
        DATABASE
-    ======================================================= */
+    ===================================================== */
 
     const db = await connectDB();
 
     const users = db.collection("users");
 
-    /* =======================================================
-       CHECK IF THIS CYCLE RESET WAS ALREADY COMPLETED
-    ======================================================= */
+    const system = db.collection("system");
 
-    const resetMarker = await db
-      .collection("system")
-      .findOne({
-        key: `cycle-reset-${currentCycle.cycle}`,
+    /* =====================================================
+       CHECK RESET MARKER
+    ===================================================== */
+
+    const resetKey =
+      `cycle-reset-${currentCycle.cycle}`;
+
+    const resetMarker =
+      await system.findOne({
+        key: resetKey,
       });
+
+    /* =====================================================
+       ALREADY RESET
+    ===================================================== */
 
     if (resetMarker) {
       return NextResponse.json({
@@ -64,163 +95,194 @@ export async function POST() {
 
         alreadyReset: true,
 
-        currentCycle: currentCycle.cycle,
+        cycle: currentCycle.cycle,
 
         cycleName: currentCycle.name,
 
+        resetAt: resetMarker.resetAt,
+
         message:
-          `${currentCycle.name} reset has already been completed.`,
+          `${currentCycle.name} has already been reset.`,
       });
     }
 
-    /* =======================================================
+    /* =====================================================
        RESET ALL USERS
-    ======================================================= */
+    ===================================================== */
 
-    const result = await users.updateMany(
-      {},
-      {
-        $set: {
-          /* -----------------------------------------------
-             GENIUS POINTS
-          ------------------------------------------------ */
+    const result =
+      await users.updateMany(
+        {},
+        {
+          $set: {
+            /* =============================================
+               GENIUS POINTS
+            ============================================= */
 
-          geniusPoints: 0,
+            geniusPoints: 0,
 
-          /* -----------------------------------------------
-             TITLE
-          ------------------------------------------------ */
+            /* =============================================
+               TITLE
+            ============================================= */
 
-          title: "🌱 Beginner",
+            title: "🌱 Beginner",
 
-          /* -----------------------------------------------
-             STREAK
-          ------------------------------------------------ */
+            /* =============================================
+               STREAK
+            ============================================= */
 
-          streak: 0,
+            streak: 0,
 
-          /* -----------------------------------------------
-             LAST SOLVED DATE
-          ------------------------------------------------ */
+            /* =============================================
+               LAST SOLVED DATE
+            ============================================= */
 
-          lastSolvedDate: null,
+            lastSolvedDate: null,
 
-          /* -----------------------------------------------
-             SOLVED FLAGS
-          ------------------------------------------------ */
+            /* =============================================
+               SOLVED FLAGS
+            ============================================= */
 
-          certificateSolved: false,
+            certificateSolved: false,
 
-          satSolved: false,
+            satSolved: false,
 
-          olympiadSolved: false,
+            olympiadSolved: false,
 
-          dailySolved: false,
+            dailySolved: false,
 
-          /* -----------------------------------------------
-             NATIONAL CERTIFICATE STATS
-          ------------------------------------------------ */
+            /* =============================================
+               NATIONAL CERTIFICATE
+            ============================================= */
 
-          "stats.national.attempts": 0,
+            "stats.national.attempts": 0,
 
-          "stats.national.correct": 0,
+            "stats.national.correct": 0,
 
-          /* -----------------------------------------------
-             SAT STATS
-          ------------------------------------------------ */
+            /* =============================================
+               SAT
+            ============================================= */
 
-          "stats.sat.attempts": 0,
+            "stats.sat.attempts": 0,
 
-          "stats.sat.correct": 0,
+            "stats.sat.correct": 0,
 
-          /* -----------------------------------------------
-             OLYMPIAD STATS
-          ------------------------------------------------ */
+            /* =============================================
+               OLYMPIAD
+            ============================================= */
 
-          "stats.olympiad.attempts": 0,
+            "stats.olympiad.attempts": 0,
 
-          "stats.olympiad.correct": 0,
+            "stats.olympiad.correct": 0,
 
-          /* -----------------------------------------------
-             DAILY STATS
-          ------------------------------------------------ */
+            /* =============================================
+               OLYMPIAD CYCLE DATA
+            ============================================= */
 
-          "stats.daily.attempts": 0,
+            "stats.olympiad.genesis.attempts": 0,
 
-          "stats.daily.correct": 0,
+            "stats.olympiad.genesis.correct": 0,
 
-          /* -----------------------------------------------
-             MATH SPRINT STATS
-          ------------------------------------------------ */
+            "stats.olympiad.independence.attempts": 0,
 
-          "stats.mathSpirit.games": 0,
+            "stats.olympiad.independence.correct": 0,
 
-          "stats.mathSpirit.highestScore": 0,
+            /* =============================================
+               DAILY
+            ============================================= */
 
-          "stats.mathSpirit.totalScore": 0,
+            "stats.daily.attempts": 0,
 
-          "stats.mathSpirit.bestCombo": 0,
+            "stats.daily.correct": 0,
 
-          /* -----------------------------------------------
-             CURRENT CYCLE
-          ------------------------------------------------ */
+            /* =============================================
+               MATH SPRINT
+            ============================================= */
 
-          currentCycle: currentCycle.cycle,
+            "stats.mathSpirit.games": 0,
 
-          /* -----------------------------------------------
-             CYCLE RESET DATE
-          ------------------------------------------------ */
+            "stats.mathSpirit.highestScore": 0,
 
-          cycleResetAt: now,
+            "stats.mathSpirit.totalScore": 0,
 
-          /* -----------------------------------------------
-             CYCLE START DATE
-          ------------------------------------------------ */
+            "stats.mathSpirit.bestCombo": 0,
 
-          cycleStartedAt: currentCycle.resetDate,
-        },
-      }
-    );
+            /* =============================================
+               CERTIFICATE CYCLES
+            ============================================= */
 
-    /* =======================================================
+            certificateCycles: {},
+
+            /* =============================================
+               CURRENT CYCLE
+            ============================================= */
+
+            currentCycle: currentCycle.cycle,
+
+            currentCycleName: currentCycle.name,
+
+            /* =============================================
+               RESET DATE
+            ============================================= */
+
+            cycleResetAt: now,
+
+            /* =============================================
+               CYCLE START DATE
+            ============================================= */
+
+            cycleStartedAt:
+              currentCycle.resetDate,
+          },
+        }
+      );
+
+    /* =====================================================
        RESET MATH SPRINT LEADERBOARD
-    ======================================================= */
+    ===================================================== */
 
     const mathSpiritLeaderboard =
-      db.collection("math_spirit_leaderboard");
+      db.collection(
+        "math_spirit_leaderboard"
+      );
 
     const mathSpiritResult =
-      await mathSpiritLeaderboard.deleteMany({});
+      await mathSpiritLeaderboard.deleteMany(
+        {}
+      );
 
-    /* =======================================================
+    /* =====================================================
        RESET CYCLE LEADERBOARD
-    ======================================================= */
+    ===================================================== */
 
     const cycleLeaderboard =
-      db.collection("cycle_leaderboard");
+      db.collection(
+        "cycle_leaderboard"
+      );
 
     const cycleLeaderboardResult =
-      await cycleLeaderboard.deleteMany({});
+      await cycleLeaderboard.deleteMany(
+        {}
+      );
 
-    /* =======================================================
-       IMPORTANT:
-       GLOBAL LEADERBOARD IS NOT DELETED
-    ======================================================= */
+    /* =====================================================
+       GLOBAL LEADERBOARD
+       DO NOT DELETE
+    ===================================================== */
 
     /*
-      We intentionally DO NOT delete:
+      Global leaderboard untouched.
 
-        db.collection("leaderboard")
-
-      Global Leaderboard remains untouched.
+      db.collection("leaderboard")
+      NEVER deleted.
     */
 
-    /* =======================================================
+    /* =====================================================
        SAVE RESET MARKER
-    ======================================================= */
+    ===================================================== */
 
-    await db.collection("system").insertOne({
-      key: `cycle-reset-${currentCycle.cycle}`,
+    await system.insertOne({
+      key: resetKey,
 
       cycle: currentCycle.cycle,
 
@@ -228,9 +290,11 @@ export async function POST() {
 
       resetAt: now,
 
-      scheduledResetAt: currentCycle.resetDate,
+      scheduledResetAt:
+        currentCycle.resetDate,
 
-      usersReset: result.modifiedCount,
+      usersReset:
+        result.modifiedCount,
 
       mathSpiritLeaderboardDeleted:
         mathSpiritResult.deletedCount,
@@ -239,9 +303,34 @@ export async function POST() {
         cycleLeaderboardResult.deletedCount,
     });
 
-    /* =======================================================
+    /* =====================================================
+       LOG
+    ===================================================== */
+
+    console.log("=================================");
+    console.log("CYCLE RESET SUCCESS");
+    console.log("Cycle:", currentCycle.cycle);
+    console.log("Name:", currentCycle.name);
+    console.log(
+      "Users reset:",
+      result.modifiedCount
+    );
+    console.log(
+      "Math Sprint deleted:",
+      mathSpiritResult.deletedCount
+    );
+    console.log(
+      "Cycle leaderboard deleted:",
+      cycleLeaderboardResult.deletedCount
+    );
+    console.log(
+      "Global leaderboard: NOT DELETED"
+    );
+    console.log("=================================");
+
+    /* =====================================================
        RESPONSE
-    ======================================================= */
+    ===================================================== */
 
     return NextResponse.json({
       success: true,
@@ -252,7 +341,8 @@ export async function POST() {
 
       cycleName: currentCycle.name,
 
-      usersReset: result.modifiedCount,
+      usersReset:
+        result.modifiedCount,
 
       mathSpiritLeaderboardDeleted:
         mathSpiritResult.deletedCount,
@@ -263,13 +353,27 @@ export async function POST() {
       globalLeaderboard:
         "NOT DELETED",
 
+      resetAt: now,
+
+      scheduledResetAt:
+        currentCycle.resetDate,
+
       message:
-        `${currentCycle.name} has started. All user progress has been reset successfully.`,
+        `${currentCycle.name} has started. All cycle progress has been reset successfully.`,
     });
   } catch (error) {
     console.error(
-      "CYCLE RESET ERROR:",
-      error
+      "================================="
+    );
+
+    console.error(
+      "CYCLE RESET ERROR:"
+    );
+
+    console.error(error);
+
+    console.error(
+      "================================="
     );
 
     return NextResponse.json(
