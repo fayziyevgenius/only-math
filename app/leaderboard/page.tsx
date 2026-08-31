@@ -32,29 +32,40 @@ type SprintUser = {
 
 type Tab = "global" | "sprint";
 
-const avatarImages: Record<string, string> = {
-  "only-math": "/logo.png",
+/* =====================================================
+   AVATAR IMAGES
+===================================================== */
 
-  "genesis-cycle":
-    "/avatars/genesis-cycle.png",
+const avatarImages: Record<string, string> = {
+  "only-math":
+    "/logo.png",
+
+  "independence-cycle":
+    "/avatars/independence-cycle.png",
 
   "daily-7":
-    "/avatars/daily-7.png",
+    "/avatars/daily-7in.png",
 
   "solve-question":
-    "/avatars/solve-question.png",
+    "/avatars/solve-questionin.png",
 
   "sprint-60":
-    "/avatars/sprint-60.png",
+    "/avatars/sprint-60in.png",
 
   "perfect-trio":
-    "/avatars/perfect-trio.png",
+    "/avatars/perfect-trioin.png",
 
   "top-3":
-    "/avatars/top-3.png",
+    "/avatars/top-3in.png",
 };
 
-function getAvatarImage(avatar?: string): string {
+/* =====================================================
+   GET AVATAR IMAGE
+===================================================== */
+
+function getAvatarImage(
+  avatar?: string
+): string {
   if (!avatar) {
     return "/logo.png";
   }
@@ -63,12 +74,28 @@ function getAvatarImage(avatar?: string): string {
     return avatarImages[avatar];
   }
 
+  /*
+   * Agar database'da eski Genesis avatar qolib ketgan
+   * bo'lsa, uni Independence avatariga o'tkazamiz.
+   */
+  if (avatar === "genesis-cycle") {
+    return "/avatars/independence-cycle.png";
+  }
+
+  /*
+   * Agar database'da to'g'ridan-to'g'ri
+   * image path saqlangan bo'lsa.
+   */
   if (avatar.startsWith("/")) {
     return avatar;
   }
 
   return "/logo.png";
 }
+
+/* =====================================================
+   PAGE
+===================================================== */
 
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] =
@@ -89,6 +116,10 @@ export default function LeaderboardPage() {
   const [error, setError] =
     useState("");
 
+  /* =====================================================
+     LOAD LEADERBOARDS
+  ===================================================== */
+
   async function loadLeaderboards(
     refresh = false
   ) {
@@ -101,27 +132,33 @@ export default function LeaderboardPage() {
 
       setError("");
 
-      const [globalResponse, sprintResponse] =
-        await Promise.all([
-          fetch("/api/leaderboard", {
+      const [
+        globalResponse,
+        sprintResponse,
+      ] = await Promise.all([
+        fetch("/api/leaderboard", {
+          method: "GET",
+          cache: "no-store",
+        }),
+
+        fetch(
+          "/api/math-spirit/leaderboard",
+          {
             method: "GET",
             cache: "no-store",
-          }),
-
-          fetch(
-            "/api/math-spirit/leaderboard",
-            {
-              method: "GET",
-              cache: "no-store",
-            }
-          ),
-        ]);
+          }
+        ),
+      ]);
 
       const globalData =
         await globalResponse.json();
 
       const sprintData =
         await sprintResponse.json();
+
+      /* =================================================
+         GLOBAL ERROR png
+      ================================================= */
 
       if (!globalResponse.ok) {
         throw new Error(
@@ -130,12 +167,20 @@ export default function LeaderboardPage() {
         );
       }
 
+      /* =================================================
+         SPRINT ERROR
+      ================================================= */
+
       if (!sprintResponse.ok) {
         throw new Error(
           sprintData.error ||
             "Failed to load sprint leaderboard."
         );
       }
+
+      /* =================================================
+         VALIDATION
+      ================================================= */
 
       if (!Array.isArray(globalData)) {
         throw new Error(
@@ -148,6 +193,10 @@ export default function LeaderboardPage() {
           "Invalid sprint leaderboard data."
         );
       }
+
+      /* =================================================
+         SAVE DATA
+      ================================================= */
 
       setGlobalUsers(globalData);
       setSprintUsers(sprintData);
@@ -166,29 +215,67 @@ export default function LeaderboardPage() {
     }
   }
 
+  /* =====================================================
+     INITIAL LOAD
+  ===================================================== */
+
   useEffect(() => {
     loadLeaderboards();
   }, []);
+
+  /* =====================================================
+     LOADING
+  ===================================================== */
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
+
+          <div
+            className="
+              w-10
+              h-10
+              border-4
+              border-zinc-700
+              border-t-green-500
+              rounded-full
+              animate-spin
+              mx-auto
+              mb-4
+            "
+          />
 
           <p className="text-zinc-400">
             Loading leaderboard...
           </p>
+
         </div>
       </div>
     );
   }
 
+  /* =====================================================
+     ERROR
+  ===================================================== */
+
   if (error) {
     return (
       <div className="min-h-screen bg-black text-white p-6 md:p-10">
+
         <div className="max-w-5xl mx-auto">
-          <div className="border border-red-900 bg-red-950/20 rounded-3xl p-10 text-center">
+
+          <div
+            className="
+              border
+              border-red-900
+              bg-red-950/20
+              rounded-3xl
+              p-10
+              text-center
+            "
+          >
+
             <h1 className="text-3xl font-bold mb-3">
               Leaderboard Error
             </h1>
@@ -202,15 +289,30 @@ export default function LeaderboardPage() {
               onClick={() =>
                 loadLeaderboards(true)
               }
-              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold"
+              className="
+                bg-green-600
+                hover:bg-green-700
+                px-6
+                py-3
+                rounded-xl
+                font-bold
+                transition
+              "
             >
               Try Again
             </button>
+
           </div>
+
         </div>
+
       </div>
     );
   }
+
+  /* =====================================================
+     CURRENT USERS
+  ===================================================== */
 
   const users =
     activeTab === "global"
@@ -221,14 +323,35 @@ export default function LeaderboardPage() {
   const second = users[1];
   const third = users[2];
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-10">
+
       <div className="max-w-5xl mx-auto">
 
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-7">
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div
+          className="
+            flex
+            flex-col
+            md:flex-row
+            md:items-center
+            md:justify-between
+            gap-5
+            mb-7
+          "
+        >
+
           <div>
+
             <div className="flex items-center gap-3">
+
               {activeTab === "global" ? (
                 <Trophy
                   size={38}
@@ -244,6 +367,7 @@ export default function LeaderboardPage() {
               <h1 className="text-4xl md:text-5xl font-black">
                 Leaderboard
               </h1>
+
             </div>
 
             <p className="text-zinc-400 mt-3">
@@ -251,6 +375,7 @@ export default function LeaderboardPage() {
                 ? "The strongest mathematicians on Only Math."
                 : "Math Sprint's fastest players."}
             </p>
+
           </div>
 
           <button
@@ -259,8 +384,24 @@ export default function LeaderboardPage() {
               loadLeaderboards(true)
             }
             disabled={refreshing}
-            className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-green-500 px-5 py-3 rounded-xl font-bold transition disabled:opacity-50"
+            className="
+              flex
+              items-center
+              justify-center
+              gap-2
+              bg-zinc-900
+              border
+              border-zinc-700
+              hover:border-green-500
+              px-5
+              py-3
+              rounded-xl
+              font-bold
+              transition
+              disabled:opacity-50
+            "
           >
+
             <RefreshCw
               size={18}
               className={
@@ -271,12 +412,29 @@ export default function LeaderboardPage() {
             />
 
             Refresh
+
           </button>
+
         </div>
 
-        {/* TABS */}
+        {/* =================================================
+            TABS
+        ================================================= */}
+
         <div className="mb-8">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+
+          <div
+            className="
+              flex
+              gap-2
+              overflow-x-auto
+              pb-1
+              scrollbar-hide
+            "
+          >
+
+            {/* GLOBAL */}
+
             <button
               type="button"
               onClick={() =>
@@ -284,8 +442,11 @@ export default function LeaderboardPage() {
               }
               className={`
                 shrink-0
-                flex items-center gap-2
-                px-5 py-3
+                flex
+                items-center
+                gap-2
+                px-5
+                py-3
                 rounded-xl
                 font-bold
                 border
@@ -297,9 +458,14 @@ export default function LeaderboardPage() {
                 }
               `}
             >
+
               <Globe size={18} />
+
               Global
+
             </button>
+
+            {/* MATH SPRINT */}
 
             <button
               type="button"
@@ -308,8 +474,11 @@ export default function LeaderboardPage() {
               }
               className={`
                 shrink-0
-                flex items-center gap-2
-                px-5 py-3
+                flex
+                items-center
+                gap-2
+                px-5
+                py-3
                 rounded-xl
                 font-bold
                 border
@@ -321,15 +490,33 @@ export default function LeaderboardPage() {
                 }
               `}
             >
+
               <Zap size={18} />
+
               Math Sprint
+
             </button>
+
           </div>
+
         </div>
 
-        {/* EMPTY */}
+        {/* =================================================
+            EMPTY
+        ================================================= */}
+
         {users.length === 0 ? (
-          <div className="border border-zinc-800 rounded-3xl p-12 text-center">
+
+          <div
+            className="
+              border
+              border-zinc-800
+              rounded-3xl
+              p-12
+              text-center
+            "
+          >
+
             {activeTab === "global" ? (
               <Trophy
                 size={60}
@@ -343,25 +530,60 @@ export default function LeaderboardPage() {
             )}
 
             <h2 className="text-3xl font-bold mb-3">
+
               {activeTab === "global"
                 ? "No rankings yet"
                 : "No Sprint rankings yet"}
+
             </h2>
 
             <p className="text-zinc-500">
+
               {activeTab === "global"
                 ? "Start solving problems and earn Genius Points."
                 : "Play Math Sprint and become the first champion."}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* TOP 3 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
 
-              {/* SECOND */}
+            </p>
+
+          </div>
+
+        ) : (
+
+          <>
+
+            {/* =================================================
+                TOP 3
+            ================================================= */}
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                md:grid-cols-3
+                gap-5
+                mb-10
+              "
+            >
+
+              {/* =================================================
+                  SECOND
+              ================================================= */}
+
               {second && (
-                <div className="order-2 md:order-1 bg-zinc-950 border border-zinc-700 rounded-3xl p-7 text-center">
+
+                <div
+                  className="
+                    order-2
+                    md:order-1
+                    bg-zinc-950
+                    border
+                    border-zinc-700
+                    rounded-3xl
+                    p-7
+                    text-center
+                  "
+                >
+
                   <div className="text-4xl mb-4">
                     🥈
                   </div>
@@ -371,7 +593,16 @@ export default function LeaderboardPage() {
                       second.avatar
                     )}
                     alt={second.username}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-zinc-600 mx-auto mb-4"
+                    className="
+                      w-24
+                      h-24
+                      rounded-full
+                      object-cover
+                      border-4
+                      border-zinc-600
+                      mx-auto
+                      mb-4
+                    "
                     onError={(event) => {
                       event.currentTarget.src =
                         "/logo.png";
@@ -388,21 +619,32 @@ export default function LeaderboardPage() {
                   </p>
 
                   {activeTab === "global" ? (
+
                     <>
+
                       <p className="text-zinc-400 text-sm mt-4">
                         {(second as GlobalUser).title}
                       </p>
 
                       <p className="text-3xl font-black text-zinc-300 mt-2">
-                        {(second as GlobalUser).geniusPoints}
+
+                        {
+                          (second as GlobalUser)
+                            .geniusPoints
+                        }
 
                         <span className="text-sm text-zinc-500 ml-2">
                           GP
                         </span>
+
                       </p>
+
                     </>
+
                   ) : (
+
                     <>
+
                       <p className="text-3xl font-black text-zinc-300 mt-5">
                         {(second as SprintUser).score}
                       </p>
@@ -410,14 +652,37 @@ export default function LeaderboardPage() {
                       <p className="text-zinc-500 text-sm">
                         Sprint Score
                       </p>
+
                     </>
+
                   )}
+
                 </div>
+
               )}
 
-              {/* FIRST */}
+              {/* =================================================
+                  FIRST
+              ================================================= */}
+
               {first && (
-                <div className="order-1 md:order-2 md:-translate-y-5 bg-gradient-to-b from-yellow-500/10 to-zinc-950 border border-yellow-500/40 rounded-3xl p-7 text-center">
+
+                <div
+                  className="
+                    order-1
+                    md:order-2
+                    md:-translate-y-5
+                    bg-gradient-to-b
+                    from-yellow-500/10
+                    to-zinc-950
+                    border
+                    border-yellow-500/40
+                    rounded-3xl
+                    p-7
+                    text-center
+                  "
+                >
+
                   <Crown
                     size={40}
                     className="text-yellow-400 mx-auto mb-2"
@@ -432,7 +697,16 @@ export default function LeaderboardPage() {
                       first.avatar
                     )}
                     alt={first.username}
-                    className="w-28 h-28 rounded-full object-cover border-4 border-yellow-400 mx-auto mb-4"
+                    className="
+                      w-28
+                      h-28
+                      rounded-full
+                      object-cover
+                      border-4
+                      border-yellow-400
+                      mx-auto
+                      mb-4
+                    "
                     onError={(event) => {
                       event.currentTarget.src =
                         "/logo.png";
@@ -449,21 +723,32 @@ export default function LeaderboardPage() {
                   </p>
 
                   {activeTab === "global" ? (
+
                     <>
+
                       <p className="text-yellow-400 text-sm mt-4 font-bold">
                         {(first as GlobalUser).title}
                       </p>
 
                       <p className="text-4xl font-black text-yellow-400 mt-2">
-                        {(first as GlobalUser).geniusPoints}
+
+                        {
+                          (first as GlobalUser)
+                            .geniusPoints
+                        }
 
                         <span className="text-sm text-zinc-500 ml-2">
                           GP
                         </span>
+
                       </p>
+
                     </>
+
                   ) : (
+
                     <>
+
                       <p className="text-4xl font-black text-yellow-400 mt-5">
                         {(first as SprintUser).score}
                       </p>
@@ -471,14 +756,33 @@ export default function LeaderboardPage() {
                       <p className="text-zinc-500 text-sm">
                         Sprint Score
                       </p>
+
                     </>
+
                   )}
+
                 </div>
+
               )}
 
-              {/* THIRD */}
+              {/* =================================================
+                  THIRD
+              ================================================= */}
+
               {third && (
-                <div className="order-3 bg-zinc-950 border border-zinc-700 rounded-3xl p-7 text-center">
+
+                <div
+                  className="
+                    order-3
+                    bg-zinc-950
+                    border
+                    border-zinc-700
+                    rounded-3xl
+                    p-7
+                    text-center
+                  "
+                >
+
                   <div className="text-4xl mb-4">
                     🥉
                   </div>
@@ -488,7 +792,16 @@ export default function LeaderboardPage() {
                       third.avatar
                     )}
                     alt={third.username}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-orange-700 mx-auto mb-4"
+                    className="
+                      w-24
+                      h-24
+                      rounded-full
+                      object-cover
+                      border-4
+                      border-orange-700
+                      mx-auto
+                      mb-4
+                    "
                     onError={(event) => {
                       event.currentTarget.src =
                         "/logo.png";
@@ -505,21 +818,32 @@ export default function LeaderboardPage() {
                   </p>
 
                   {activeTab === "global" ? (
+
                     <>
+
                       <p className="text-orange-400 text-sm mt-4">
                         {(third as GlobalUser).title}
                       </p>
 
                       <p className="text-3xl font-black text-orange-400 mt-2">
-                        {(third as GlobalUser).geniusPoints}
+
+                        {
+                          (third as GlobalUser)
+                            .geniusPoints
+                        }
 
                         <span className="text-sm text-zinc-500 ml-2">
                           GP
                         </span>
+
                       </p>
+
                     </>
+
                   ) : (
+
                     <>
+
                       <p className="text-3xl font-black text-orange-400 mt-5">
                         {(third as SprintUser).score}
                       </p>
@@ -527,17 +851,45 @@ export default function LeaderboardPage() {
                       <p className="text-zinc-500 text-sm">
                         Sprint Score
                       </p>
+
                     </>
+
                   )}
+
                 </div>
+
               )}
+
             </div>
 
-            {/* ALL RANKINGS */}
-            <div className="border border-zinc-800 rounded-3xl overflow-hidden">
+            {/* =================================================
+                ALL RANKINGS
+            ================================================= */}
 
-              <div className="bg-zinc-950 px-5 md:px-7 py-5 border-b border-zinc-800">
+            <div
+              className="
+                border
+                border-zinc-800
+                rounded-3xl
+                overflow-hidden
+              "
+            >
+
+              {/* HEADER */}
+
+              <div
+                className="
+                  bg-zinc-950
+                  px-5
+                  md:px-7
+                  py-5
+                  border-b
+                  border-zinc-800
+                "
+              >
+
                 <div className="flex items-center gap-3">
+
                   {activeTab === "global" ? (
                     <Trophy
                       size={25}
@@ -551,22 +903,34 @@ export default function LeaderboardPage() {
                   )}
 
                   <div>
+
                     <h2 className="text-2xl font-bold">
+
                       {activeTab === "global"
                         ? "All Rankings"
                         : "Sprint Rankings"}
+
                     </h2>
 
                     <p className="text-zinc-500 mt-1">
                       {users.length} players
                     </p>
+
                   </div>
+
                 </div>
+
               </div>
 
+              {/* =================================================
+                  RANKINGS
+              ================================================= */}
+
               <div className="divide-y divide-zinc-800">
+
                 {users.map(
                   (player, index) => {
+
                     const rank =
                       index + 1;
 
@@ -581,46 +945,95 @@ export default function LeaderboardPage() {
                         : null;
 
                     return (
+
                       <div
                         key={`${player.username}-${index}`}
-                        className="px-4 md:px-7 py-5 flex items-center gap-3 md:gap-4 hover:bg-zinc-950 transition"
+                        className="
+                          px-4
+                          md:px-7
+                          py-5
+                          flex
+                          items-center
+                          gap-3
+                          md:gap-4
+                          hover:bg-zinc-950
+                          transition
+                        "
                       >
-                        {/* RANK */}
-                        <div className="w-10 md:w-12 shrink-0 text-center">
+
+                        {/* =================================================
+                            RANK
+                        ================================================= */}
+
+                        <div
+                          className="
+                            w-10
+                            md:w-12
+                            shrink-0
+                            text-center
+                          "
+                        >
+
                           {rank === 1 ? (
+
                             <span className="text-2xl">
                               🥇
                             </span>
+
                           ) : rank === 2 ? (
+
                             <span className="text-2xl">
                               🥈
                             </span>
+
                           ) : rank === 3 ? (
+
                             <span className="text-2xl">
                               🥉
                             </span>
+
                           ) : (
+
                             <span className="text-zinc-500 font-bold">
                               #{rank}
                             </span>
+
                           )}
+
                         </div>
 
-                        {/* AVATAR */}
+                        {/* =================================================
+                            AVATAR
+                        ================================================= */}
+
                         <img
                           src={getAvatarImage(
                             player.avatar
                           )}
                           alt={player.username}
-                          className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover border border-zinc-700 shrink-0"
+                          className="
+                            w-11
+                            h-11
+                            md:w-14
+                            md:h-14
+                            rounded-full
+                            object-cover
+                            border
+                            border-zinc-700
+                            shrink-0
+                          "
                           onError={(event) => {
                             event.currentTarget.src =
                               "/logo.png";
                           }}
                         />
 
-                        {/* USER */}
+                        {/* =================================================
+                            USER
+                        ================================================= */}
+
                         <div className="flex-1 min-w-0">
+
                           <h3 className="font-bold truncate">
                             {player.name}{" "}
                             {player.surname}
@@ -631,26 +1044,41 @@ export default function LeaderboardPage() {
                           </p>
 
                           {globalPlayer && (
+
                             <p className="text-xs text-zinc-600 mt-1 truncate">
                               {globalPlayer.title}
                             </p>
+
                           )}
 
                           {sprintPlayer && (
+
                             <p className="text-xs text-zinc-600 mt-1 md:hidden">
+
                               Correct:{" "}
                               {sprintPlayer.correct}
+
                               {" • "}
+
                               🔥{" "}
                               {sprintPlayer.bestCombo}
+
                             </p>
+
                           )}
+
                         </div>
 
-                        {/* SPRINT STATS */}
+                        {/* =================================================
+                            SPRINT STATS
+                        ================================================= */}
+
                         {sprintPlayer && (
+
                           <div className="hidden md:flex gap-8 text-center">
+
                             <div>
+
                               <p className="text-xs text-zinc-600">
                                 Correct
                               </p>
@@ -660,9 +1088,11 @@ export default function LeaderboardPage() {
                                   sprintPlayer.correct
                                 }
                               </p>
+
                             </div>
 
                             <div>
+
                               <p className="text-xs text-zinc-600">
                                 Combo
                               </p>
@@ -673,16 +1103,25 @@ export default function LeaderboardPage() {
                                   sprintPlayer.bestCombo
                                 }
                               </p>
+
                             </div>
+
                           </div>
+
                         )}
 
-                        {/* SCORE */}
+                        {/* =================================================
+                            SCORE
+                        ================================================= */}
+
                         <div className="text-right shrink-0">
+
                           <p className="text-xs text-zinc-600">
+
                             {activeTab === "global"
                               ? "Genius Points"
                               : "Score"}
+
                           </p>
 
                           <p
@@ -704,26 +1143,39 @@ export default function LeaderboardPage() {
                               }
                             `}
                           >
+
                             {activeTab === "global"
                               ? globalPlayer?.geniusPoints
                               : sprintPlayer?.score}
+
                           </p>
 
                           <p className="text-xs text-zinc-600">
+
                             {activeTab === "global"
                               ? "GP"
                               : "PTS"}
+
                           </p>
+
                         </div>
+
                       </div>
+
                     );
                   }
                 )}
+
               </div>
+
             </div>
+
           </>
+
         )}
+
       </div>
+
     </div>
   );
 }
