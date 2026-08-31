@@ -188,7 +188,7 @@ export default function MathSprintPage() {
   useEffect(() => {
     if (!gameOver) return;
 
-    if (finalScore >= 50) {
+    if (finalScore == 50) {
       setShowSecretNumber(true);
 
       confetti({
@@ -446,7 +446,7 @@ export default function MathSprintPage() {
                 </h2>
 
                 <p className="text-zinc-400 mt-3">
-                  50 yoki undan yuqori ball oldingiz.
+                  50 ball oldingiz.
                 </p>
 
                 <div className="mt-7 rounded-2xl bg-black/50 border border-green-500/20 py-6">
