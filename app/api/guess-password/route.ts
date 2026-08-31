@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 function createToken(identifier: string) {
   const secret =
-    process.env.GUESS_PASSWORD_SESSION_SECRET;
+    process.env.GUESS_PASSWORD_SESSION_SECRET?.trim();
 
   if (!secret) {
     throw new Error(
@@ -19,18 +19,17 @@ function createToken(identifier: string) {
 
   const timestamp = Date.now().toString();
 
-  const payload =
-    `${timestamp}:${identifier}`;
+  const payload = `${timestamp}:${identifier}`;
 
   const signature = crypto
     .createHmac("sha256", secret)
     .update(`guess-password:${payload}`)
     .digest("hex");
 
-  const encodedIdentifier =
-    Buffer.from(identifier, "utf8").toString(
-      "base64url"
-    );
+  const encodedIdentifier = Buffer.from(
+    identifier,
+    "utf8"
+  ).toString("base64url");
 
   return `${timestamp}.${encodedIdentifier}.${signature}`;
 }
@@ -38,17 +37,12 @@ function createToken(identifier: string) {
 /*
 =========================================================
   CALCULATE GUESS RESULT
-=========================================================
 
-  correct:
-    belgi to'g'ri va joyi to'g'ri
+  correct   = belgi bor + joyi to'g'ri
+  misplaced = belgi bor + joyi noto'g'ri
+  wrong     = belgi umuman yo'q
 
-  misplaced:
-    belgi passwordda bor,
-    lekin joyi noto'g'ri
-
-  wrong:
-    belgi passwordda umuman yo'q
+  Duplicate belgilar ham to'g'ri hisoblanadi.
 =========================================================
 */
 
@@ -62,21 +56,18 @@ function calculateResult(
     | "wrong"
   )[] = Array(guess.length).fill("wrong");
 
+  const usedCorrect = Array(correct.length).fill(false);
+
   /*
   =======================================================
-    1. AVVAL EXACT MATCH
+    1. EXACT MATCH
   =======================================================
   */
-
-  const remainingCorrect: string[] = [];
-  const remainingGuess: string[] = [];
 
   for (let i = 0; i < guess.length; i++) {
     if (guess[i] === correct[i]) {
       result[i] = "correct";
-    } else {
-      remainingGuess.push(guess[i]);
-      remainingCorrect.push(correct[i]);
+      usedCorrect[i] = true;
     }
   }
 
@@ -91,22 +82,42 @@ function calculateResult(
       continue;
     }
 
-    const character = guess[i];
-
-    const correctIndex =
-      remainingCorrect.indexOf(character);
-
-    if (correctIndex !== -1) {
-      result[i] = "misplaced";
-
-      remainingCorrect.splice(
-        correctIndex,
-        1
-      );
+    for (let j = 0; j < correct.length; j++) {
+      if (
+        !usedCorrect[j] &&
+        guess[i] === correct[j]
+      ) {
+        result[i] = "misplaced";
+        usedCorrect[j] = true;
+        break;
+      }
     }
   }
 
   return result;
+}
+
+/*
+=========================================================
+  SAFE JSON RESPONSE
+=========================================================
+*/
+
+function jsonResponse(
+  data: unknown,
+  status = 200
+) {
+  return NextResponse.json(
+    data,
+    {
+      status,
+      headers: {
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
+    }
+  );
 }
 
 /*
@@ -125,7 +136,38 @@ export async function POST(
     =====================================================
     */
 
-    const body = await request.json();
+    let body: any;
+
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error(
+        "Invalid JSON body:",
+        error
+      );
+
+      return jsonResponse(
+        {
+          success: false,
+          correct: false,
+          result: [
+            "wrong",
+            "wrong",
+            "wrong",
+            "wrong",
+          ],
+          error:
+            "Noto'g'ri so'rov yuborildi.",
+        },
+        400
+      );
+    }
+
+    /*
+    =====================================================
+      READ GUESS
+    =====================================================
+    */
 
     const guess =
       typeof body?.guess === "string"
@@ -133,6 +175,12 @@ export async function POST(
             .trim()
             .toUpperCase()
         : "";
+
+    /*
+    =====================================================
+      READ USER
+    =====================================================
+    */
 
     const username =
       typeof body?.username === "string"
@@ -146,7 +194,7 @@ export async function POST(
 
     /*
     =====================================================
-      USER IDENTIFIER
+      IDENTIFIER
     =====================================================
     */
 
@@ -154,21 +202,26 @@ export async function POST(
       username || email;
 
     if (!identifier) {
-      return NextResponse.json(
+      return jsonResponse(
         {
           success: false,
+          correct: false,
+          result: [
+            "wrong",
+            "wrong",
+            "wrong",
+            "wrong",
+          ],
           error:
             "User aniqlanmadi. Iltimos, qayta login qiling.",
         },
-        {
-          status: 401,
-        }
+        401
       );
     }
 
     /*
     =====================================================
-      SERVER FIRST 4
+      SERVER PASSWORD
     =====================================================
     */
 
@@ -177,26 +230,31 @@ export async function POST(
         ?.trim()
         .toUpperCase();
 
+    /*
+    =====================================================
+      ENV MISSING
+    =====================================================
+    */
+
     if (!correctGuess) {
       console.error(
         "GUESS_PASSWORD_FIRST4 is missing."
       );
 
-      return NextResponse.json(
+      return jsonResponse(
         {
           success: false,
+          correct: false,
           error:
             "Server configuration error.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
     /*
     =====================================================
-      SERVER PASSWORD VALIDATION
+      ENV VALIDATION
     =====================================================
     */
 
@@ -206,18 +264,18 @@ export async function POST(
       )
     ) {
       console.error(
-        "GUESS_PASSWORD_FIRST4 must contain exactly 4 letters/numbers."
+        "Invalid GUESS_PASSWORD_FIRST4:",
+        correctGuess.length
       );
 
-      return NextResponse.json(
+      return jsonResponse(
         {
           success: false,
+          correct: false,
           error:
             "Server password configuration error.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
@@ -227,16 +285,23 @@ export async function POST(
     =====================================================
     */
 
-    if (guess.length !== 4) {
-      return NextResponse.json(
+    if (
+      guess.length !== 4
+    ) {
+      return jsonResponse(
         {
           success: false,
+          correct: false,
+          result: [
+            "wrong",
+            "wrong",
+            "wrong",
+            "wrong",
+          ],
           error:
             "4 ta belgidan iborat kod kiriting.",
         },
-        {
-          status: 400,
-        }
+        400
       );
     }
 
@@ -246,16 +311,25 @@ export async function POST(
     =====================================================
     */
 
-    if (!/^[A-Z0-9]{4}$/.test(guess)) {
-      return NextResponse.json(
+    if (
+      !/^[A-Z0-9]{4}$/.test(
+        guess
+      )
+    ) {
+      return jsonResponse(
         {
           success: false,
+          correct: false,
+          result: [
+            "wrong",
+            "wrong",
+            "wrong",
+            "wrong",
+          ],
           error:
             "Faqat harf va raqamlardan foydalaning.",
         },
-        {
-          status: 400,
-        }
+        400
       );
     }
 
@@ -273,7 +347,22 @@ export async function POST(
 
     /*
     =====================================================
-      CHECK WHETHER EVERYTHING IS CORRECT
+      DEBUG LOG
+
+      Vercel logs orqali ko'rish mumkin.
+    =====================================================
+    */
+
+    console.log(
+      "Guess:",
+      guess,
+      "Result:",
+      result
+    );
+
+    /*
+    =====================================================
+      CHECK FULL MATCH
     =====================================================
     */
 
@@ -290,7 +379,7 @@ export async function POST(
     */
 
     if (!isCorrect) {
-      return NextResponse.json(
+      return jsonResponse(
         {
           success: false,
           correct: false,
@@ -298,13 +387,7 @@ export async function POST(
           error:
             "Password noto'g'ri. Ranglarga qarab yana urinib ko'ring.",
         },
-        {
-          status: 401,
-          headers: {
-            "Cache-Control":
-              "no-store, no-cache, must-revalidate",
-          },
-        }
+        200
       );
     }
 
@@ -314,8 +397,34 @@ export async function POST(
     =====================================================
     */
 
-    const token =
-      createToken(identifier);
+    let token: string;
+
+    try {
+      token =
+        createToken(identifier);
+    } catch (error) {
+      console.error(
+        "Token creation error:",
+        error
+      );
+
+      return jsonResponse(
+        {
+          success: false,
+          correct: false,
+          result,
+          error:
+            "Session configuration error.",
+        },
+        500
+      );
+    }
+
+    /*
+    =====================================================
+      SUCCESS LOG
+    =====================================================
+    */
 
     console.log(
       "================================="
@@ -331,6 +440,11 @@ export async function POST(
     );
 
     console.log(
+      "Guess:",
+      guess
+    );
+
+    console.log(
       "================================="
     );
 
@@ -340,7 +454,7 @@ export async function POST(
     =====================================================
     */
 
-    return NextResponse.json(
+    return jsonResponse(
       {
         success: true,
         correct: true,
@@ -349,29 +463,28 @@ export async function POST(
         message:
           "🎉 4 ta belgini to'g'ri topdingiz!",
       },
-      {
-        status: 200,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate",
-        },
-      }
+      200
     );
   } catch (error) {
+    /*
+    =====================================================
+      REAL SERVER ERROR
+    =====================================================
+    */
+
     console.error(
       "Guess password API error:",
       error
     );
 
-    return NextResponse.json(
+    return jsonResponse(
       {
         success: false,
+        correct: false,
         error:
           "Server Error.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 }
