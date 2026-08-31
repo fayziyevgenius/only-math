@@ -397,25 +397,18 @@ const independenceQuestions = [
 
   {
     id: 19,
-    type: "table",
+   
     question:
-      "Four values of x and their corresponding values of g(x) are shown in the table above for the linear function g. The equation g(x) = cx + d defines function g, and c and d are constants. What is the value of c + d?",
-    table: {
-      headers: ["x", "2", "4", "6", "8"],
-      rows: [
-        ["g(x)", "46", "0", "−46", "−92"],
-      ],
-    },
-    options: ["−23", "69", "92", "115"],
+      "A phone company offers two monthly plans. Plan A costs $40 per month plus $0.15 per minute of international calling. Plan B costs $25 per month plus $0.20 per minute of international calling. For how many minutes of international calling will the total monthly cost of Plan A equal the total monthly cost of Plan B?",
+    options: ["150", "200", "300", "350"],
     points: 10,
   },
 
   {
     id: 20,
-    type: "math",
     question:
-      "What is the value of 2^((a − 1)(a + 1)) / 2^((a − 2)(a + 2))?",
-    options: ["1/16", "1/8", "8", "16"],
+      "What is the value of (a − 1)(a + 1) -(a − 2)(a + 2)?",
+    options: ["1", "8", "3", "Aniqlab bo'lmaydi"],
     points: 10,
   },
 ];
