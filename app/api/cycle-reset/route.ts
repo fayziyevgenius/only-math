@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
 /* =========================================================
-   CYCLE SETTINGS
+   CYCLE CONFIG
 ========================================================= */
 
 const FIRST_CYCLE_DATE = new Date(
@@ -60,18 +60,18 @@ function getCurrentCycle(now: Date) {
 }
 
 /* =========================================================
-   RESET FUNCTION
+   RESET CYCLE
 ========================================================= */
 
 async function performReset() {
   const now = new Date();
 
-  /* =======================================================
-     CURRENT CYCLE
-  ======================================================= */
-
   const currentCycle =
     getCurrentCycle(now);
+
+  /* =======================================================
+     NO CYCLE
+  ======================================================= */
 
   if (!currentCycle) {
     return NextResponse.json({
@@ -95,36 +95,50 @@ async function performReset() {
     db.collection("system");
 
   /* =======================================================
-     UNIQUE RESET MARKER
+     RESET MARKER
   ======================================================= */
 
   const resetKey =
     `cycle-reset-${currentCycle.cycle}`;
 
-  /* =======================================================
-     CHECK ALREADY RESET
-  ======================================================= */
-
-  const existingReset =
+  const existingMarker =
     await system.findOne({
       key: resetKey,
     });
 
-  if (existingReset) {
+  /* =======================================================
+     CHECK WHETHER USERS ARE ALREADY ON CURRENT CYCLE
+  ======================================================= */
+
+  const usersStillOnOldCycle =
+    await users.findOne({
+      currentCycle: {
+        $ne: currentCycle.cycle,
+      },
+    });
+
+  /*
+    Agar marker mavjud bo'lsa ham, lekin userlar hali
+    eski cycle'da bo'lsa, resetni qayta bajarish mumkin.
+
+    Bu bizning hozirgi holatimiz uchun MUHIM:
+    cycle-reset-2 marker bor, lekin Habiba currentCycle: 1.
+  */
+
+  if (
+    existingMarker &&
+    !usersStillOnOldCycle
+  ) {
     return NextResponse.json({
       success: true,
       reset: false,
       alreadyReset: true,
-
       cycle:
         currentCycle.cycle,
-
       cycleName:
         currentCycle.cycleName,
-
       resetAt:
-        existingReset.resetAt,
-
+        existingMarker.resetAt,
       message:
         `${currentCycle.cycleName} has already been reset.`,
     });
@@ -132,6 +146,11 @@ async function performReset() {
 
   /* =======================================================
      RESET USERS
+     
+     IMPORTANT:
+     geniusPoints IS NOT RESET.
+     
+     It belongs to GLOBAL SCORE.
   ======================================================= */
 
   const userResult =
@@ -140,16 +159,27 @@ async function performReset() {
       {
         $set: {
           /* -----------------------------------------------
-             GENIUS POINTS
+             KEEP:
+             geniusPoints
+             
+             We intentionally DO NOT touch it.
           ------------------------------------------------ */
 
-          geniusPoints: 0,
+          /* -----------------------------------------------
+             CURRENT CYCLE
+          ------------------------------------------------ */
+
+          currentCycle:
+            currentCycle.cycle,
+
+          currentCycleGP: 0,
 
           /* -----------------------------------------------
              TITLE
+             
+             We also DO NOT reset title because title can
+             represent global achievement.
           ------------------------------------------------ */
-
-          title: "🌱 Beginner",
 
           /* -----------------------------------------------
              STREAK
@@ -158,13 +188,20 @@ async function performReset() {
           streak: 0,
 
           /* -----------------------------------------------
-             LAST SOLVED DATE
+             DATES
           ------------------------------------------------ */
 
           lastSolvedDate: null,
 
+          lastDailyDate: null,
+
+          cycleResetAt: now,
+
+          cycleStartedAt:
+            currentCycle.cycleStart,
+
           /* -----------------------------------------------
-             SOLVED FLAGS
+             CURRENT CYCLE SOLVED FLAGS
           ------------------------------------------------ */
 
           certificateSolved: false,
@@ -176,39 +213,36 @@ async function performReset() {
           dailySolved: false,
 
           /* -----------------------------------------------
-             NATIONAL CERTIFICATE
+             CURRENT CYCLE DAILY
+          ------------------------------------------------ */
+
+          lastDailyCycle:
+            currentCycle.cycleName,
+
+          lastDailyCycleDay: 0,
+
+          /* -----------------------------------------------
+             CURRENT CYCLE STATS
           ------------------------------------------------ */
 
           "stats.national.attempts": 0,
 
           "stats.national.correct": 0,
 
-          /* -----------------------------------------------
-             SAT
-          ------------------------------------------------ */
-
           "stats.sat.attempts": 0,
 
           "stats.sat.correct": 0,
 
-          /* -----------------------------------------------
-             OLYMPIAD
-          ------------------------------------------------ */
-
           "stats.olympiad.attempts": 0,
 
           "stats.olympiad.correct": 0,
-
-          /* -----------------------------------------------
-             DAILY
-          ------------------------------------------------ */
 
           "stats.daily.attempts": 0,
 
           "stats.daily.correct": 0,
 
           /* -----------------------------------------------
-             MATH SPIRIT
+             MATH SPIRIT CURRENT CYCLE
           ------------------------------------------------ */
 
           "stats.mathSpirit.games": 0,
@@ -220,24 +254,14 @@ async function performReset() {
           "stats.mathSpirit.bestCombo": 0,
 
           /* -----------------------------------------------
-             CURRENT CYCLE
+             REMOVE OLD GENESIS FLAGS
           ------------------------------------------------ */
 
-          currentCycle:
-            currentCycle.cycle,
+          olympiadGenesisSolved: false,
 
-          /* -----------------------------------------------
-             CYCLE START
-          ------------------------------------------------ */
+          satGenesisSolved: false,
 
-          cycleStartedAt:
-            currentCycle.cycleStart,
-
-          /* -----------------------------------------------
-             RESET TIME
-          ------------------------------------------------ */
-
-          cycleResetAt: now,
+          lastSATCycle: null,
         },
       }
     );
@@ -273,44 +297,57 @@ async function performReset() {
   /* =======================================================
      GLOBAL LEADERBOARD
      
-     !!! NEVER DELETE !!!
+     !!! DO NOT TOUCH !!!
   ======================================================= */
 
   /*
-    db.collection("leaderboard")
-    
-    BU YERDA UMUMAN ISHLATILMAYDI.
-    
-    Global Leaderboard saqlanib qoladi.
+     db.collection("leaderboard")
+     
+     HECH QACHON DELETE QILINMAYDI.
+     
+     geniusPoints ham reset qilinmaydi.
   */
 
   /* =======================================================
-     SAVE RESET MARKER
+     UPDATE / CREATE RESET MARKER
   ======================================================= */
 
-  await system.insertOne({
-    key: resetKey,
+  await system.updateOne(
+    {
+      key: resetKey,
+    },
+    {
+      $set: {
+        key: resetKey,
 
-    cycle:
-      currentCycle.cycle,
+        cycle:
+          currentCycle.cycle,
 
-    name:
-      currentCycle.cycleName,
+        name:
+          currentCycle.cycleName,
 
-    resetAt: now,
+        resetAt: now,
 
-    scheduledResetAt:
-      currentCycle.cycleStart,
+        scheduledResetAt:
+          currentCycle.cycleStart,
 
-    usersReset:
-      userResult.modifiedCount,
+        usersReset:
+          userResult.modifiedCount,
 
-    mathSpiritLeaderboardDeleted:
-      mathSpiritResult.deletedCount,
+        mathSpiritLeaderboardDeleted:
+          mathSpiritResult.deletedCount,
 
-    cycleLeaderboardDeleted:
-      cycleLeaderboardResult.deletedCount,
-  });
+        cycleLeaderboardDeleted:
+          cycleLeaderboardResult.deletedCount,
+
+        repaired:
+          existingMarker ? true : false,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
 
   /* =======================================================
      RESPONSE
@@ -320,6 +357,9 @@ async function performReset() {
     success: true,
 
     reset: true,
+
+    repaired:
+      existingMarker ? true : false,
 
     cycle:
       currentCycle.cycle,
@@ -339,11 +379,14 @@ async function performReset() {
     cycleLeaderboardDeleted:
       cycleLeaderboardResult.deletedCount,
 
+    geniusPoints:
+      "NOT RESET",
+
     globalLeaderboard:
       "NOT DELETED",
 
     message:
-      `${currentCycle.cycleName} has started successfully.`,
+      `${currentCycle.cycleName} has started. Cycle scores have been reset while global scores remain unchanged.`,
   });
 }
 
