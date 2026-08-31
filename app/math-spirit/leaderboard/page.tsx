@@ -1,276 +1,566 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Crown, Medal, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Trophy,
+  Crown,
+  RefreshCw,
+} from "lucide-react";
 
-type Player = {
-  _id: string;
+type SprintUser = {
   username: string;
+  name: string;
+  surname: string;
   score: number;
   correct: number;
   wrong: number;
   bestCombo: number;
+  avatar: string;
 };
 
-export default function LeaderboardPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
+const avatarImages: Record<
+  string,
+  string
+> = {
+  "only-math": "/logo.png",
 
-  const currentUser =
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("currentUser") || "{}")
-      : {};
+  "genesis-cycle":
+    "/avatars/genesis-cycle.png",
+
+  "daily-7":
+    "/avatars/daily-7.png",
+
+  "solve-question":
+    "/avatars/solve-question.png",
+
+  "sprint-60":
+    "/avatars/sprint-60.png",
+
+  "perfect-trio":
+    "/avatars/perfect-trio.png",
+
+  "top-3":
+    "/avatars/top-3.png",
+};
+
+function getAvatarImage(
+  avatar?: string
+): string {
+  if (!avatar) {
+    return "/logo.png";
+  }
+
+  if (avatarImages[avatar]) {
+    return avatarImages[avatar];
+  }
+
+  if (avatar.startsWith("/")) {
+    return avatar;
+  }
+
+  return "/logo.png";
+}
+
+export default function SprintLeaderboardPage() {
+  const [users, setUsers] =
+    useState<SprintUser[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  async function loadLeaderboard(
+    refresh = false
+  ) {
+    try {
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      setError("");
+
+      const response = await fetch(
+        "/api/math-spirit/leaderboard",
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to load leaderboard."
+        );
+      }
+
+      if (!Array.isArray(data)) {
+        throw new Error(
+          "Invalid leaderboard data."
+        );
+      }
+
+      setUsers(data);
+    } catch (error) {
+      console.error(
+        "Sprint leaderboard error:",
+        error
+      );
+
+      setError(
+        "Sprint leaderboardni yuklashda xatolik yuz berdi."
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadLeaderboard() {
-      try {
-        const res = await fetch("/api/math-spirit/leaderboard");
-        const data = await res.json();
-        setPlayers(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadLeaderboard();
   }, []);
 
-  const topThree = useMemo(() => players.slice(0, 3), [players]);
-  const others = useMemo(() => players.slice(3), [players]);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <h1 className="text-4xl font-bold animate-pulse">
-          Loading Leaderboard...
-        </h1>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+
+        <div className="text-center">
+
+          <div className="w-10 h-10 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
+
+          <p className="text-zinc-400">
+            Loading Sprint leaderboard...
+          </p>
+
+        </div>
+
       </div>
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto py-14">
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white p-6 md:p-10">
 
-      <div className="text-center">
+        <div className="max-w-5xl mx-auto">
 
-        <div className="inline-flex items-center gap-3 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-6 py-2">
+          <div className="border border-red-900 bg-red-950/20 rounded-3xl p-10 text-center">
 
-          <Trophy className="text-yellow-400" />
+            <h1 className="text-3xl font-bold mb-3">
+              Sprint Leaderboard Error
+            </h1>
 
-          <span className="font-bold text-yellow-300">
-            GLOBAL LEADERBOARD
-          </span>
-
-        </div>
-
-        <h1 className="text-6xl font-black mt-8">
-          Math Spirit
-        </h1>
-
-        <p className="text-zinc-400 mt-4 text-xl">
-          Top players around the world
-        </p>
-
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-8 mt-16">
-
-        {topThree.map((player, index) => (
-
-          <div
-            key={player._id}
-            className={`
-            rounded-3xl
-            border
-            p-8
-            text-center
-            transition
-            hover:scale-105
-
-            ${
-              index === 0
-                ? "border-yellow-500 bg-yellow-500/10"
-                : index === 1
-                ? "border-zinc-400 bg-zinc-400/10"
-                : "border-orange-500 bg-orange-500/10"
-            }
-            `}
-          >
-
-            <div className="flex justify-center">
-
-              {index === 0 && (
-                <Crown
-                  size={60}
-                  className="text-yellow-400"
-                />
-              )}
-
-              {index === 1 && (
-                <Medal
-                  size={60}
-                  className="text-zinc-300"
-                />
-              )}
-
-              {index === 2 && (
-                <Medal
-                  size={60}
-                  className="text-orange-400"
-                />
-              )}
-
-            </div>
-
-            <p className="mt-6 text-zinc-400">
-              #{index + 1}
+            <p className="text-zinc-400 mb-6">
+              {error}
             </p>
 
-            <h2 className="text-4xl font-black mt-2 break-all">
-              {player.username}
-            </h2>
-
-            <p className="text-6xl font-black text-green-400 mt-8">
-              {player.score}
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 mt-8">
-
-              <div className="rounded-2xl bg-black/30 p-4">
-
-                <p className="text-zinc-500">
-                  Correct
-                </p>
-
-                <p className="text-3xl font-bold text-green-400">
-                  {player.correct}
-                </p>
-
-              </div>
-
-              <div className="rounded-2xl bg-black/30 p-4">
-
-                <p className="text-zinc-500">
-                  Combo
-                </p>
-
-                <p className="text-3xl font-bold text-yellow-400">
-                  {player.bestCombo}
-                </p>
-
-              </div>
-
-            </div>
+            <button
+              type="button"
+              onClick={() =>
+                loadLeaderboard(true)
+              }
+              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold"
+            >
+              Try Again
+            </button>
 
           </div>
 
-        ))}
+        </div>
 
       </div>
-            <div className="mt-16 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
+    );
+  }
 
-        <table className="w-full">
+  const first = users[0];
+  const second = users[1];
+  const third = users[2];
 
-          <thead className="bg-zinc-950">
+  return (
+    <div className="min-h-screen bg-black text-white p-4 md:p-10">
 
-            <tr>
+      <div className="max-w-5xl mx-auto">
 
-              <th className="py-5">Rank</th>
+        {/* HEADER */}
 
-              <th>Username</th>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-10">
 
-              <th>Score</th>
+          <div>
 
-              <th>Correct</th>
+            <div className="flex items-center gap-3">
 
-              <th>Wrong</th>
+              <Trophy
+                size={38}
+                className="text-yellow-400"
+              />
 
-              <th>Best Combo</th>
+              <h1 className="text-4xl md:text-5xl font-black">
+                Sprint Leaderboard
+              </h1>
 
-            </tr>
+            </div>
 
-          </thead>
+            <p className="text-zinc-400 mt-3">
+              Math Sprint's fastest players.
+            </p>
 
-          <tbody>
+          </div>
 
-            {others.map((player, index) => {
+          <button
+            type="button"
+            onClick={() =>
+              loadLeaderboard(true)
+            }
+            disabled={refreshing}
+            className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-green-500 px-5 py-3 rounded-xl font-bold transition disabled:opacity-50"
+          >
 
-              const isMe =
-                player.username === currentUser.username;
+            <RefreshCw
+              size={18}
+              className={
+                refreshing
+                  ? "animate-spin"
+                  : ""
+              }
+            />
 
-              return (
+            Refresh
 
-                <tr
-                  key={player._id}
-                  className={`
-                    border-t border-zinc-800
-                    transition
+          </button>
 
-                    ${
-                      isMe
-                        ? "bg-green-500/10"
-                        : "hover:bg-zinc-800/40"
-                    }
-                  `}
-                >
+        </div>
 
-                  <td className="py-5 text-center font-bold">
-                    #{index + 4}
-                  </td>
+        {/* EMPTY */}
 
-                  <td className="text-center font-semibold">
+        {users.length === 0 ? (
+          <div className="border border-zinc-800 rounded-3xl p-12 text-center">
 
-                    {player.username}
+            <Trophy
+              size={60}
+              className="mx-auto text-zinc-700 mb-5"
+            />
 
-                    {isMe && (
-                      <span className="ml-3 rounded-full bg-green-600 px-3 py-1 text-xs">
-                        YOU
-                      </span>
+            <h2 className="text-3xl font-bold mb-3">
+              No Sprint rankings yet
+            </h2>
+
+            <p className="text-zinc-500">
+              Play Math Sprint and become
+              the first champion.
+            </p>
+
+          </div>
+        ) : (
+          <>
+            {/* TOP 3 */}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+
+              {/* SECOND */}
+
+              {second && (
+                <div className="order-2 md:order-1 bg-zinc-950 border border-zinc-700 rounded-3xl p-7 text-center">
+
+                  <div className="text-4xl mb-4">
+                    🥈
+                  </div>
+
+                  <img
+                    src={getAvatarImage(
+                      second.avatar
                     )}
+                    alt={
+                      second.username
+                    }
+                    className="w-24 h-24 rounded-full object-cover border-4 border-zinc-600 mx-auto mb-4"
+                    onError={(event) => {
+                      event.currentTarget.src =
+                        "/logo.png";
+                    }}
+                  />
 
-                  </td>
+                  <h2 className="text-xl font-bold">
+                    {second.name}{" "}
+                    {second.surname}
+                  </h2>
 
-                  <td className="text-center text-green-400 font-bold">
-                    {player.score}
-                  </td>
+                  <p className="text-zinc-500 mt-1">
+                    @{second.username}
+                  </p>
 
-                  <td className="text-center">
-                    {player.correct}
-                  </td>
+                  <p className="text-3xl font-black text-zinc-300 mt-5">
+                    {second.score}
+                  </p>
 
-                  <td className="text-center text-red-400">
-                    {player.wrong}
-                  </td>
+                  <p className="text-zinc-500 text-sm">
+                    Sprint Score
+                  </p>
 
-                  <td className="text-center text-yellow-400">
-                    {player.bestCombo}
-                  </td>
+                </div>
+              )}
 
-                </tr>
+              {/* FIRST */}
 
-              );
+              {first && (
+                <div className="order-1 md:order-2 md:-translate-y-5 bg-gradient-to-b from-yellow-500/10 to-zinc-950 border border-yellow-500/40 rounded-3xl p-7 text-center">
 
-            })}
+                  <Crown
+                    size={40}
+                    className="text-yellow-400 mx-auto mb-2"
+                  />
 
-          </tbody>
+                  <div className="text-4xl mb-4">
+                    🥇
+                  </div>
 
-        </table>
+                  <img
+                    src={getAvatarImage(
+                      first.avatar
+                    )}
+                    alt={
+                      first.username
+                    }
+                    className="w-28 h-28 rounded-full object-cover border-4 border-yellow-400 mx-auto mb-4"
+                    onError={(event) => {
+                      event.currentTarget.src =
+                        "/logo.png";
+                    }}
+                  />
+
+                  <h2 className="text-2xl font-black">
+                    {first.name}{" "}
+                    {first.surname}
+                  </h2>
+
+                  <p className="text-zinc-400 mt-1">
+                    @{first.username}
+                  </p>
+
+                  <p className="text-4xl font-black text-yellow-400 mt-5">
+                    {first.score}
+                  </p>
+
+                  <p className="text-zinc-500 text-sm">
+                    Sprint Score
+                  </p>
+
+                </div>
+              )}
+
+              {/* THIRD */}
+
+              {third && (
+                <div className="order-3 bg-zinc-950 border border-zinc-700 rounded-3xl p-7 text-center">
+
+                  <div className="text-4xl mb-4">
+                    🥉
+                  </div>
+
+                  <img
+                    src={getAvatarImage(
+                      third.avatar
+                    )}
+                    alt={
+                      third.username
+                    }
+                    className="w-24 h-24 rounded-full object-cover border-4 border-orange-700 mx-auto mb-4"
+                    onError={(event) => {
+                      event.currentTarget.src =
+                        "/logo.png";
+                    }}
+                  />
+
+                  <h2 className="text-xl font-bold">
+                    {third.name}{" "}
+                    {third.surname}
+                  </h2>
+
+                  <p className="text-zinc-500 mt-1">
+                    @{third.username}
+                  </p>
+
+                  <p className="text-3xl font-black text-orange-400 mt-5">
+                    {third.score}
+                  </p>
+
+                  <p className="text-zinc-500 text-sm">
+                    Sprint Score
+                  </p>
+
+                </div>
+              )}
+
+            </div>
+
+            {/* ALL */}
+
+            <div className="border border-zinc-800 rounded-3xl overflow-hidden">
+
+              <div className="bg-zinc-950 px-5 md:px-7 py-5 border-b border-zinc-800">
+
+                <h2 className="text-2xl font-bold">
+                  ⚡ Sprint Rankings
+                </h2>
+
+                <p className="text-zinc-500 mt-1">
+                  {users.length} players
+                </p>
+
+              </div>
+
+              <div className="divide-y divide-zinc-800">
+
+                {users.map(
+                  (player, index) => {
+
+                    const rank =
+                      index + 1;
+
+                    return (
+                      <div
+                        key={`${player.username}-${index}`}
+                        className="px-4 md:px-7 py-5 flex items-center gap-4 hover:bg-zinc-950 transition"
+                      >
+
+                        {/* RANK */}
+
+                        <div className="w-12 shrink-0 text-center">
+
+                          {rank === 1 ? (
+                            <span className="text-2xl">
+                              🥇
+                            </span>
+                          ) : rank === 2 ? (
+                            <span className="text-2xl">
+                              🥈
+                            </span>
+                          ) : rank === 3 ? (
+                            <span className="text-2xl">
+                              🥉
+                            </span>
+                          ) : (
+                            <span className="text-zinc-500 font-bold">
+                              #{rank}
+                            </span>
+                          )}
+
+                        </div>
+
+                        {/* AVATAR */}
+
+                        <img
+                          src={getAvatarImage(
+                            player.avatar
+                          )}
+                          alt={
+                            player.username
+                          }
+                          className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border border-zinc-700 shrink-0"
+                          onError={(event) => {
+                            event.currentTarget.src =
+                              "/logo.png";
+                          }}
+                        />
+
+                        {/* USER */}
+
+                        <div className="flex-1 min-w-0">
+
+                          <h3 className="font-bold truncate">
+                            {player.name}{" "}
+                            {player.surname}
+                          </h3>
+
+                          <p className="text-zinc-500 text-sm truncate">
+                            @{player.username}
+                          </p>
+
+                        </div>
+
+                        {/* STATS */}
+
+                        <div className="hidden md:flex gap-8 text-center">
+
+                          <div>
+                            <p className="text-xs text-zinc-600">
+                              Correct
+                            </p>
+
+                            <p className="font-bold text-green-400">
+                              {
+                                player.correct
+                              }
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-zinc-600">
+                              Combo
+                            </p>
+
+                            <p className="font-bold text-orange-400">
+                              🔥{" "}
+                              {
+                                player.bestCombo
+                              }
+                            </p>
+                          </div>
+
+                        </div>
+
+                        {/* SCORE */}
+
+                        <div className="text-right shrink-0">
+
+                          <p className="text-xs text-zinc-600">
+                            Score
+                          </p>
+
+                          <p
+                            className={`
+                              text-xl
+                              md:text-2xl
+                              font-black
+                              ${
+                                rank === 1
+                                  ? "text-yellow-400"
+                                  : rank === 2
+                                  ? "text-zinc-300"
+                                  : rank === 3
+                                  ? "text-orange-400"
+                                  : "text-white"
+                              }
+                            `}
+                          >
+                            {
+                              player.score
+                            }
+                          </p>
+
+                        </div>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+            </div>
+          </>
+        )}
 
       </div>
-
-      <div className="mt-16 text-center">
-
-        <button
-          onClick={() => location.reload()}
-          className="rounded-2xl bg-green-600 hover:bg-green-700 px-10 py-4 text-2xl font-bold transition"
-        >
-          Refresh Leaderboard
-        </button>
-
-      </div>
-
     </div>
   );
 }

@@ -1,97 +1,87 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
+// import prisma from "@/lib/prisma"; // Agar Prisma ishlatayotgan bo'lsangiz
+
+const CORRECT_ANSWERS: Record<number, string> = {
+  1: "48",
+  2: "5/3",
+  3: "35000",
+  4: "7",
+  5: "27",
+  6: "754",
+  7: "42",
+  8: "38",
+  9: "310 yoki 77.5",
+  10: "9",
+  11: "30",
+  12: "17.5",
+  13: "16",
+  14: "48",
+  15: "\\( \\frac{\\sqrt{33}}{2} \\)",
+  16: "0",
+  17: "36^\\circ",
+  18: "1 ta",
+  19: "2 ta",
+  20: "3 ta",
+};
+
+const POINTS_MAP: Record<number, number> = {
+  // 1-16 gacha 10 balldan, 17-20 gacha 15 balldan (Jami 220 GP)
+  1: 10, 2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10,
+  11: 10, 12: 10, 13: 10, 14: 10, 15: 10, 16: 10, 17: 15, 18: 15, 19: 15, 20: 15,
+};
 
 export async function POST(req: Request) {
   try {
-    const { username, answer1, answer2 } = await req.json();
+    const { username, answers, set } = await req.json();
 
-const db = await connectDB();
-
-const user = await db.collection("users").findOne({ username });
-if (!user) {
-  return NextResponse.json(
-    {
-      username,
-      error: "User not found",
-    },
-    { status: 404 }
-  );
-}
-
-    if (user.certificateSolved) {
-      return NextResponse.json(
-        { error: "You have already completed this Certificate test." },
-        { status: 400 }
-      );
+    if (!username || !answers) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    let points = 0;
+    /* Baza bilan ishlash (Namuna)
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    
+    // Yechilganligini tekshirish
+    if (user.completedCertificates.includes(set)) {
+      return NextResponse.json({ error: "You have already completed the Independence Certificate." }, { status: 400 });
+    }
+    */
 
-    // Question 1
-    if (answer1.trim() === "3") {
-      points += 30;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let earnedPoints = 0;
+    const totalQuestions = Object.keys(CORRECT_ANSWERS).length;
+
+    for (const [qId, answer] of Object.entries(answers as Record<number, string>)) {
+      const questionId = Number(qId);
+      if (CORRECT_ANSWERS[questionId] === answer) {
+        correctCount++;
+        earnedPoints += (POINTS_MAP[questionId] || 10);
+      } else {
+        incorrectCount++;
+      }
     }
 
-    // Question 2
-    if (answer2.trim() === "60") {
-      points += 40;
-    }
+    // Rank Update mantiqi
+    let rankUp = false;
+    let oldRank = "Bronze"; // user.rank;
+    let newRank = "Bronze";
 
-    const totalPoints = (user.geniusPoints || 0) + points;
-
-let title = "🌱 Beginner";
-
-if (totalPoints >= 100) title = "🥉 Bronze";
-if (totalPoints >= 300) title = "🥈 Silver";
-if (totalPoints >= 700) title = "🥇 Gold";
-if (totalPoints >= 1500) title = "💎 Diamond";
-if (totalPoints >= 3000) title = "👑 Math Genius";
-
-const today = new Date().toISOString().split("T")[0];
-
-const correct =
-  (answer1.trim() === "3" ? 1 : 0) +
-  (answer2.trim() === "60" ? 1 : 0);
-
-const attempts = 2;
-
-let update: any = {
-  $set: {
-    certificateSolved: true,
-  },
-  $inc: {
-    geniusPoints: points,
-
-    "stats.national.attempts": attempts,
-    "stats.national.correct": correct,
-  },
-};
-
-if (user.lastSolvedDate !== today) {
-  update.$inc.streak = 1;
-  update.$set.lastSolvedDate = today;
-}
-
-await db.collection("users").updateOne(
-  { username },
-  update
-);
+    // Agar reyting oshgan bo'lsa mantiqni shu yerda yozasiz:
+    // await prisma.user.update({ ... points: user.points + earnedPoints ... });
 
     return NextResponse.json({
-      success: true,
-      points,
-      message:
-        points === 70
-          ? "Perfect! You solved all questions correctly."
-          : `You received ${points} GP.`,
+      points: earnedPoints,
+      correct: correctCount,
+      incorrect: incorrectCount,
+      totalQuestions,
+      rankUp,
+      oldRank,
+      newRank,
     });
-
   } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Server Error" },
-      { status: 500 }
-    );
+    console.error("Certificate Grading Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

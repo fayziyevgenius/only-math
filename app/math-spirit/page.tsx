@@ -2,7 +2,8 @@
 
 import { Play, Timer, Trophy, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
+import confetti from "canvas-confetti";
+import RankUpModal from "@/app/components/RankUpModal";
 
 type Question = {
   question: string;
@@ -58,31 +59,74 @@ function generateQuestion(): Question {
 export default function MathSprintPage() {
 
 async function saveScore() {
-
   const currentUser = JSON.parse(
     localStorage.getItem("currentUser") || "{}"
   );
 
   if (!currentUser.username) return;
 
-  await fetch("/api/math-spirit/submit", {
-    method: "POST",
+  try {
+    const res = await fetch("/api/math-spirit/submit", {
+      method: "POST",
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-    body: JSON.stringify({
-  username: currentUser.username,
-  score: finalScore,
-  correct,
-  wrong,
-  bestCombo,
-}),
-  });
+      body: JSON.stringify({
+        username: currentUser.username,
+        score: finalScore,
+        correct,
+        wrong,
+        bestCombo,
+      }),
+    });
 
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error(data.error);
+      return;
+    }
+
+    // =========================
+    // RANK UP
+    // =========================
+
+    if (data.rankUp) {
+      setRankData({
+        oldRank: data.oldRank,
+        newRank: data.newRank,
+      });
+
+      rankupSound.current?.play();
+
+      confetti({
+        particleCount: 220,
+        spread: 100,
+        origin: {
+          y: 0.6,
+        },
+      });
+
+      setTimeout(() => {
+        setShowRankUp(true);
+      }, 500);
+    }
+
+  } catch (error) {
+    console.error("Math Spirit save error:", error);
+  }
 }
   const [started, setStarted] = useState(false);
+  const [showRankUp, setShowRankUp] = useState(false);
+
+const [rankData, setRankData] = useState<{
+  oldRank: string;
+  newRank: string;
+} | null>(null);
+
+const rankupSound = useRef<HTMLAudioElement | null>(null);
   const [question, setQuestion] = useState<Question>({
   question: "",
   answer: 0,
@@ -120,7 +164,7 @@ useEffect(() => {
   startSound.current = new Audio("/sounds/start.mp3");
   gameOverSound.current = new Audio("/sounds/gameover.mp3");
   recordSound.current = new Audio("/sounds/newrecord.mp3");
-
+  rankupSound.current = new Audio("/sounds/rankup.mp3");
   correctSound.current.volume = 0.5;
   wrongSound.current.volume = 0.5;
   comboSound.current.volume = 0.7;
@@ -652,7 +696,15 @@ if (started) {
         </div>
 
       </div>
-
+      <RankUpModal
+  open={showRankUp}
+  oldRank={rankData?.oldRank ?? ""}
+  newRank={rankData?.newRank ?? ""}
+  onClose={() => {
+    setShowRankUp(false);
+    setRankData(null);
+  }}
+/>
     </div>
   );
 }

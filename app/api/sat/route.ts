@@ -1,99 +1,340 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
-export async function POST(req: Request) {
+/* =========================================================
+   GENESIS ANSWERS
+========================================================= */
+
+const genesisAnswers: Record<
+  number,
+  string
+> = {
+  1: "C",
+  2: "A",
+  3: "A",
+  4: "A",
+  5: "A",
+  6: "A",
+  7: "B",
+  8: "D",
+  9: "A",
+  10: "D",
+  11: "B",
+  12: "C",
+  13: "B",
+  14: "A",
+  15: "A",
+  16: "C",
+  17: "D",
+  18: "C",
+  19: "A",
+  20: "C",
+};
+
+/* =========================================================
+   INDEPENDENCE ANSWERS
+   QUESTIONS 1–17 PROVIDED BY USER
+========================================================= */
+
+const independenceAnswers: Record<
+  number,
+  string
+> = {
+  1: "B",
+  2: "D",
+  3: "C",
+  4: "A",
+  5: "C",
+  6: "A",
+  7: "D",
+  8: "A",
+  9: "D",
+  10: "D",
+  11: "B",
+  12: "D",
+  13: "A",
+  14: "A",
+  15: "B",
+  16: "B",
+  17: "A",
+};
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+const POINTS_PER_QUESTION = 10;
+
+/* =========================================================
+   POST
+========================================================= */
+
+export async function POST(
+  req: Request
+) {
   try {
-    const { username, answer1, answer2 } = await req.json();
+    const body = await req.json();
 
-const db = await connectDB();
+    const username =
+      body?.username;
 
-const user = await db.collection("users").findOne({ username });
-if (!user) {
-  return NextResponse.json(
-    {
-      username,
-      error: "User not found",
-    },
-    { status: 404 }
-  );
-}
+    const answers =
+      body?.answers;
 
-    if (user.satSolved) {
+    const cycle =
+      body?.cycle;
+
+    if (
+      !username ||
+      !answers ||
+      !cycle
+    ) {
       return NextResponse.json(
-        { error: "You have already completed this SAT test." },
+        {
+          error:
+            "Invalid request.",
+        },
         { status: 400 }
       );
     }
 
-    let points = 0;
-
-    // Question 1
-    if (answer1.trim() === "17/24") {
-      points += 55;
+    if (
+      cycle !== "genesis" &&
+      cycle !== "independence"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid cycle.",
+        },
+        { status: 400 }
+      );
     }
 
-    // Question 2
-    if (answer2.trim() === "A") {
-      points += 40;
+    const db =
+      await connectDB();
+
+    const user =
+      await db
+        .collection("users")
+        .findOne({
+          username,
+        });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error:
+            "User not found.",
+        },
+        { status: 404 }
+      );
     }
 
-    const totalPoints = (user.geniusPoints || 0) + points;
+    /* =====================================================
+       SELECT ANSWER KEY
+    ===================================================== */
 
-let title = "🌱 Beginner";
+    const correctAnswers =
+      cycle === "genesis"
+        ? genesisAnswers
+        : independenceAnswers;
 
-if (totalPoints >= 100) title = "🥉 Bronze";
-if (totalPoints >= 300) title = "🥈 Silver";
-if (totalPoints >= 700) title = "🥇 Gold";
-if (totalPoints >= 1500) title = "💎 Diamond";
-if (totalPoints >= 3000) title = "👑 Math Genius";
+    /*
+      Independence currently has 17 questions
+      until Q18–Q20 are added.
+    */
 
+    const totalQuestions =
+      Object.keys(
+        correctAnswers
+      ).length;
 
-const today = new Date().toISOString().split("T")[0];
+    /* =====================================================
+       SOLVED FIELD
+    ===================================================== */
 
-const correct =
-  (answer1.trim() === "17/24" ? 1 : 0) +
-  (answer2.trim() === "A" ? 1 : 0);
+    const solvedField =
+      cycle === "genesis"
+        ? "satGenesisSolved"
+        : "satIndependenceSolved";
 
-const attempts = 2;
+    if (user[solvedField]) {
+      return NextResponse.json(
+        {
+          error:
+            "You have already completed this SAT test.",
+        },
+        { status: 400 }
+      );
+    }
 
-let update: any = {
-  $set: {
-    satSolved: true,
-    title,
-  },
-  $inc: {
-    geniusPoints: points,
+    /* =====================================================
+       CALCULATE
+    ===================================================== */
 
-    "stats.sat.attempts": attempts,
-    "stats.sat.correct": correct,
-  },
-};
+    let correct = 0;
 
-if (user.lastSolvedDate !== today) {
-  update.$inc.streak = 1;
-  update.$set.lastSolvedDate = today;
-}
+    for (
+      let i = 1;
+      i <= totalQuestions;
+      i++
+    ) {
+      const userAnswer = String(
+        answers[i] || ""
+      )
+        .trim()
+        .toUpperCase();
 
-await db.collection("users").updateOne(
-  { username },
-  update
-);
+      if (
+        userAnswer ===
+        correctAnswers[i]
+      ) {
+        correct++;
+      }
+    }
 
+    const incorrect =
+      totalQuestions -
+      correct;
+
+    const points =
+      correct *
+      POINTS_PER_QUESTION;
+
+    /* =====================================================
+       RANK
+    ===================================================== */
+
+    const oldTitle =
+      user.title ||
+      "🌱 Beginner";
+
+    const currentPoints =
+      Number(
+        user.geniusPoints || 0
+      );
+
+    const totalPoints =
+      currentPoints +
+      points;
+
+    let title =
+      "🌱 Beginner";
+
+    if (totalPoints >= 100) {
+      title = "🥉 Bronze";
+    }
+
+    if (totalPoints >= 300) {
+      title = "🥈 Silver";
+    }
+
+    if (totalPoints >= 700) {
+      title = "🥇 Gold";
+    }
+
+    if (totalPoints >= 1500) {
+      title = "💎 Diamond";
+    }
+
+    if (totalPoints >= 3000) {
+      title = "👑 Math Genius";
+    }
+
+    /* =====================================================
+       STREAK
+    ===================================================== */
+
+    const today =
+      new Date()
+        .toISOString()
+        .split("T")[0];
+
+    const update: any = {
+      $set: {
+        [solvedField]: true,
+        title,
+      },
+
+      $inc: {
+        geniusPoints:
+          points,
+
+        [`stats.sat.${cycle}.attempts`]:
+          totalQuestions,
+
+        [`stats.sat.${cycle}.correct`]:
+          correct,
+      },
+    };
+
+    if (
+      user.lastSolvedDate !==
+      today
+    ) {
+      update.$inc.streak = 1;
+      update.$set.lastSolvedDate =
+        today;
+    }
+
+    /* =====================================================
+       UPDATE DATABASE
+    ===================================================== */
+
+    await db
+      .collection("users")
+      .updateOne(
+        {
+          username,
+        },
+        update
+      );
+
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
 
     return NextResponse.json({
       success: true,
-      points,
-      message:
-        points === 95
-          ? "Perfect! You solved all questions correctly."
-          : `You received ${points} GP.`,
-    });
 
+      cycle,
+
+      points,
+
+      correct,
+
+      incorrect,
+
+      total:
+        totalQuestions,
+
+      rankUp:
+        oldTitle !== title,
+
+      oldRank:
+        oldTitle,
+
+      newRank:
+        title,
+
+      message:
+        correct ===
+        totalQuestions
+          ? "Perfect! You solved every SAT question correctly."
+          : `You received ${points} Genius Points.`,
+    });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "SAT submit error:",
+      error
+    );
 
     return NextResponse.json(
-      { error: "Server Error" },
+      {
+        error:
+          "Server Error.",
+      },
       { status: 500 }
     );
   }

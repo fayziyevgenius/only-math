@@ -73,3 +73,1363 @@ body {
   }
 
 }
+@import "katex/dist/katex.min.css";
+@keyframes genesis-particle {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.6);
+  }
+
+  20% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+
+  80% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.5);
+  }
+}
+
+.animate-genesis-particle {
+  animation-name: genesis-particle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+/* =========================================
+   GENESIS CYCLE EFFECT
+========================================= */
+
+@keyframes genesis-particle {
+  0% {
+    transform: translate3d(0, 20px, 0) scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translate3d(20px, -25px, 0) scale(1);
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translate3d(-15px, -60px, 0) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes genesis-symbol {
+  0% {
+    transform: translate3d(0, 20px, 0) rotate(-5deg);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(25px, -25px, 0) rotate(8deg);
+    opacity: 0.7;
+  }
+
+  80% {
+    opacity: 0.35;
+  }
+
+  100% {
+    transform: translate3d(-20px, -70px, 0) rotate(-8deg);
+    opacity: 0;
+  }
+}
+
+@keyframes genesis-glow {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes genesis-glow-reverse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.8;
+  }
+}
+
+@keyframes genesis-ring {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.04);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(0.92);
+    opacity: 0.3;
+  }
+}
+
+@keyframes genesis-ring-reverse {
+  0% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(1);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(0.9);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes genesis-sprout {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.92);
+    opacity: 0.07;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 0.13;
+  }
+}
+
+.animate-genesis-particle {
+  animation-name: genesis-particle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.animate-genesis-symbol {
+  animation-name: genesis-symbol;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.animate-genesis-glow {
+  animation: genesis-glow 5s ease-in-out infinite;
+}
+
+.animate-genesis-glow-reverse {
+  animation: genesis-glow-reverse 6s ease-in-out infinite;
+}
+
+.animate-genesis-ring {
+  animation: genesis-ring 18s linear infinite;
+}
+
+.animate-genesis-ring-reverse {
+  animation: genesis-ring-reverse 14s linear infinite;
+}
+
+.animate-genesis-sprout {
+  animation: genesis-sprout 4s ease-in-out infinite;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-genesis-particle,
+  .animate-genesis-symbol,
+  .animate-genesis-glow,
+  .animate-genesis-glow-reverse,
+  .animate-genesis-ring,
+  .animate-genesis-ring-reverse,
+  .animate-genesis-sprout {
+    animation: none !important;
+  }
+}
+/* =========================================================
+   ONLY MATH — CYCLE ATMOSPHERES
+========================================================= */
+
+.cycle-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* =========================================================
+   GENESIS
+========================================================= */
+
+.genesis-background {
+  isolation: isolate;
+}
+
+/* Grid */
+
+.genesis-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.055;
+
+  background-image:
+    linear-gradient(
+      rgba(74, 222, 128, 0.65) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(74, 222, 128, 0.65) 1px,
+      transparent 1px
+    );
+
+  background-size: 70px 70px;
+
+  mask-image:
+    radial-gradient(
+      ellipse at center,
+      black 0%,
+      transparent 78%
+    );
+}
+
+/* Ambient glows */
+
+.genesis-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(140px);
+  pointer-events: none;
+}
+
+.genesis-glow-one {
+  width: 850px;
+  height: 850px;
+  top: -380px;
+  right: -300px;
+  background: rgba(34, 197, 94, 0.19);
+  animation: genesisGlowOne 14s ease-in-out infinite;
+}
+
+.genesis-glow-two {
+  width: 750px;
+  height: 750px;
+  bottom: -350px;
+  left: -300px;
+  background: rgba(59, 130, 246, 0.12);
+  animation: genesisGlowTwo 18s ease-in-out infinite;
+}
+
+.genesis-glow-three {
+  width: 650px;
+  height: 650px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(34, 197, 94, 0.055);
+  filter: blur(120px);
+  animation: genesisCenterGlow 10s ease-in-out infinite;
+}
+
+/* Big title */
+
+.genesis-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  font-size: clamp(80px, 15vw, 250px);
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+
+  color: rgba(74, 222, 128, 0.025);
+
+  user-select: none;
+}
+
+.genesis-subtitle {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 100px);
+  transform: translateX(-50%);
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5em;
+  white-space: nowrap;
+
+  color: rgba(134, 239, 172, 0.07);
+
+  user-select: none;
+}
+
+/* Orbits */
+
+.genesis-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  transform-origin: center;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.genesis-orbit-one {
+  width: 680px;
+  height: 260px;
+
+  transform: translate(-50%, -50%) rotate(-18deg);
+
+  border: 1px solid rgba(74, 222, 128, 0.1);
+
+  box-shadow:
+    0 0 30px rgba(34, 197, 94, 0.025),
+    inset 0 0 30px rgba(34, 197, 94, 0.02);
+
+  animation: genesisOrbitOne 35s linear infinite;
+}
+
+.genesis-orbit-two {
+  width: 820px;
+  height: 310px;
+
+  transform: translate(-50%, -50%) rotate(25deg);
+
+  border: 1px solid rgba(96, 165, 250, 0.08);
+
+  animation: genesisOrbitTwo 48s linear infinite reverse;
+}
+
+.genesis-orbit-three {
+  width: 470px;
+  height: 180px;
+
+  transform: translate(-50%, -50%) rotate(70deg);
+
+  border: 1px solid rgba(74, 222, 128, 0.055);
+
+  animation: genesisOrbitThree 27s linear infinite;
+}
+
+/* Math symbols */
+
+.genesis-symbol {
+  position: absolute;
+
+  font-weight: 1000;
+  line-height: 1;
+
+  color: rgba(134, 239, 172, 0.09);
+
+  user-select: none;
+
+  animation:
+    genesisSymbolFloat
+    9s
+    ease-in-out
+    infinite;
+}
+
+/* Stars */
+
+.genesis-star {
+  position: absolute;
+
+  color: rgba(134, 239, 172, 0.45);
+
+  user-select: none;
+
+  animation:
+    genesisStar
+    4s
+    ease-in-out
+    infinite;
+}
+
+.genesis-star-one {
+  left: 10%;
+  top: 30%;
+  font-size: 25px;
+}
+
+.genesis-star-two {
+  left: 35%;
+  top: 15%;
+  color: rgba(147, 197, 253, 0.35);
+  animation-delay: -1s;
+}
+
+.genesis-star-three {
+  left: 55%;
+  top: 75%;
+  font-size: 30px;
+  animation-delay: -2s;
+}
+
+.genesis-star-four {
+  right: 12%;
+  top: 38%;
+  color: rgba(147, 197, 253, 0.35);
+  animation-delay: -3s;
+}
+
+.genesis-star-five {
+  right: 30%;
+  bottom: 15%;
+  font-size: 23px;
+  animation-delay: -1.5s;
+}
+
+/* Dots */
+
+.genesis-dot {
+  position: absolute;
+
+  border-radius: 9999px;
+
+  background: rgba(74, 222, 128, 0.55);
+
+  box-shadow:
+    0 0 20px rgba(74, 222, 128, 0.4);
+
+  animation:
+    genesisDot
+    7s
+    ease-in-out
+    infinite;
+}
+
+.genesis-dot-one {
+  left: 20%;
+  top: 45%;
+  width: 7px;
+  height: 7px;
+}
+
+.genesis-dot-two {
+  left: 70%;
+  top: 30%;
+  width: 5px;
+  height: 5px;
+  background: rgba(96, 165, 250, 0.7);
+}
+
+.genesis-dot-three {
+  left: 45%;
+  top: 65%;
+  width: 8px;
+  height: 8px;
+}
+
+.genesis-dot-four {
+  right: 15%;
+  top: 70%;
+  width: 5px;
+  height: 5px;
+}
+
+.genesis-dot-five {
+  left: 8%;
+  bottom: 15%;
+  width: 4px;
+  height: 4px;
+}
+
+/* Energy */
+
+.genesis-energy {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 180px;
+  height: 180px;
+
+  transform: translate(-50%, -50%);
+
+  opacity: 0.12;
+}
+
+.genesis-energy-ring {
+  position: absolute;
+  inset: 0;
+
+  border-radius: 50%;
+
+  border:
+    1px solid rgba(74, 222, 128, 0.35);
+
+  box-shadow:
+    0 0 60px rgba(34, 197, 94, 0.1),
+    inset 0 0 50px rgba(34, 197, 94, 0.08);
+
+  animation:
+    genesisEnergyRing
+    8s
+    ease-in-out
+    infinite;
+}
+
+.genesis-energy-core {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 22px;
+  height: 22px;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background: rgba(74, 222, 128, 0.5);
+
+  box-shadow:
+    0 0 25px rgba(74, 222, 128, 0.5),
+    0 0 70px rgba(34, 197, 94, 0.25);
+
+  animation:
+    genesisCore
+    4s
+    ease-in-out
+    infinite;
+}
+
+/* =========================================================
+   INDEPENDENCE
+========================================================= */
+
+.independence-background {
+  isolation: isolate;
+}
+
+/* Grid */
+
+.independence-grid {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0.045;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 1px
+    );
+
+  background-size: 70px 70px;
+
+  mask-image:
+    radial-gradient(
+      ellipse at center,
+      black 0%,
+      transparent 80%
+    );
+}
+
+/* Glows */
+
+.independence-glow {
+  position: absolute;
+  border-radius: 9999px;
+
+  filter: blur(155px);
+
+  pointer-events: none;
+}
+
+.independence-glow-blue {
+  width: 1000px;
+  height: 800px;
+
+  top: -420px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: rgba(59, 130, 246, 0.18);
+
+  animation:
+    independenceBlueGlow
+    14s
+    ease-in-out
+    infinite;
+}
+
+.independence-glow-green {
+  width: 800px;
+  height: 800px;
+
+  left: -300px;
+  bottom: -350px;
+
+  background: rgba(34, 197, 94, 0.12);
+
+  animation:
+    independenceGreenGlow
+    18s
+    ease-in-out
+    infinite;
+}
+
+.independence-glow-red {
+  width: 700px;
+  height: 700px;
+
+  right: -350px;
+  top: 25%;
+
+  background: rgba(239, 68, 68, 0.075);
+
+  animation:
+    independenceRedGlow
+    16s
+    ease-in-out
+    infinite;
+}
+
+/* Main title */
+
+.independence-title {
+  position: absolute;
+
+  left: 50%;
+  top: 45%;
+
+  transform: translate(-50%, -50%);
+
+  font-size: clamp(55px, 10vw, 180px);
+
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+
+  white-space: nowrap;
+
+  color: rgba(255, 255, 255, 0.027);
+
+  user-select: none;
+}
+
+.independence-subtitle {
+  position: absolute;
+
+  left: 50%;
+  top: 57%;
+
+  transform: translateX(-50%);
+
+  font-size: clamp(18px, 4vw, 55px);
+
+  font-weight: 1000;
+
+  letter-spacing: 0.4em;
+
+  white-space: nowrap;
+
+  color: rgba(147, 197, 253, 0.045);
+
+  user-select: none;
+}
+
+/* Flags */
+
+.independence-flag {
+  position: absolute;
+
+  opacity: 0.25;
+
+  filter:
+    drop-shadow(
+      0 0 20px
+      rgba(0, 150, 255, 0.45)
+    );
+
+  animation-name:
+    independenceFlagFloat;
+
+  animation-timing-function:
+    ease-in-out;
+
+  animation-iteration-count:
+    infinite;
+
+  will-change:
+    transform;
+}
+
+/* Extra flags */
+
+.independence-extra {
+  position: absolute;
+
+  opacity: 0.22;
+
+  filter:
+    drop-shadow(
+      0 0 20px
+      rgba(0, 150, 255, 0.4)
+    );
+
+  user-select: none;
+}
+
+.independence-extra-one {
+  left: 8%;
+  top: 45%;
+  font-size: 38px;
+
+  animation:
+    independenceFloat
+    8s
+    ease-in-out
+    infinite;
+}
+
+.independence-extra-two {
+  left: 34%;
+  top: 40%;
+  font-size: 48px;
+
+  animation:
+    independenceFloatReverse
+    10s
+    ease-in-out
+    infinite;
+}
+
+.independence-extra-three {
+  right: 23%;
+  top: 38%;
+  font-size: 38px;
+
+  animation:
+    independenceFloat
+    9s
+    ease-in-out
+    infinite;
+}
+
+.independence-extra-four {
+  right: 7%;
+  bottom: 20%;
+  font-size: 48px;
+
+  animation:
+    independenceFloatReverse
+    11s
+    ease-in-out
+    infinite;
+}
+
+/* Stars */
+
+.independence-star {
+  position: absolute;
+
+  color: rgba(147, 197, 253, 0.45);
+
+  user-select: none;
+
+  animation:
+    independenceTwinkle
+    4s
+    ease-in-out
+    infinite;
+}
+
+.independence-star-one {
+  left: 12%;
+  top: 20%;
+}
+
+.independence-star-two {
+  left: 28%;
+  top: 14%;
+  color: rgba(255, 255, 255, 0.3);
+  animation-delay: -1s;
+}
+
+.independence-star-three {
+  left: 45%;
+  top: 30%;
+  font-size: 25px;
+  animation-delay: -2s;
+}
+
+.independence-star-four {
+  left: 68%;
+  top: 18%;
+  color: rgba(255, 255, 255, 0.25);
+  animation-delay: -3s;
+}
+
+.independence-star-five {
+  right: 12%;
+  top: 42%;
+  animation-delay: -1.5s;
+}
+
+/* Light lines */
+
+.independence-light-line {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      currentColor,
+      transparent
+    );
+
+  opacity: 0.3;
+}
+
+.independence-light-blue {
+  top: 24%;
+  color: rgba(96, 165, 250, 0.45);
+}
+
+.independence-light-white {
+  top: 24.5%;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.independence-light-green {
+  top: 25%;
+  color: rgba(74, 222, 128, 0.25);
+}
+
+/* Decorative moons */
+
+.independence-moon {
+  position: absolute;
+
+  border-radius: 50%;
+
+  border:
+    1px solid rgba(147, 197, 253, 0.08);
+
+  box-shadow:
+    0 0 50px rgba(59, 130, 246, 0.04);
+
+  animation:
+    independenceMoon
+    12s
+    ease-in-out
+    infinite;
+}
+
+.independence-moon-one {
+  width: 450px;
+  height: 450px;
+
+  left: -180px;
+  top: 40%;
+}
+
+.independence-moon-two {
+  width: 550px;
+  height: 550px;
+
+  right: -250px;
+  top: 5%;
+
+  animation-delay: -5s;
+}
+
+/* =========================================================
+   KEYFRAMES — GENESIS
+========================================================= */
+
+@keyframes genesisGlowOne {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+    opacity: 0.65;
+  }
+
+  50% {
+    transform:
+      translate3d(-80px, 55px, 0)
+      scale(1.14);
+    opacity: 1;
+  }
+}
+
+@keyframes genesisGlowTwo {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform:
+      translate3d(75px, -55px, 0)
+      scale(1.12);
+    opacity: 0.9;
+  }
+}
+
+@keyframes genesisCenterGlow {
+  0%,
+  100% {
+    transform:
+      translate(-50%, -50%)
+      scale(0.9);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform:
+      translate(-50%, -50%)
+      scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes genesisOrbitOne {
+  from {
+    transform:
+      translate(-50%, -50%)
+      rotate(-18deg);
+  }
+
+  to {
+    transform:
+      translate(-50%, -50%)
+      rotate(342deg);
+  }
+}
+
+@keyframes genesisOrbitTwo {
+  from {
+    transform:
+      translate(-50%, -50%)
+      rotate(25deg);
+  }
+
+  to {
+    transform:
+      translate(-50%, -50%)
+      rotate(-335deg);
+  }
+}
+
+@keyframes genesisOrbitThree {
+  from {
+    transform:
+      translate(-50%, -50%)
+      rotate(70deg);
+  }
+
+  to {
+    transform:
+      translate(-50%, -50%)
+      rotate(430deg);
+  }
+}
+
+@keyframes genesisSymbol {
+  0% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(0deg)
+      scale(1);
+
+    opacity: 0.035;
+  }
+
+  50% {
+    transform:
+      translate3d(25px, -35px, 0)
+      rotate(8deg)
+      scale(1.08);
+
+    opacity: 0.105;
+  }
+
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(0deg)
+      scale(1);
+
+    opacity: 0.035;
+  }
+}
+
+@keyframes genesisSymbolFloat {
+  0% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(0deg)
+      scale(1);
+
+    opacity: 0.035;
+  }
+
+  50% {
+    transform:
+      translate3d(22px, -38px, 0)
+      rotate(7deg)
+      scale(1.08);
+
+    opacity: 0.11;
+  }
+
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(0deg)
+      scale(1);
+
+    opacity: 0.035;
+  }
+}
+
+@keyframes genesisStar {
+  0%,
+  100% {
+    transform:
+      scale(0.7)
+      rotate(0deg);
+
+    opacity: 0.15;
+  }
+
+  50% {
+    transform:
+      scale(1.45)
+      rotate(90deg);
+
+    opacity: 0.8;
+  }
+}
+
+@keyframes genesisDot {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0);
+
+    opacity: 0.1;
+  }
+
+  50% {
+    transform:
+      translate3d(30px, -45px, 0);
+
+    opacity: 0.85;
+  }
+}
+
+@keyframes genesisEnergyRing {
+  0%,
+  100% {
+    transform:
+      scale(0.8)
+      rotate(0deg);
+
+    opacity: 0.3;
+  }
+
+  50% {
+    transform:
+      scale(1.15)
+      rotate(180deg);
+
+    opacity: 0.8;
+  }
+}
+
+@keyframes genesisCore {
+  0%,
+  100% {
+    transform:
+      translate(-50%, -50%)
+      scale(0.7);
+
+    opacity: 0.35;
+  }
+
+  50% {
+    transform:
+      translate(-50%, -50%)
+      scale(1.3);
+
+    opacity: 0.8;
+  }
+}
+
+/* =========================================================
+   KEYFRAMES — INDEPENDENCE
+========================================================= */
+
+@keyframes independenceFlagFloat {
+  0% {
+    transform:
+      translate3d(-20px, 0, 0)
+      rotate(-8deg);
+  }
+
+  20% {
+    transform:
+      translate3d(35px, -25px, 0)
+      rotate(8deg);
+  }
+
+  40% {
+    transform:
+      translate3d(-15px, -45px, 0)
+      rotate(-12deg);
+  }
+
+  60% {
+    transform:
+      translate3d(40px, 15px, 0)
+      rotate(10deg);
+  }
+
+  80% {
+    transform:
+      translate3d(-25px, -20px, 0)
+      rotate(-6deg);
+  }
+
+  100% {
+    transform:
+      translate3d(-20px, 0, 0)
+      rotate(-8deg);
+  }
+}
+
+@keyframes independenceFloat {
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(0deg);
+  }
+
+  50% {
+    transform:
+      translateY(-30px)
+      rotate(12deg);
+  }
+}
+
+@keyframes independenceFloatReverse {
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(0deg);
+  }
+
+  50% {
+    transform:
+      translateY(30px)
+      rotate(-12deg);
+  }
+}
+
+@keyframes independenceTwinkle {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes independenceBlueGlow {
+  0%,
+  100% {
+    transform:
+      translateX(-50%)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translateX(-50%)
+      scale(1.13);
+  }
+}
+
+@keyframes independenceGreenGlow {
+  0%,
+  100% {
+    transform:
+      translate(0, 0)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translate(80px, -40px)
+      scale(1.12);
+  }
+}
+
+@keyframes independenceRedGlow {
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(1.15);
+  }
+}
+
+@keyframes independenceMoon {
+  0%,
+  100% {
+    transform:
+      scale(0.9)
+      rotate(0deg);
+
+    opacity: 0.25;
+  }
+
+  50% {
+    transform:
+      scale(1.08)
+      rotate(20deg);
+
+    opacity: 0.55;
+  }
+}
+
+/* =========================================================
+   MOBILE OPTIMIZATION
+========================================================= */
+
+@media (max-width: 768px) {
+  .genesis-orbit-one {
+    width: 430px;
+    height: 170px;
+  }
+
+  .genesis-orbit-two {
+    width: 520px;
+    height: 200px;
+  }
+
+  .genesis-orbit-three {
+    width: 300px;
+    height: 120px;
+  }
+
+  .genesis-energy {
+    width: 120px;
+    height: 120px;
+  }
+
+  .genesis-subtitle {
+    top: calc(50% + 65px);
+    letter-spacing: 0.25em;
+    font-size: 7px;
+  }
+
+  .independence-title {
+    font-size: 16vw;
+  }
+
+  .independence-subtitle {
+    font-size: 6vw;
+    letter-spacing: 0.25em;
+  }
+
+  .independence-moon-one {
+    width: 280px;
+    height: 280px;
+  }
+
+  .independence-moon-two {
+    width: 350px;
+    height: 350px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .genesis-glow,
+  .genesis-orbit,
+  .genesis-symbol,
+  .genesis-star,
+  .genesis-dot,
+  .genesis-energy-ring,
+  .genesis-energy-core,
+  .independence-glow,
+  .independence-flag,
+  .independence-extra,
+  .independence-star,
+  .independence-moon {
+    animation: none !important;
+  }
+}

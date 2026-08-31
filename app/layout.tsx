@@ -40,13 +40,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
     images: [
-  {
-    url: "/og-image.png",
-    width: 1200,
-    height: 630,
-    alt: "Only Math",
-  },
-],
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Only Math",
+      },
+    ],
   },
 
   twitter: {
@@ -71,7 +71,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="overflow-hidden">
+      <body className="bg-black text-white">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
+import GenesisEffect from "@/app/components/GenesisEffect";
 export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
