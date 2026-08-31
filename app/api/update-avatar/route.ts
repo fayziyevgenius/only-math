@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
-type CycleName = "genesis" | "independence";
+type CycleName = "independence";
 
 function getCurrentCycle(): CycleName | null {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -13,11 +13,16 @@ function getCurrentCycle(): CycleName | null {
 
   const today = formatter.format(new Date());
 
-  if (today >= "2026-08-17" && today <= "2026-08-30") {
-    return "genesis";
-  }
+  // =====================================================
+  // INDEPENDENCE CYCLE
+  //
+  // 31 AUGUST 2026 → 13 SEPTEMBER 2026
+  // =====================================================
 
-  if (today >= "2026-08-31" && today <= "2026-09-13") {
+  if (
+    today >= "2026-08-31" &&
+    today <= "2026-09-13"
+  ) {
     return "independence";
   }
 
@@ -41,14 +46,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // =====================================================
+    // ALLOWED AVATARS
+    // =====================================================
+
     const allowedAvatars = [
       "only-math",
-      "genesis-cycle",
+      "independence-cycle",
       "daily-7",
       "solve-question",
       "sprint-60",
       "perfect-trio",
       "top-3",
+      "hacker",
     ];
 
     if (!allowedAvatars.includes(avatar)) {
@@ -120,6 +130,10 @@ export async function POST(req: Request) {
 
     // =====================================================
     // OLYMPIAD
+    //
+    // Genesis va Independence ikkalasi ham hisobga olinadi.
+    //
+    // Bu Perfect Trio uchun kerak.
     // =====================================================
 
     const olympiad = stats.olympiad || {};
@@ -155,8 +169,7 @@ export async function POST(req: Request) {
     // =====================================================
     // PERFECT TRIO
     //
-    // MUHIM:
-    // BU QISMGA TEGILMAYDI.
+    // BU QISM O'ZGARTIRILMAYDI.
     //
     // Agar DB'da perfectTrio true bo'lsa,
     // u doim unlock hisoblanadi.
@@ -174,36 +187,80 @@ export async function POST(req: Request) {
     // OTHER STATS
     // =====================================================
 
-    const dailyAttempts = Number(
-      stats.daily?.attempts || 0
-    );
-
     const sprintHighestScore = Number(
       stats.mathSpirit?.highestScore || 0
     );
+
+    // =====================================================
+    // SOLVED ANY QUESTION
+    //
+    // Certificate / SAT / Olympiad
+    // dan kamida bitta savol.
+    //
+    // Bu umumiy Problem Solver uchun.
+    // =====================================================
 
     const solvedAnyQuestion =
       nationalAttempts > 0 ||
       satAttempts > 0 ||
       olympiadAttempts > 0;
 
-    const genesisCycleUnlocked =
+    // =====================================================
+    // INDEPENDENCE CYCLE
+    //
+    // Independence Cycle'da:
+    //
+    // Certificate
+    // SAT
+    // Olympiad Independence
+    //
+    // dan kamida bitta savol yechilsa unlock.
+    // =====================================================
+
+    const independenceCycleUnlocked =
       nationalAttempts > 0 ||
       satAttempts > 0 ||
-      olympiadGenesisAttempts > 0;
+      olympiadIndependenceAttempts > 0;
+
+    // =====================================================
+    // SPRINT 60+
+    // =====================================================
 
     const sprint60Unlocked =
       sprintHighestScore >= 60;
+
+    // =====================================================
+    // TOP 3
+    // =====================================================
 
     const topThreeUnlocked =
       user.topThree === true;
 
     // =====================================================
+    // HACKER
+    //
+    // MUHIM:
+    //
+    // Hacker achievement 8 talik kodni muvaffaqiyatli
+    // ochgandan keyin DB'da:
+    //
+    // hackerUnlocked: true
+    //
+    // bo'lishi kerak.
+    //
+    // Biz bu yerda kodni o'zimiz ochmaymiz.
+    // Faqat serverdagi haqiqiy unlock holatini tekshiramiz.
+    // =====================================================
+
+    const hackerUnlocked =
+      user.hackerUnlocked === true;
+
+    // =====================================================
     // CURRENT CYCLE LOGIN DAYS
     //
-    // FAQAT DAILY-7 UCHUN.
+    // FAQAT INDEPENDENCE CYCLE.
     //
-    // PERFECT TRIO BUNGA BOG'LANMAYDI.
+    // DAILY-7 uchun ishlatiladi.
     // =====================================================
 
     const currentCycle = getCurrentCycle();
@@ -229,39 +286,80 @@ export async function POST(req: Request) {
     let unlocked = false;
 
     switch (avatar) {
+      // ===================================================
+      // ONLY MATH
+      // ===================================================
+
       case "only-math":
         unlocked = true;
         break;
 
-      case "genesis-cycle":
+      // ===================================================
+      // INDEPENDENCE CYCLE
+      // ===================================================
+
+      case "independence-cycle":
         unlocked =
-          genesisCycleUnlocked;
+          independenceCycleUnlocked;
         break;
+
+      // ===================================================
+      // DAILY MASTER
+      // ===================================================
 
       case "daily-7":
         unlocked =
           daily7Unlocked;
         break;
 
+      // ===================================================
+      // PROBLEM SOLVER
+      // ===================================================
+
       case "solve-question":
         unlocked =
           solvedAnyQuestion;
         break;
+
+      // ===================================================
+      // SPRINT RUNNER
+      // ===================================================
 
       case "sprint-60":
         unlocked =
           sprint60Unlocked;
         break;
 
+      // ===================================================
+      // PERFECT TRIO
+      // ===================================================
+
       case "perfect-trio":
         unlocked =
           perfectThreeUnlocked;
         break;
 
+      // ===================================================
+      // TOP 3
+      // ===================================================
+
       case "top-3":
         unlocked =
           topThreeUnlocked;
         break;
+
+      // ===================================================
+      // HACKER
+      // ===================================================
+
+      case "hacker":
+        unlocked =
+          hackerUnlocked;
+        break;
+
+      // ===================================================
+      // DEFAULT
+      // ===================================================
 
       default:
         unlocked = false;
@@ -310,8 +408,32 @@ export async function POST(req: Request) {
     );
 
     console.log(
+      "Certificate attempts:",
+      nationalAttempts
+    );
+
+    console.log(
+      "Certificate correct:",
+      nationalCorrect
+    );
+
+    console.log(
       "Certificate perfect:",
       perfectCertificate
+    );
+
+    console.log(
+      "-----------------------------------"
+    );
+
+    console.log(
+      "SAT attempts:",
+      satAttempts
+    );
+
+    console.log(
+      "SAT correct:",
+      satCorrect
     );
 
     console.log(
@@ -320,18 +442,81 @@ export async function POST(req: Request) {
     );
 
     console.log(
+      "-----------------------------------"
+    );
+
+    console.log(
+      "Olympiad Genesis attempts:",
+      olympiadGenesisAttempts
+    );
+
+    console.log(
+      "Olympiad Genesis correct:",
+      olympiadGenesisCorrect
+    );
+
+    console.log(
+      "Olympiad Independence attempts:",
+      olympiadIndependenceAttempts
+    );
+
+    console.log(
+      "Olympiad Independence correct:",
+      olympiadIndependenceCorrect
+    );
+
+    console.log(
+      "Olympiad total attempts:",
+      olympiadAttempts
+    );
+
+    console.log(
+      "Olympiad total correct:",
+      olympiadCorrect
+    );
+
+    console.log(
       "Olympiad perfect:",
       perfectOlympiad
     );
 
     console.log(
-      "Database perfectTrio:",
-      user.perfectTrio
+      "-----------------------------------"
+    );
+
+    console.log(
+      "Independence Cycle:",
+      independenceCycleUnlocked
+    );
+
+    console.log(
+      "Problem Solver:",
+      solvedAnyQuestion
+    );
+
+    console.log(
+      "Sprint 60+:",
+      sprint60Unlocked
+    );
+
+    console.log(
+      "Top 3:",
+      topThreeUnlocked
     );
 
     console.log(
       "Perfect Trio:",
       perfectThreeUnlocked
+    );
+
+    console.log(
+      "Hacker DB status:",
+      user.hackerUnlocked
+    );
+
+    console.log(
+      "Hacker:",
+      hackerUnlocked
     );
 
     console.log(
@@ -368,6 +553,9 @@ export async function POST(req: Request) {
 
           perfectTrio:
             perfectThreeUnlocked,
+
+          hacker:
+            hackerUnlocked,
         },
         { status: 403 }
       );
@@ -376,7 +564,10 @@ export async function POST(req: Request) {
     // =====================================================
     // SAVE AVATAR
     //
-    // PERFECT TRIO GA TEGILMAYDI.
+    // MUHIM:
+    // Bu yerda achievementlarning o'ziga tegilmaydi.
+    //
+    // Faqat foydalanuvchining ACTIVE avatar'i o'zgaradi.
     // =====================================================
 
     await users.updateOne(
@@ -409,6 +600,9 @@ export async function POST(req: Request) {
 
       perfectTrio:
         perfectThreeUnlocked,
+
+      hacker:
+        hackerUnlocked,
     });
   } catch (error) {
     console.error(

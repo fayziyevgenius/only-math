@@ -17,23 +17,37 @@ type User = {
   streak: number;
   title: string;
 
+  // =========================================
+  // HACKER
+  // =========================================
+
+  hackerUnlocked?: boolean;
+
+  // =========================================
+  // STATS
+  // =========================================
+
   stats: {
     national: {
       attempts: number;
       correct: number;
     };
+
     sat: {
       attempts: number;
       correct: number;
     };
+
     olympiad: {
       attempts: number;
       correct: number;
     };
+
     daily: {
       attempts: number;
       correct: number;
     };
+
     mathSpirit: {
       games: number;
       highestScore: number;
@@ -56,8 +70,12 @@ type Avatar = {
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const [loadingAvatar, setLoadingAvatar] = useState(false);
+
+  const [avatarOpen, setAvatarOpen] =
+    useState(false);
+
+  const [loadingAvatar, setLoadingAvatar] =
+    useState(false);
 
   // =====================================================
   // LOAD USER
@@ -71,40 +89,56 @@ export default function AccountPage() {
 
         if (!currentUserData) return;
 
-        const localUser = JSON.parse(currentUserData);
+        const localUser =
+          JSON.parse(currentUserData);
 
         if (!localUser.username) return;
 
         const res = await fetch("/api/me", {
           method: "POST",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
+
           body: JSON.stringify({
             username: localUser.username,
           }),
+
           cache: "no-store",
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          console.error("Failed to load user:", data);
+          console.error(
+            "Failed to load user:",
+            data
+          );
+
           return;
         }
 
-        // Serverdagi ma'lumot asosiy manba.
+        // =================================================
+        // SERVERDAGI USER ASOSIY MANBA
+        // =================================================
+
         setUser(data);
 
-        // LocalStorage ham serverdagi yangi ma'lumot bilan
-        // yangilanadi.
+        // =================================================
+        // LOCAL STORAGE SYNC
+        // =================================================
+
         localStorage.setItem(
           "currentUser",
           JSON.stringify(data)
         );
 
-        // Eski avatar keyini ham serverdagi avatar bilan
-        // sinxronlashtiramiz.
+        // =================================================
+        // AVATAR SYNC
+        // =================================================
+
         if (data.avatar) {
           localStorage.setItem(
             "onlyMathAvatar",
@@ -142,14 +176,17 @@ export default function AccountPage() {
         "/api/update-avatar",
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             username: user.username,
             avatar: avatar.id,
           }),
+
           cache: "no-store",
         }
       );
@@ -157,12 +194,33 @@ export default function AccountPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error("========== /api/update-avatar ERROR ==========");
-        console.error("Status:", res.status);
-        console.error("Status Text:", res.statusText);
-        console.error("Response:", data);
-        console.error("Current User:", user);
-        console.error("==============================================");
+        console.error(
+          "========== /api/update-avatar ERROR =========="
+        );
+
+        console.error(
+          "Status:",
+          res.status
+        );
+
+        console.error(
+          "Status Text:",
+          res.statusText
+        );
+
+        console.error(
+          "Response:",
+          data
+        );
+
+        console.error(
+          "Current User:",
+          user
+        );
+
+        console.error(
+          "=============================================="
+        );
 
         alert(
           data?.error ||
@@ -172,7 +230,10 @@ export default function AccountPage() {
         return;
       }
 
-      // Serverdan qaytgan avatar.
+      // =================================================
+      // SERVERDAN QAYTGAN AVATAR
+      // =================================================
+
       const newAvatar =
         data.avatar || avatar.id;
 
@@ -180,27 +241,33 @@ export default function AccountPage() {
       // UPDATE REACT STATE
       // =================================================
 
-      setUser((previousUser) => {
-        if (!previousUser) {
-          return previousUser;
-        }
+      setUser(
+        (previousUser) => {
+          if (!previousUser) {
+            return previousUser;
+          }
 
-        return {
-          ...previousUser,
-          avatar: newAvatar,
-        };
-      });
+          return {
+            ...previousUser,
+            avatar: newAvatar,
+          };
+        }
+      );
 
       // =================================================
       // UPDATE LOCAL STORAGE
       // =================================================
 
       const currentUserData =
-        localStorage.getItem("currentUser");
+        localStorage.getItem(
+          "currentUser"
+        );
 
       if (currentUserData) {
         const currentUser =
-          JSON.parse(currentUserData);
+          JSON.parse(
+            currentUserData
+          );
 
         const updatedUser = {
           ...currentUser,
@@ -217,6 +284,10 @@ export default function AccountPage() {
         "onlyMathAvatar",
         newAvatar
       );
+
+      // =================================================
+      // CLOSE MODAL
+      // =================================================
 
       setAvatarOpen(false);
     } catch (error) {
@@ -244,13 +315,13 @@ export default function AccountPage() {
   }
 
   // =====================================================
-  // USER
+  // CURRENT USER
   // =====================================================
 
   const currentUser = user;
 
   // =====================================================
-  // ACCURACY
+  // ACCURACY png
   // =====================================================
 
   const nationalAccuracy =
@@ -301,132 +372,334 @@ export default function AccountPage() {
   // ACHIEVEMENTS
   // =====================================================
 
-  // 7 Daily Problems
+  // =====================================================
+  // 1. DAILY MASTER
+  // =====================================================
+
   const daily7Unlocked =
     currentUser.stats.daily.attempts >= 7;
 
-  // Any Certificate / SAT / Olympiad question
+  // =====================================================
+  // 2. INDEPENDENCE CYCLE
+  //
+  // Certificate / SAT / Olympiad'dan
+  // kamida bitta savol yechilgan bo'lsa
+  // =====================================================
+
   const solvedAnyQuestion =
     currentUser.stats.national.attempts > 0 ||
     currentUser.stats.sat.attempts > 0 ||
     currentUser.stats.olympiad.attempts > 0;
 
-  // Math Sprint 60+
-  const sprint60Unlocked =
-    currentUser.stats.mathSpirit.highestScore >= 60;
+  const independenceCycleUnlocked =
+    solvedAnyQuestion;
 
-  // Perfect Certificate
+  // =====================================================
+  // 3. PROBLEM SOLVER
+  // =====================================================
+
+  const problemSolverUnlocked =
+    solvedAnyQuestion;
+
+  // =====================================================
+  // 4. MATH SPRINT 60+
+  // =====================================================
+
+  const sprint60Unlocked =
+    currentUser.stats.mathSpirit
+      .highestScore >= 60;
+
+  // =====================================================
+  // 5. PERFECT CERTIFICATE
+  // =====================================================
+
   const perfectCertificate =
     currentUser.stats.national.attempts > 0 &&
     currentUser.stats.national.correct ===
       currentUser.stats.national.attempts;
 
-  // Perfect SAT
+  // =====================================================
+  // 6. PERFECT SAT
+  // =====================================================
+
   const perfectSAT =
     currentUser.stats.sat.attempts > 0 &&
     currentUser.stats.sat.correct ===
       currentUser.stats.sat.attempts;
 
-  // Perfect Olympiad
+  // =====================================================
+  // 7. PERFECT OLYMPIAD
+  // =====================================================
+
   const perfectOlympiad =
     currentUser.stats.olympiad.attempts > 0 &&
     currentUser.stats.olympiad.correct ===
       currentUser.stats.olympiad.attempts;
 
-  // Perfect result in all 3
+  // =====================================================
+  // 8. PERFECT THREE
+  // =====================================================
+
   const perfectThreeUnlocked =
     perfectCertificate &&
     perfectSAT &&
     perfectOlympiad;
 
-  // Top 3
+  // =====================================================
+  // 9. TOP 3
+  // =====================================================
+
   const topThreeUnlocked =
     currentUser.topThree === true;
+
+  // =====================================================
+  // 10. HACKER
+  //
+  // Faqat 8 talik kodni to'g'ri ochganda
+  // backend currentUser.hackerUnlocked = true
+  // qilib qo'yadi.
+  // =====================================================
+
+  const hackerUnlocked =
+    currentUser.hackerUnlocked === true;
+
+  // =====================================================
+  // DEBUG
+  // =====================================================
+
+  console.log(
+    "========== ACCOUNT ACHIEVEMENTS =========="
+  );
+
+  console.log(
+    "Independence Cycle:",
+    independenceCycleUnlocked
+  );
+
+  console.log(
+    "Problem Solver:",
+    problemSolverUnlocked
+  );
+
+  console.log(
+    "Daily Master:",
+    daily7Unlocked
+  );
+
+  console.log(
+    "Sprint Runner:",
+    sprint60Unlocked
+  );
+
+  console.log(
+    "Perfect Certificate:",
+    perfectCertificate
+  );
+
+  console.log(
+    "Perfect SAT:",
+    perfectSAT
+  );
+
+  console.log(
+    "Perfect Olympiad:",
+    perfectOlympiad
+  );
+
+  console.log(
+    "Perfect Three:",
+    perfectThreeUnlocked
+  );
+
+  console.log(
+    "Top 3:",
+    topThreeUnlocked
+  );
+
+  console.log(
+    "Hacker:",
+    hackerUnlocked
+  );
+
+  console.log(
+    "=========================================="
+  );
 
   // =====================================================
   // AVATARS
   // =====================================================
 
   const avatars: Avatar[] = [
+    // ===================================================
+    // DEFAULT
+    // ===================================================
+
     {
       id: "only-math",
+
       name: "Only Math",
-      image: "/logo.png",
+
+      image:
+        "/logo.png",
+
       unlocked: true,
+
       description:
         "Only Math asosiy avatari.",
     },
 
+    // ===================================================
+    // INDEPENDENCE CYCLE
+    // ===================================================
+
     {
-      id: "genesis-cycle",
-      name: "Genesis Cycle",
+      id: "independence-cycle",
+
+      name: "Independence Cycle",
+
       image:
-        "/avatars/genesis-cycle.png",
-      unlocked: solvedAnyQuestion,
+        "/avatars/independence-cycle.png",
+
+      unlocked:
+        independenceCycleUnlocked,
+
       requirement:
-        "Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
+        "Independence Cycle'da Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
+
       description:
-        "Genesis Cycle uchun maxsus avatar.",
+        "Independence Cycle uchun maxsus avatar.",
     },
+
+    // ===================================================
+    // DAILY MASTER
+    // ===================================================
 
     {
       id: "daily-7",
+
       name: "Daily Master",
+
       image:
-        "/avatars/daily-7.png",
-      unlocked: daily7Unlocked,
+        "/avatars/daily-7in.png",
+
+      unlocked:
+        daily7Unlocked,
+
       requirement:
         "7 ta Daily Problem yeching.",
+
       description:
         "Daily mashg'ulotlarini muntazam bajarganlar uchun.",
     },
 
+    // ===================================================
+    // PROBLEM SOLVER
+    // ===================================================
+
     {
       id: "solve-question",
+
       name: "Problem Solver",
+
       image:
-        "/avatars/solve-question.png",
-      unlocked: solvedAnyQuestion,
+        "/avatars/solve-questionin.png",
+
+      unlocked:
+        problemSolverUnlocked,
+
       requirement:
         "Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
+
       description:
         "Birinchi akademik savolini yechgan foydalanuvchi uchun.",
     },
 
+    // ===================================================
+    // SPRINT RUNNER
+    // ===================================================
+
     {
       id: "sprint-60",
+
       name: "Sprint Runner",
+
       image:
-        "/avatars/sprint-60.png",
-      unlocked: sprint60Unlocked,
+        "/avatars/sprint-60in.png",
+
+      unlocked:
+        sprint60Unlocked,
+
       requirement:
         "Math Sprint'da 60 yoki undan yuqori ball oling.",
+
       description:
         "Tezlik va aniqlikni namoyish qilganlar uchun.",
     },
 
+    // ===================================================
+    // PERFECT TRIO
+    // ===================================================
+
     {
       id: "perfect-trio",
+
       name: "Perfect Trio",
+
       image:
-        "/avatars/perfect-trio.png",
-      unlocked: perfectThreeUnlocked,
+        "/avatars/perfect-trioin.png",
+
+      unlocked:
+        perfectThreeUnlocked,
+
       requirement:
         "Certificate, SAT va Olympiad'dan mukammal natija oling.",
+
       description:
         "Uchala yo'nalishda ham perfect natijaga erishganlar uchun.",
     },
 
+    // ===================================================
+    // TOP 3
+    // ===================================================
+
     {
       id: "top-3",
+
       name: "Top 3",
+
       image:
-        "/avatars/top-3.png",
-      unlocked: topThreeUnlocked,
+        "/avatars/top-3in.png",
+
+      unlocked:
+        topThreeUnlocked,
+
       requirement:
         "Leaderboard'da Top 3 o'rinni egallang.",
+
       description:
         "Eng kuchli foydalanuvchilar uchun maxsus avatar.",
+    },
+
+    // ===================================================
+    // HACKER
+    // ===================================================
+
+    {
+      id: "hacker",
+
+      name: "Hacker",
+
+      image:
+        "/avatars/hacker.png",
+
+      unlocked:
+        hackerUnlocked,
+
+      requirement:
+        "8 talik maxfiy kodni to'g'ri oching.",
+
+      description:
+        "Maxfiy 8 talik kodni muvaffaqiyatli ochganlar uchun maxsus avatar.",
     },
   ];
 
@@ -435,7 +708,8 @@ export default function AccountPage() {
   // =====================================================
 
   const serverAvatar =
-    currentUser.avatar || "only-math";
+    currentUser.avatar ||
+    "only-math";
 
   const activeAvatar =
     avatars.find(
@@ -461,7 +735,9 @@ export default function AccountPage() {
 
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
 
-            {/* AVATAR */}
+            {/* =================================================
+                AVATAR
+            ================================================= */}
 
             <button
               type="button"
@@ -487,8 +763,12 @@ export default function AccountPage() {
             >
 
               <img
-                src={activeAvatar.image}
-                alt={activeAvatar.name}
+                src={
+                  activeAvatar.image
+                }
+                alt={
+                  activeAvatar.name
+                }
                 className="
                   w-full
                   h-full
@@ -521,7 +801,9 @@ export default function AccountPage() {
 
             </button>
 
-            {/* PROFILE */}
+            {/* =================================================
+                PROFILE
+            ================================================= */}
 
             <div className="text-center md:text-left">
 
@@ -554,7 +836,10 @@ export default function AccountPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
 
+            {/* NAME */}
+
             <div>
+
               <p className="text-gray-400">
                 Name
               </p>
@@ -562,9 +847,13 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-words">
                 {currentUser.name}
               </p>
+
             </div>
 
+            {/* SURNAME */}
+
             <div>
+
               <p className="text-gray-400">
                 Surname
               </p>
@@ -572,9 +861,13 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-words">
                 {currentUser.surname}
               </p>
+
             </div>
 
+            {/* EMAIL */}
+
             <div>
+
               <p className="text-gray-400">
                 Email
               </p>
@@ -582,9 +875,13 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-all">
                 {currentUser.email}
               </p>
+
             </div>
 
+            {/* USERNAME */}
+
             <div>
+
               <p className="text-gray-400">
                 Username
               </p>
@@ -592,9 +889,13 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-all">
                 @{currentUser.username}
               </p>
+
             </div>
 
+            {/* BIRTHDAY */}
+
             <div>
+
               <p className="text-gray-400">
                 Birthday
               </p>
@@ -602,6 +903,7 @@ export default function AccountPage() {
               <p className="text-xl md:text-2xl break-words">
                 {currentUser.birthday}
               </p>
+
             </div>
 
           </div>
@@ -611,6 +913,7 @@ export default function AccountPage() {
           ================================================= */}
 
           <Link href="/edit-profile">
+
             <button
               type="button"
               className="
@@ -627,6 +930,7 @@ export default function AccountPage() {
             >
               Edit Profile
             </button>
+
           </Link>
 
           {/* =================================================
@@ -641,7 +945,9 @@ export default function AccountPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
 
-              {/* NATIONAL */}
+              {/* =================================================
+                  NATIONAL CERTIFICATE
+              ================================================= */}
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
 
@@ -650,38 +956,54 @@ export default function AccountPage() {
                 </h3>
 
                 <div className="flex justify-between mb-2">
-                  <span>Attempts</span>
+
+                  <span>
+                    Attempts
+                  </span>
 
                   <span>
                     {
-                      currentUser.stats.national
+                      currentUser.stats
+                        .national
                         .attempts
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between mb-2">
-                  <span>Correct</span>
+
+                  <span>
+                    Correct
+                  </span>
 
                   <span className="text-green-400">
                     {
-                      currentUser.stats.national
+                      currentUser.stats
+                        .national
                         .correct
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between">
-                  <span>Accuracy</span>
+
+                  <span>
+                    Accuracy
+                  </span>
 
                   <span className="text-yellow-400">
                     {nationalAccuracy}%
                   </span>
+
                 </div>
 
               </div>
 
-              {/* SAT */}
+              {/* =================================================
+                  SAT
+              ================================================= */}
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
 
@@ -690,38 +1012,54 @@ export default function AccountPage() {
                 </h3>
 
                 <div className="flex justify-between mb-2">
-                  <span>Attempts</span>
+
+                  <span>
+                    Attempts
+                  </span>
 
                   <span>
                     {
-                      currentUser.stats.sat
+                      currentUser.stats
+                        .sat
                         .attempts
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between mb-2">
-                  <span>Correct</span>
+
+                  <span>
+                    Correct
+                  </span>
 
                   <span className="text-green-400">
                     {
-                      currentUser.stats.sat
+                      currentUser.stats
+                        .sat
                         .correct
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between">
-                  <span>Accuracy</span>
+
+                  <span>
+                    Accuracy
+                  </span>
 
                   <span className="text-yellow-400">
                     {satAccuracy}%
                   </span>
+
                 </div>
 
               </div>
 
-              {/* OLYMPIAD */}
+              {/* =================================================
+                  OLYMPIAD
+              ================================================= */}
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
 
@@ -730,38 +1068,54 @@ export default function AccountPage() {
                 </h3>
 
                 <div className="flex justify-between mb-2">
-                  <span>Attempts</span>
+
+                  <span>
+                    Attempts
+                  </span>
 
                   <span>
                     {
-                      currentUser.stats.olympiad
+                      currentUser.stats
+                        .olympiad
                         .attempts
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between mb-2">
-                  <span>Correct</span>
+
+                  <span>
+                    Correct
+                  </span>
 
                   <span className="text-green-400">
                     {
-                      currentUser.stats.olympiad
+                      currentUser.stats
+                        .olympiad
                         .correct
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between">
-                  <span>Accuracy</span>
+
+                  <span>
+                    Accuracy
+                  </span>
 
                   <span className="text-yellow-400">
                     {olympiadAccuracy}%
                   </span>
+
                 </div>
 
               </div>
 
-              {/* DAILY */}
+              {/* =================================================
+                  DAILY
+              ================================================= */}
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
 
@@ -770,38 +1124,54 @@ export default function AccountPage() {
                 </h3>
 
                 <div className="flex justify-between mb-2">
-                  <span>Attempts</span>
+
+                  <span>
+                    Attempts
+                  </span>
 
                   <span>
                     {
-                      currentUser.stats.daily
+                      currentUser.stats
+                        .daily
                         .attempts
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between mb-2">
-                  <span>Correct</span>
+
+                  <span>
+                    Correct
+                  </span>
 
                   <span className="text-green-400">
                     {
-                      currentUser.stats.daily
+                      currentUser.stats
+                        .daily
                         .correct
                     }
                   </span>
+
                 </div>
 
                 <div className="flex justify-between">
-                  <span>Accuracy</span>
+
+                  <span>
+                    Accuracy
+                  </span>
 
                   <span className="text-yellow-400">
                     {dailyAccuracy}%
                   </span>
+
                 </div>
 
               </div>
 
-              {/* MATH SPRINT */}
+              {/* =================================================
+                  MATH SPRINT
+              ================================================= */}
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:col-span-2">
 
@@ -811,7 +1181,10 @@ export default function AccountPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
 
+                  {/* GAMES */}
+
                   <div>
+
                     <p className="text-zinc-400">
                       Games
                     </p>
@@ -819,12 +1192,17 @@ export default function AccountPage() {
                     <h2 className="text-3xl font-bold">
                       {
                         currentUser.stats
-                          .mathSpirit.games
+                          .mathSpirit
+                          .games
                       }
                     </h2>
+
                   </div>
 
+                  {/* HIGHEST */}
+
                   <div>
+
                     <p className="text-zinc-400">
                       Highest Score
                     </p>
@@ -836,9 +1214,13 @@ export default function AccountPage() {
                           .highestScore
                       }
                     </h2>
+
                   </div>
 
+                  {/* AVERAGE */}
+
                   <div>
+
                     <p className="text-zinc-400">
                       Average Score
                     </p>
@@ -846,9 +1228,13 @@ export default function AccountPage() {
                     <h2 className="text-3xl font-bold text-blue-400">
                       {averageSprintScore}
                     </h2>
+
                   </div>
 
+                  {/* BEST COMBO */}
+
                   <div>
+
                     <p className="text-zinc-400">
                       Best Combo
                     </p>
@@ -861,6 +1247,7 @@ export default function AccountPage() {
                           .bestCombo
                       }
                     </h2>
+
                   </div>
 
                 </div>
@@ -880,6 +1267,7 @@ export default function AccountPage() {
       ===================================================== */}
 
       {avatarOpen && (
+
         <div
           className="
             fixed
@@ -915,7 +1303,9 @@ export default function AccountPage() {
             }
           >
 
-            {/* HEADER */}
+            {/* =================================================
+                MODAL HEADER
+            ================================================= */}
 
             <div className="flex items-center justify-between mb-7">
 
@@ -930,8 +1320,7 @@ export default function AccountPage() {
                 </h2>
 
                 <p className="text-zinc-500 mt-1">
-                  Bajargan achievementlaringiz
-                  orqali yangi avatarlarni oching.
+                  Bajargan achievementlaringiz orqali yangi avatarlarni oching.
                 </p>
 
               </div>
@@ -959,160 +1348,204 @@ export default function AccountPage() {
 
             </div>
 
-            {/* AVATAR GRID */}
+            {/* =================================================
+                AVATAR GRID
+            ================================================= */}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
 
-              {avatars.map((avatar) => {
+              {avatars.map(
+                (avatar) => {
 
-                const isSelected =
-                  activeAvatar.id ===
-                  avatar.id;
+                  const isSelected =
+                    activeAvatar.id ===
+                    avatar.id;
 
-                return (
-                  <button
-                    key={avatar.id}
-                    type="button"
-                    disabled={
-                      !avatar.unlocked ||
-                      loadingAvatar
-                    }
-                    onClick={() =>
-                      changeAvatar(avatar)
-                    }
-                    className={`
-                      relative
-                      rounded-2xl
-                      border
-                      p-3
-                      text-left
-                      transition-all
-                      ${
-                        avatar.unlocked
-                          ? "cursor-pointer hover:border-green-500 hover:bg-zinc-900"
-                          : "cursor-not-allowed opacity-60"
+                  return (
+
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      disabled={
+                        !avatar.unlocked ||
+                        loadingAvatar
                       }
-                      ${
-                        isSelected
-                          ? "border-green-500 bg-green-500/10"
-                          : "border-zinc-800 bg-black"
+                      onClick={() =>
+                        changeAvatar(
+                          avatar
+                        )
                       }
-                    `}
-                  >
-
-                    {/* IMAGE */}
-
-                    <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900">
-
-                      <img
-                        src={avatar.image}
-                        alt={avatar.name}
-                        className={`
-                          w-full
-                          h-full
-                          object-cover
-                          rounded-xl
-                          ${
-                            avatar.unlocked
-                              ? ""
-                              : "grayscale brightness-50"
-                          }
-                        `}
-                      />
-
-                      {/* LOCK */}
-
-                      {!avatar.unlocked && (
-                        <div
-                          className="
-                            absolute
-                            inset-0
-                            flex
-                            items-center
-                            justify-center
-                            bg-black/45
-                          "
-                        >
-                          <span className="text-3xl">
-                            🔒
-                          </span>
-                        </div>
-                      )}
-
-                      {/* SELECTED */}
-
-                      {isSelected && (
-                        <div
-                          className="
-                            absolute
-                            top-2
-                            right-2
-                            w-7
-                            h-7
-                            rounded-full
-                            bg-green-500
-                            text-black
-                            flex
-                            items-center
-                            justify-center
-                            font-black
-                          "
-                        >
-                          ✓
-                        </div>
-                      )}
-
-                    </div>
-
-                    {/* NAME */}
-
-                    <p
                       className={`
-                        mt-3
-                        font-bold
-                        text-sm
+                        relative
+                        rounded-2xl
+                        border
+                        p-3
+                        text-left
+                        transition-all
                         ${
                           avatar.unlocked
-                            ? "text-white"
-                            : "text-zinc-500"
+                            ? "cursor-pointer hover:border-green-500 hover:bg-zinc-900"
+                            : "cursor-not-allowed opacity-60"
+                        }
+                        ${
+                          isSelected
+                            ? "border-green-500 bg-green-500/10"
+                            : "border-zinc-800 bg-black"
                         }
                       `}
                     >
-                      {avatar.name}
-                    </p>
 
-                    {/* LOCKED */}
+                      {/* =================================================
+                          IMAGE
+                      ================================================= */}
 
-                    {!avatar.unlocked &&
-                      avatar.requirement && (
-                        <p className="text-[11px] leading-4 text-zinc-600 mt-1">
-                          🔒{" "}
-                          {avatar.requirement}
+                      <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900">
+
+                        <img
+                          src={
+                            avatar.image
+                          }
+                          alt={
+                            avatar.name
+                          }
+                          className={`
+                            w-full
+                            h-full
+                            object-cover
+                            rounded-xl
+                            ${
+                              avatar.unlocked
+                                ? ""
+                                : "grayscale brightness-50"
+                            }
+                          `}
+                        />
+
+                        {/* =================================================
+                            LOCK
+                        ================================================= */}
+
+                        {!avatar.unlocked && (
+
+                          <div
+                            className="
+                              absolute
+                              inset-0
+                              flex
+                              items-center
+                              justify-center
+                              bg-black/45
+                            "
+                          >
+
+                            <span className="text-3xl">
+                              🔒
+                            </span>
+
+                          </div>
+
+                        )}
+
+                        {/* =================================================
+                            SELECTED
+                        ================================================= */}
+
+                        {isSelected && (
+
+                          <div
+                            className="
+                              absolute
+                              top-2
+                              right-2
+                              w-7
+                              h-7
+                              rounded-full
+                              bg-green-500
+                              text-black
+                              flex
+                              items-center
+                              justify-center
+                              font-black
+                            "
+                          >
+                            ✓
+                          </div>
+
+                        )}
+
+                      </div>
+
+                      {/* =================================================
+                          NAME
+                      ================================================= */}
+
+                      <p
+                        className={`
+                          mt-3
+                          font-bold
+                          text-sm
+                          ${
+                            avatar.unlocked
+                              ? "text-white"
+                              : "text-zinc-500"
+                          }
+                        `}
+                      >
+                        {avatar.name}
+                      </p>
+
+                      {/* =================================================
+                          LOCKED REQUIREMENT
+                      ================================================= */}
+
+                      {!avatar.unlocked &&
+                        avatar.requirement && (
+
+                          <p className="text-[11px] leading-4 text-zinc-600 mt-1">
+
+                            🔒{" "}
+                            {
+                              avatar.requirement
+                            }
+
+                          </p>
+
+                        )}
+
+                      {/* =================================================
+                          UNLOCKED
+                      ================================================= */}
+
+                      {avatar.unlocked && (
+
+                        <p className="text-[11px] text-green-400 mt-1">
+
+                          ✓ Unlocked
+
                         </p>
+
                       )}
 
-                    {/* UNLOCKED */}
+                    </button>
 
-                    {avatar.unlocked && (
-                      <p className="text-[11px] text-green-400 mt-1">
-                        ✓ Unlocked
-                      </p>
-                    )}
-
-                  </button>
-                );
-              })}
+                  );
+                }
+              )}
 
             </div>
 
-            {/* FOOTER */}
+            {/* =================================================
+                FOOTER
+            ================================================= */}
 
             <div className="mt-7 pt-5 border-t border-zinc-800">
 
               <p className="text-sm text-zinc-500 text-center">
+
                 🔓 Achievementlarni
                 bajarganingiz sari yangi
                 avatarlar ochiladi.
+
               </p>
 
             </div>
@@ -1120,6 +1553,7 @@ export default function AccountPage() {
           </div>
 
         </div>
+
       )}
 
     </div>
