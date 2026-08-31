@@ -213,8 +213,8 @@ const independenceQuestions: Question[] = [
     options: [
       "√55 − √52",
       "√56 − √53",
-      "77 − 74",
-      "88 − 85",
+      "√77 − √74",
+      "√88 − √85",
     ],
     points: 30,
   },
@@ -278,7 +278,7 @@ const independenceQuestions: Question[] = [
   {
     id: 11,
     question:
-      "To'g'ri burchakli ABC da, AC = 12, BC = 5, C to'g'ri burchak. Yarim doira chizmadagidek chizilgan, ushbu yarim doira radiusini toping?",
+      "To'g'ri burchakli ABC uchburchakda C burchak to'g'ri burchak, AC=12 va BC=5. Markazi AC katetda yotgan hamda gipotenuza AB ga va BC katetga C nuqtada urinadigan yarim doira chizilgan. Ushbu yarim doiraning radiusini toping?",
     options: ["7/6", "13/5", "59/18", "10/3"],
     points: 30,
   },
@@ -316,11 +316,10 @@ const independenceQuestions: Question[] = [
   },
 
   {
-    id: 16,
-    question:
-      "Hisoblang:\n\n1/2 + 4/2² + 9/2³ + 16/2⁴ + ...",
-    options: ["4", "2", "1", "6"],
-    points: 30,
+  id: 16,
+  question: "Ketma-ket kelgan 5 ta toq sonning yig'indisi 135 ga teng. Ushbu sonlarning eng kattasini toping.",
+  options: ["27", "29", "31", "33"],
+  points: 30
   },
 
   {

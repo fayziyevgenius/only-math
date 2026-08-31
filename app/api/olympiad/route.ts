@@ -34,12 +34,12 @@ const genesisAnswers: Record<number, string> = {
 
 const independenceAnswers: Record<number, string> = {
   1: "C",
-  2: "C",
+  2: "D",
   3: "B",
   4: "C",
   5: "D",
   6: "A",
-  7: "B",
+  7: "A",
   8: "A",
   9: "C",
   10: "D",
@@ -48,10 +48,10 @@ const independenceAnswers: Record<number, string> = {
   13: "A",
   14: "C",
   15: "B",
-  16: "A",
-  17: "B",
+  16: "C",
+  17: "C",
   18: "D",
-  19: "C",
+  19: "A",
   20: "C",
 };
 
