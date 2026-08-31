@@ -427,7 +427,7 @@ export default function AchievementsPage() {
         "7 ta Daily Problem yeching.",
 
       image:
-        "/avatars/daily-7.png",
+        "/avatars/daily-7in.png",
 
       unlocked:
         daily7Unlocked,
@@ -449,7 +449,7 @@ export default function AchievementsPage() {
         "Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
 
       image:
-        "/avatars/solve-question.png",
+        "/avatars/solve-questionin.png",
 
       unlocked:
         solveAnyQuestionUnlocked,
@@ -471,7 +471,7 @@ export default function AchievementsPage() {
         "Math Sprint'da 60 yoki undan yuqori score oling.",
 
       image:
-        "/avatars/sprint-60.png",
+        "/avatars/sprint-60in.png",
 
       unlocked:
         sprint60Unlocked,
@@ -493,7 +493,7 @@ export default function AchievementsPage() {
         "Certificate, SAT va Olympiad'dan perfect score oling.",
 
       image:
-        "/avatars/perfect-trio.png",
+        "/avatars/perfect-trioin.png",
 
       unlocked:
         perfectTrioUnlocked,
@@ -515,7 +515,7 @@ export default function AchievementsPage() {
         "Global Leaderboard'da Top 3 o'rinni egallang.",
 
       image:
-        "/avatars/top-3.png",
+        "/avatars/top-3in.png",
 
       unlocked:
         top3Unlocked,
