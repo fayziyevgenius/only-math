@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
-export const dynamic = "force-dynamic";
-
 /*
 =========================================================
   CREATE SESSION TOKEN
 =========================================================
 */
 
-function createToken(identifier: string): string {
+function createToken(identifier: string) {
   const secret =
     process.env.GUESS_PASSWORD_SESSION_SECRET;
 
@@ -30,12 +28,85 @@ function createToken(identifier: string): string {
     .digest("hex");
 
   const encodedIdentifier =
-    Buffer.from(
-      identifier,
-      "utf8"
-    ).toString("base64url");
+    Buffer.from(identifier, "utf8").toString(
+      "base64url"
+    );
 
   return `${timestamp}.${encodedIdentifier}.${signature}`;
+}
+
+/*
+=========================================================
+  CALCULATE GUESS RESULT
+=========================================================
+
+  correct:
+    belgi to'g'ri va joyi to'g'ri
+
+  misplaced:
+    belgi passwordda bor,
+    lekin joyi noto'g'ri
+
+  wrong:
+    belgi passwordda umuman yo'q
+=========================================================
+*/
+
+function calculateResult(
+  guess: string,
+  correct: string
+): ("correct" | "misplaced" | "wrong")[] {
+  const result: (
+    | "correct"
+    | "misplaced"
+    | "wrong"
+  )[] = Array(guess.length).fill("wrong");
+
+  /*
+  =======================================================
+    1. AVVAL EXACT MATCH
+  =======================================================
+  */
+
+  const remainingCorrect: string[] = [];
+  const remainingGuess: string[] = [];
+
+  for (let i = 0; i < guess.length; i++) {
+    if (guess[i] === correct[i]) {
+      result[i] = "correct";
+    } else {
+      remainingGuess.push(guess[i]);
+      remainingCorrect.push(correct[i]);
+    }
+  }
+
+  /*
+  =======================================================
+    2. MISPLACED MATCH
+  =======================================================
+  */
+
+  for (let i = 0; i < guess.length; i++) {
+    if (result[i] === "correct") {
+      continue;
+    }
+
+    const character = guess[i];
+
+    const correctIndex =
+      remainingCorrect.indexOf(character);
+
+    if (correctIndex !== -1) {
+      result[i] = "misplaced";
+
+      remainingCorrect.splice(
+        correctIndex,
+        1
+      );
+    }
+  }
+
+  return result;
 }
 
 /*
@@ -97,6 +168,61 @@ export async function POST(
 
     /*
     =====================================================
+      SERVER FIRST 4
+    =====================================================
+    */
+
+    const correctGuess =
+      process.env.GUESS_PASSWORD_FIRST4
+        ?.trim()
+        .toUpperCase();
+
+    if (!correctGuess) {
+      console.error(
+        "GUESS_PASSWORD_FIRST4 is missing."
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Server configuration error.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      SERVER PASSWORD VALIDATION
+    =====================================================
+    */
+
+    if (
+      !/^[A-Z0-9]{4}$/.test(
+        correctGuess
+      )
+    ) {
+      console.error(
+        "GUESS_PASSWORD_FIRST4 must contain exactly 4 letters/numbers."
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Server password configuration error.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+    =====================================================
       GUESS LENGTH
     =====================================================
     */
@@ -135,88 +261,31 @@ export async function POST(
 
     /*
     =====================================================
-      SERVER FIRST 4
+      CALCULATE RESULT
     =====================================================
     */
 
-    const correctGuess =
-      process.env.GUESS_PASSWORD_FIRST4
-        ?.trim()
-        .toUpperCase();
-
-    if (!correctGuess) {
-      console.error(
-        "GUESS_PASSWORD_FIRST4 is missing."
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Server configuration error.",
-        },
-        {
-          status: 500,
-        }
-      );
-    }
-
-    /*
-    =====================================================
-      SERVER FIRST 4 VALIDATION
-    =====================================================
-    */
-
-    if (
-      !/^[A-Z0-9]{4}$/.test(
-        correctGuess
-      )
-    ) {
-      console.error(
-        "GUESS_PASSWORD_FIRST4 must contain exactly 4 letters/numbers."
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Server password configuration error.",
-        },
-        {
-          status: 500,
-        }
-      );
-    }
-
-    /*
-    =====================================================
-      SECURE COMPARISON
-    =====================================================
-    */
-
-    const guessBuffer =
-      Buffer.from(
+    const result =
+      calculateResult(
         guess,
-        "utf8"
+        correctGuess
       );
 
-    const correctBuffer =
-      Buffer.from(
-        correctGuess,
-        "utf8"
-      );
+    /*
+    =====================================================
+      CHECK WHETHER EVERYTHING IS CORRECT
+    =====================================================
+    */
 
     const isCorrect =
-      guessBuffer.length ===
-        correctBuffer.length &&
-      crypto.timingSafeEqual(
-        guessBuffer,
-        correctBuffer
+      result.every(
+        (item) =>
+          item === "correct"
       );
 
     /*
     =====================================================
-      WRONG
+      WRONG GUESS
     =====================================================
     */
 
@@ -224,18 +293,24 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
+          correct: false,
+          result,
           error:
-            "Password noto'g'ri. Yana bir bor urinib ko'ring.",
+            "Password noto'g'ri. Ranglarga qarab yana urinib ko'ring.",
         },
         {
           status: 401,
+          headers: {
+            "Cache-Control":
+              "no-store, no-cache, must-revalidate",
+          },
         }
       );
     }
 
     /*
     =====================================================
-      CORRECT
+      CORRECT GUESS
     =====================================================
     */
 
@@ -261,13 +336,15 @@ export async function POST(
 
     /*
     =====================================================
-      RESPONSE
+      SUCCESS
     =====================================================
     */
 
     return NextResponse.json(
       {
         success: true,
+        correct: true,
+        result,
         token,
         message:
           "🎉 4 ta belgini to'g'ri topdingiz!",
@@ -289,7 +366,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: "Server Error.",
+        error:
+          "Server Error.",
       },
       {
         status: 500,
