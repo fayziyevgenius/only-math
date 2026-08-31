@@ -9,8 +9,11 @@ type User = {
 
   geniusPoints: number;
 
-  olympiadGenesisSolved?: boolean;
   olympiadIndependenceSolved?: boolean;
+
+  // Hacker achievement
+  // 8 belgili Independence kod to'liq ochilganda true bo'ladi
+  independenceCodeUnlocked?: boolean;
 
   stats: {
     national?: {
@@ -26,11 +29,6 @@ type User = {
     olympiad?: {
       attempts: number;
       correct: number;
-
-      genesis?: {
-        attempts: number;
-        correct: number;
-      };
 
       independence?: {
         attempts: number;
@@ -93,12 +91,15 @@ export default function AchievementsPage() {
 
         const res = await fetch("/api/me", {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             username: localUser.username,
           }),
+
           cache: "no-store",
         });
 
@@ -146,11 +147,13 @@ export default function AchievementsPage() {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
+
           <div className="w-12 h-12 mx-auto rounded-full border-4 border-zinc-800 border-t-green-500 animate-spin" />
 
           <p className="mt-5 text-zinc-400">
             Loading achievements...
           </p>
+
         </div>
       </div>
     );
@@ -163,7 +166,9 @@ export default function AchievementsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+
         <div className="text-center">
+
           <h1 className="text-3xl font-black">
             Please sign in
           </h1>
@@ -171,7 +176,9 @@ export default function AchievementsPage() {
           <p className="text-zinc-500 mt-2">
             Your achievements could not be loaded.
           </p>
+
         </div>
+
       </div>
     );
   }
@@ -206,21 +213,21 @@ export default function AchievementsPage() {
     currentUser.stats?.olympiad?.correct || 0
   );
 
-  const olympiadGenesisAttempts = Number(
-    currentUser.stats?.olympiad?.genesis?.attempts || 0
-  );
+  // =====================================================
+  // INDEPENDENCE CYCLE
+  // =====================================================
 
-  const olympiadGenesisCorrect = Number(
-    currentUser.stats?.olympiad?.genesis?.correct || 0
-  );
+  const olympiadIndependenceAttempts =
+    Number(
+      currentUser.stats?.olympiad?.independence
+        ?.attempts || 0
+    );
 
-  const olympiadIndependenceAttempts = Number(
-    currentUser.stats?.olympiad?.independence?.attempts || 0
-  );
-
-  const olympiadIndependenceCorrect = Number(
-    currentUser.stats?.olympiad?.independence?.correct || 0
-  );
+  const olympiadIndependenceCorrect =
+    Number(
+      currentUser.stats?.olympiad?.independence
+        ?.correct || 0
+    );
 
   const dailyAttempts = Number(
     currentUser.stats?.daily?.attempts || 0
@@ -245,16 +252,13 @@ export default function AchievementsPage() {
   //
   // Olympiad:
   // - old stats.olympiad.attempts
-  // - genesis attempts
-  // - independence attempts
-  // - solved boolean
+  // - Independence attempts
+  // - Independence solved
   // =====================================================
 
   const olympiadSolved =
     olympiadAttempts > 0 ||
-    olympiadGenesisAttempts > 0 ||
     olympiadIndependenceAttempts > 0 ||
-    currentUser.olympiadGenesisSolved === true ||
     currentUser.olympiadIndependenceSolved === true;
 
   const solveAnyQuestionUnlocked =
@@ -269,54 +273,26 @@ export default function AchievementsPage() {
   const sprint60Unlocked =
     highestSprintScore >= 60;
 
-  /* =====================================================
-   PERFECT TRIO
-===================================================== */
+  // =====================================================
+  // 4. PERFECT TRIO
+  // =====================================================
 
-const certificatePerfect =
-  nationalAttempts === 20 &&
-  nationalCorrect === 20;
+  const certificatePerfect =
+    nationalAttempts === 20 &&
+    nationalCorrect === 20;
 
-const satPerfect =
-  satAttempts === 20 &&
-  satCorrect === 20;
+  const satPerfect =
+    satAttempts === 20 &&
+    satCorrect === 20;
 
-const olympiadPerfect =
-  olympiadAttempts === 20 &&
-  olympiadCorrect === 20;
+  const olympiadPerfect =
+    olympiadAttempts === 20 &&
+    olympiadCorrect === 20;
 
-const perfectTrioUnlocked =
-  certificatePerfect &&
-  satPerfect &&
-  olympiadPerfect;
-
-console.log("========== PERFECT TRIO ==========");
-
-console.log(
-  "Certificate:",
-  nationalCorrect,
-  "/",
-  nationalAttempts
-);
-
-console.log(
-  "SAT:",
-  satCorrect,
-  "/",
-  satAttempts
-);
-
-console.log(
-  "Olympiad:",
-  olympiadCorrect,
-  "/",
-  olympiadAttempts
-);
-
-console.log(
-  "Perfect Trio:",
-  perfectTrioUnlocked
-);
+  const perfectTrioUnlocked =
+    certificatePerfect &&
+    satPerfect &&
+    olympiadPerfect;
 
   // =====================================================
   // 5. TOP 3
@@ -326,23 +302,41 @@ console.log(
     currentUser.topThree === true;
 
   // =====================================================
-  // 6. GENESIS CYCLE
+  // 6. INDEPENDENCE CYCLE
   //
-  // Genesis'da Certificate / SAT / Olympiad
+  // Independence'da:
+  // Certificate
+  // SAT
+  // Olympiad
+  //
   // dan kamida bitta savol.
   // =====================================================
 
-  const genesisCycleUnlocked =
+  const independenceCycleUnlocked =
     nationalAttempts > 0 ||
     satAttempts > 0 ||
-    olympiadGenesisAttempts > 0 ||
-    currentUser.olympiadGenesisSolved === true;
+    olympiadIndependenceAttempts > 0 ||
+    currentUser.olympiadIndependenceSolved === true;
+
+  // =====================================================
+  // 7. HACKER
+  //
+  // 8 belgili maxfiy kod to'liq ochilganda unlock.
+  //
+  // Backend:
+  // independenceCodeUnlocked === true
+  // =====================================================
+
+  const hackerUnlocked =
+    currentUser.independenceCodeUnlocked === true;
 
   // =====================================================
   // DEBUG
   // =====================================================
 
-  console.log("=== ACHIEVEMENT STATUS ===");
+  console.log(
+    "========== ACHIEVEMENT STATUS =========="
+  );
 
   console.log(
     "National attempts:",
@@ -360,22 +354,12 @@ console.log(
   );
 
   console.log(
-    "Olympiad Genesis attempts:",
-    olympiadGenesisAttempts
-  );
-
-  console.log(
-    "Olympiad Independence attempts:",
+    "Independence attempts:",
     olympiadIndependenceAttempts
   );
 
   console.log(
-    "Olympiad Genesis solved:",
-    currentUser.olympiadGenesisSolved
-  );
-
-  console.log(
-    "Olympiad Independence solved:",
+    "Independence solved:",
     currentUser.olympiadIndependenceSolved
   );
 
@@ -385,8 +369,18 @@ console.log(
   );
 
   console.log(
-    "Genesis Cycle:",
-    genesisCycleUnlocked
+    "Independence Cycle:",
+    independenceCycleUnlocked
+  );
+
+  console.log(
+    "Hacker:",
+    hackerUnlocked
+  );
+
+  console.log(
+    "Perfect Trio:",
+    perfectTrioUnlocked
   );
 
   // =====================================================
@@ -394,23 +388,32 @@ console.log(
   // =====================================================
 
   const achievements: Achievement[] = [
-    {
-      id: "genesis-cycle",
 
-      title: "Genesis Cycle",
+    // ===================================================
+    // INDEPENDENCE CYCLE
+    // ===================================================
+
+    {
+      id: "independence-cycle",
+
+      title: "Independence Cycle",
 
       description:
-        "Only Math tarixining birinchi cycle'ida boshlanganingizni bildiruvchi maxsus avatar.",
+        "Only Math tarixidagi Independence Cycle'da qatnashganingizni bildiruvchi maxsus avatar.",
 
       requirement:
-        "Genesis Cycle'da Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
+        "Independence Cycle'da Certificate, SAT yoki Olympiad'dan kamida bitta savol yeching.",
 
       image:
-        "/avatars/genesis-cycle.png",
+        "/avatars/independence-cycle.png",
 
       unlocked:
-        genesisCycleUnlocked,
+        independenceCycleUnlocked,
     },
+
+    // ===================================================
+    // DAILY MASTER
+    // ===================================================
 
     {
       id: "daily-7",
@@ -430,6 +433,10 @@ console.log(
         daily7Unlocked,
     },
 
+    // ===================================================
+    // PROBLEM SOLVER
+    // ===================================================
+
     {
       id: "solve-question",
 
@@ -447,6 +454,10 @@ console.log(
       unlocked:
         solveAnyQuestionUnlocked,
     },
+
+    // ===================================================
+    // SPRINT RUNNER
+    // ===================================================
 
     {
       id: "sprint-60",
@@ -466,6 +477,10 @@ console.log(
         sprint60Unlocked,
     },
 
+    // ===================================================
+    // PERFECT TRIO
+    // ===================================================
+
     {
       id: "perfect-trio",
 
@@ -484,6 +499,10 @@ console.log(
         perfectTrioUnlocked,
     },
 
+    // ===================================================
+    // TOP 3
+    // ===================================================
+
     {
       id: "top-3",
 
@@ -500,6 +519,28 @@ console.log(
 
       unlocked:
         top3Unlocked,
+    },
+
+    // ===================================================
+    // HACKER
+    // ===================================================
+
+    {
+      id: "hacker",
+
+      title: "Hacker",
+
+      description:
+        "Independence Cycle'dagi maxfiy 8 belgili kodni to'liq ochgan foydalanuvchilar uchun.",
+
+      requirement:
+        "8 belgidan iborat maxfiy kodni to'liq oching.",
+
+      image:
+        "/avatars/hacker.png",
+
+      unlocked:
+        hackerUnlocked,
     },
   ];
 
@@ -837,7 +878,7 @@ console.log(
         </section>
 
         {/* =====================================================
-            OLYMPIAD STATUS
+            INDEPENDENCE STATUS
         ===================================================== */}
 
         <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
@@ -851,11 +892,11 @@ console.log(
             <div>
 
               <h3 className="text-xl font-black">
-                Olympiad Achievement Status
+                Independence Cycle Achievement Status
               </h3>
 
               <p className="text-sm text-zinc-600">
-                Problem Solver uchun Olympiad holati
+                Independence Cycle holati
               </p>
 
             </div>
@@ -879,11 +920,11 @@ console.log(
             <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
 
               <p className="text-xs uppercase tracking-wider text-zinc-600">
-                Genesis attempts
+                Independence attempts
               </p>
 
               <p className="text-3xl font-black text-white mt-1">
-                {olympiadGenesisAttempts}
+                {olympiadIndependenceAttempts}
               </p>
 
             </div>
@@ -891,17 +932,17 @@ console.log(
             <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
 
               <p className="text-xs uppercase tracking-wider text-zinc-600">
-                Genesis solved
+                Independence solved
               </p>
 
               <p
                 className={`text-xl font-black mt-2 ${
-                  currentUser.olympiadGenesisSolved
+                  currentUser.olympiadIndependenceSolved
                     ? "text-green-400"
                     : "text-zinc-500"
                 }`}
               >
-                {currentUser.olympiadGenesisSolved
+                {currentUser.olympiadIndependenceSolved
                   ? "✓ YES"
                   : "NO"}
               </p>
@@ -911,17 +952,105 @@ console.log(
             <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
 
               <p className="text-xs uppercase tracking-wider text-zinc-600">
-                Problem Solver
+                Independence Cycle
               </p>
 
               <p
                 className={`text-xl font-black mt-2 ${
-                  solveAnyQuestionUnlocked
+                  independenceCycleUnlocked
                     ? "text-green-400"
                     : "text-zinc-500"
                 }`}
               >
-                {solveAnyQuestionUnlocked
+                {independenceCycleUnlocked
+                  ? "✓ UNLOCKED"
+                  : "🔒 LOCKED"}
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* =====================================================
+            HACKER STATUS
+        ===================================================== */}
+
+        <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
+
+          <div className="flex items-center gap-3 mb-5">
+
+            <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-xl">
+              🧑‍💻
+            </div>
+
+            <div>
+
+              <h3 className="text-xl font-black">
+                Hacker Achievement
+              </h3>
+
+              <p className="text-sm text-zinc-600">
+                8 belgili maxfiy kod holati
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Required
+              </p>
+
+              <p className="text-3xl font-black text-white mt-1">
+                8
+              </p>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                code characters
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Code status
+              </p>
+
+              <p
+                className={`text-xl font-black mt-2 ${
+                  hackerUnlocked
+                    ? "text-green-400"
+                    : "text-zinc-500"
+                }`}
+              >
+                {hackerUnlocked
+                  ? "✓ COMPLETE"
+                  : "🔒 INCOMPLETE"}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
+
+              <p className="text-xs uppercase tracking-wider text-zinc-600">
+                Hacker
+              </p>
+
+              <p
+                className={`text-xl font-black mt-2 ${
+                  hackerUnlocked
+                    ? "text-green-400"
+                    : "text-zinc-500"
+                }`}
+              >
+                {hackerUnlocked
                   ? "✓ UNLOCKED"
                   : "🔒 LOCKED"}
               </p>

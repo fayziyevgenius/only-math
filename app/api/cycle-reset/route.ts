@@ -96,6 +96,19 @@ async function performReset() {
 
   /* =======================================================
      RESET MARKER
+     
+     IMPORTANT:
+     Each cycle can be reset ONLY ONCE.
+     
+     After the reset:
+     
+     User gets GP
+     User completes tasks
+     User's GP changes
+     
+     BUT the marker remains.
+     
+     Therefore the cycle will NEVER be reset again.
   ======================================================= */
 
   const resetKey =
@@ -107,159 +120,57 @@ async function performReset() {
     });
 
   /* =======================================================
-     CHECK IF RESET IS REALLY COMPLETE
+     ALREADY RESET
      
-     IMPORTANT:
-     We DO NOT trust the marker alone.
+     DO NOT CHECK USER VALUES HERE.
      
-     Even if cycle-reset-2 exists, we check whether
-     users are actually reset.
+     This is the most important fix.
+     
+     We do NOT care if:
+     
+     geniusPoints = 0
+     geniusPoints = 20
+     geniusPoints = 100
+     currentCycleGP = 50
+     
+     If the marker exists, reset is finished.
   ======================================================= */
 
-  const usersNeedingReset =
-    await users.findOne({
-      $or: [
-        {
-          geniusPoints: {
-            $ne: 0,
-          },
-        },
-
-        {
-          currentCycleGP: {
-            $ne: 0,
-          },
-        },
-
-        {
-          currentCycle: {
-            $ne: currentCycle.cycle,
-          },
-        },
-
-        {
-          streak: {
-            $ne: 0,
-          },
-        },
-
-        {
-          certificateSolved: true,
-        },
-
-        {
-          satSolved: true,
-        },
-
-        {
-          olympiadSolved: true,
-        },
-
-        {
-          dailySolved: true,
-        },
-
-        {
-          "stats.national.attempts": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.national.correct": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.sat.attempts": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.sat.correct": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.olympiad.attempts": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.olympiad.correct": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.daily.attempts": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.daily.correct": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.mathSpirit.games": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.mathSpirit.highestScore": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.mathSpirit.totalScore": {
-            $ne: 0,
-          },
-        },
-
-        {
-          "stats.mathSpirit.bestCombo": {
-            $ne: 0,
-          },
-        },
-      ],
-    });
-
-  /* =======================================================
-     ALREADY FULLY RESET
-  ======================================================= */
-
-  if (
-    existingMarker &&
-    !usersNeedingReset
-  ) {
+  if (existingMarker) {
     return NextResponse.json({
       success: true,
+
       reset: false,
+
       alreadyReset: true,
+
       cycle:
         currentCycle.cycle,
+
       cycleName:
         currentCycle.cycleName,
+
       resetAt:
         existingMarker.resetAt,
+
       message:
-        `${currentCycle.cycleName} has already been fully reset.`,
+        `${currentCycle.cycleName} has already been reset. User scores will NOT be reset again.`,
     });
   }
 
   /* =======================================================
+     FIRST RESET FOR THIS CYCLE
+  ======================================================= */
+
+  console.log(
+    `Starting first reset for ${currentCycle.cycleName}`
+  );
+
+  /* =======================================================
      RESET ALL USERS
      
-     EVERYTHING IMPORTANT = 0 / false
+     IMPORTANT:
+     This happens ONLY ONCE because of reset marker above.
   ======================================================= */
 
   const userResult =
@@ -268,13 +179,15 @@ async function performReset() {
       {
         $set: {
           /* -----------------------------------------------
-             GLOBAL SCORE
+             GLOBAL / CURRENT GP
+             
+             Reset at beginning of a new cycle.
           ------------------------------------------------ */
 
           geniusPoints: 0,
 
           /* -----------------------------------------------
-             CYCLE SCORE
+             CURRENT CYCLE SCORE
           ------------------------------------------------ */
 
           currentCycleGP: 0,
@@ -387,7 +300,7 @@ async function performReset() {
           lastSATCycle: null,
 
           /* -----------------------------------------------
-             GUESS PASSWORD
+             GUESS PASSWORD / HACKER
           ------------------------------------------------ */
 
           guessPasswordUnlocked: false,
@@ -450,7 +363,10 @@ async function performReset() {
     );
 
   /* =======================================================
-     RESET GLOBAL LEADERBOARD
+     GLOBAL LEADERBOARD
+     
+     NOTE:
+     This is kept according to your existing system.
   ======================================================= */
 
   const globalLeaderboard =
@@ -462,48 +378,49 @@ async function performReset() {
     );
 
   /* =======================================================
-     SAVE / UPDATE RESET MARKER
+     SAVE RESET MARKER
+     
+     This MUST happen after the reset.
+     
+     Once this exists, future requests will return
+     alreadyReset = true.
   ======================================================= */
 
-  await system.updateOne(
-    {
-      key: resetKey,
-    },
-    {
-      $set: {
-        key: resetKey,
+  await system.insertOne({
+    key: resetKey,
 
-        cycle:
-          currentCycle.cycle,
+    cycle:
+      currentCycle.cycle,
 
-        name:
-          currentCycle.cycleName,
+    name:
+      currentCycle.cycleName,
 
-        resetAt: now,
+    resetAt: now,
 
-        scheduledResetAt:
-          currentCycle.cycleStart,
+    scheduledResetAt:
+      new Date(
+        currentCycle.cycleStart.getTime() +
+          CYCLE_LENGTH_DAYS *
+            24 *
+            60 *
+            60 *
+            1000
+      ),
 
-        usersReset:
-          userResult.modifiedCount,
+    usersReset:
+      userResult.modifiedCount,
 
-        mathSpiritLeaderboardDeleted:
-          mathSpiritResult.deletedCount,
+    mathSpiritLeaderboardDeleted:
+      mathSpiritResult.deletedCount,
 
-        cycleLeaderboardDeleted:
-          cycleLeaderboardResult.deletedCount,
+    cycleLeaderboardDeleted:
+      cycleLeaderboardResult.deletedCount,
 
-        globalLeaderboardDeleted:
-          globalLeaderboardResult.deletedCount,
+    globalLeaderboardDeleted:
+      globalLeaderboardResult.deletedCount,
 
-        repaired:
-          Boolean(existingMarker),
-      },
-    },
-    {
-      upsert: true,
-    }
-  );
+    version: 2,
+  });
 
   /* =======================================================
      RESPONSE
@@ -514,8 +431,7 @@ async function performReset() {
 
     reset: true,
 
-    repaired:
-      Boolean(existingMarker),
+    alreadyReset: false,
 
     cycle:
       currentCycle.cycle,
@@ -554,7 +470,7 @@ async function performReset() {
       "DELETED",
 
     message:
-      `${currentCycle.cycleName} has been fully reset.`,
+      `${currentCycle.cycleName} was reset successfully. This cycle will NOT reset again.`,
   });
 }
 
