@@ -43,7 +43,7 @@ export default function IndependencePage() {
       {/* ========================================================= */}
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Deep blue atmosphere */}
+        {/* Blue atmosphere */}
         <div className="absolute -left-[220px] top-[10%] h-[620px] w-[620px] rounded-full bg-[#1EB4E8]/[0.055] blur-[150px] animate-[atmosphereLeft_14s_ease-in-out_infinite]" />
 
         {/* Green atmosphere */}
@@ -52,10 +52,10 @@ export default function IndependencePage() {
         {/* Red atmosphere */}
         <div className="absolute bottom-[-350px] left-1/2 h-[650px] w-[900px] -translate-x-1/2 rounded-full bg-[#CE1126]/[0.035] blur-[180px]" />
 
-        {/* White central atmosphere */}
+        {/* Central soft light */}
         <div className="absolute left-1/2 top-[38%] h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.025] blur-[130px] animate-[centralBreath_7s_ease-in-out_infinite]" />
 
-        {/* Very subtle grid */}
+        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
@@ -69,10 +69,7 @@ export default function IndependencePage() {
           }}
         />
 
-        {/* ===================================================== */}
-        {/* STARS                                                   */}
-        {/* ===================================================== */}
-
+        {/* Stars */}
         {stars.map((star, index) => (
           <span
             key={index}
@@ -87,56 +84,54 @@ export default function IndependencePage() {
           />
         ))}
 
-        {/* ===================================================== */}
-        {/* FLOATING LIGHTS                                         */}
-        {/* ===================================================== */}
+        {/* Floating national lights */}
+        {floatingLights.map((light, index) => {
+          const type = index % 4;
 
-        {floatingLights.map((light, index) => (
-          <span
-            key={index}
-            className={`absolute rounded-full animate-[lightFloat_10s_ease-in-out_infinite] ${
-              index % 4 === 0
-                ? "bg-[#1EB4E8]"
-                : index % 4 === 1
-                  ? "bg-[#1EB53A]"
-                  : index % 4 === 2
-                    ? "bg-[#CE1126]"
-                    : "bg-white"
-            }`}
-            style={{
-              left: light.left,
-              top: light.top,
-              width: `${light.size}px`,
-              height: `${light.size}px`,
-              animationDelay: light.delay,
-              animationDuration: light.duration,
-              boxShadow:
-                index % 4 === 0
-                  ? "0 0 16px rgba(30,180,232,.7)"
-                  : index % 4 === 1
-                    ? "0 0 16px rgba(30,181,58,.7)"
-                    : index % 4 === 2
-                      ? "0 0 16px rgba(206,17,38,.7)"
-                      : "0 0 14px rgba(255,255,255,.7)",
-            }}
-          />
-        ))}
+          let colorClass = "bg-white";
+          let shadow = "0 0 14px rgba(255,255,255,.7)";
 
-        {/* ===================================================== */}
-        {/* HORIZONTAL LIGHT LINES                                 */}
-        {/* ===================================================== */}
+          if (type === 0) {
+            colorClass = "bg-[#1EB4E8]";
+            shadow = "0 0 16px rgba(30,180,232,.7)";
+          }
 
+          if (type === 1) {
+            colorClass = "bg-[#1EB53A]";
+            shadow = "0 0 16px rgba(30,181,58,.7)";
+          }
+
+          if (type === 2) {
+            colorClass = "bg-[#CE1126]";
+            shadow = "0 0 16px rgba(206,17,38,.7)";
+          }
+
+          return (
+            <span
+              key={index}
+              className={`absolute rounded-full ${colorClass} animate-[lightFloat_10s_ease-in-out_infinite]`}
+              style={{
+                left: light.left,
+                top: light.top,
+                width: `${light.size}px`,
+                height: `${light.size}px`,
+                animationDelay: light.delay,
+                animationDuration: light.duration,
+                boxShadow: shadow,
+              }}
+            />
+          );
+        })}
+
+        {/* Horizontal light lines */}
         <div className="absolute left-0 right-0 top-[27%] h-px bg-gradient-to-r from-transparent via-[#1EB4E8]/10 to-transparent" />
 
         <div className="absolute left-0 right-0 top-[70%] h-px bg-gradient-to-r from-transparent via-[#1EB53A]/10 to-transparent" />
 
-        {/* ===================================================== */}
-        {/* NATIONAL COLOR STRIP                                    */}
-        {/* ===================================================== */}
-
+        {/* Bottom national colors */}
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#1EB4E8]/0 via-[#1EB4E8]/60 to-[#CE1126]/0 opacity-50" />
 
-        <div className="absolute bottom-[2px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="absolute bottom-[2px] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
         <div className="absolute bottom-[3px] left-0 right-0 h-[2px] bg-gradient-to-r from-[#CE1126]/0 via-[#1EB53A]/60 to-transparent opacity-50" />
       </div>
@@ -174,7 +169,7 @@ export default function IndependencePage() {
             </span>
 
             <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.025] px-4 py-2 backdrop-blur-xl">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1EB53A] shadow-[0_0_10px_rgba(30,181,58,.8)] animate-pulse" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#1EB53A] shadow-[0_0_10px_rgba(30,181,58,.8)]" />
 
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-300">
                 Only Math
@@ -188,10 +183,7 @@ export default function IndependencePage() {
         {/* ===================================================== */}
 
         <section className="flex flex-1 flex-col items-center justify-center py-14 text-center sm:py-20">
-          {/* ================================================= */}
-          {/* TOP LABEL                                          */}
-          {/* ================================================= */}
-
+          {/* Top label */}
           <div
             className={`mb-8 flex items-center gap-4 transition-all duration-1000 delay-200 ${
               mounted
@@ -209,7 +201,7 @@ export default function IndependencePage() {
           </div>
 
           {/* ================================================= */}
-          {/* FLAG                                                 */}
+          {/* UZBEKISTAN FLAG                                     */}
           {/* ================================================= */}
 
           <div
@@ -219,10 +211,9 @@ export default function IndependencePage() {
                 : "translate-y-8 scale-95 opacity-0"
             }`}
           >
-            {/* Large ambient glow */}
+            {/* Ambient glow */}
             <div className="absolute left-1/2 top-1/2 h-52 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.06] blur-[70px] sm:h-64 sm:w-96" />
 
-            {/* Light behind flag */}
             <div className="absolute left-1/2 top-1/2 h-36 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.035] blur-[45px] sm:h-44 sm:w-72" />
 
             {/* Flag */}
@@ -231,9 +222,10 @@ export default function IndependencePage() {
                 viewBox="0 0 242 145"
                 className="h-full w-full overflow-visible"
                 aria-label="Uzbekistan flag"
+                role="img"
               >
                 <defs>
-                  {/* Blue fabric */}
+                  {/* Blue */}
                   <linearGradient
                     id="uzBlue"
                     x1="0"
@@ -246,7 +238,7 @@ export default function IndependencePage() {
                     <stop offset="100%" stopColor="#168FB9" />
                   </linearGradient>
 
-                  {/* Green fabric */}
+                  {/* Green */}
                   <linearGradient
                     id="uzGreen"
                     x1="0"
@@ -259,7 +251,7 @@ export default function IndependencePage() {
                     <stop offset="100%" stopColor="#14872D" />
                   </linearGradient>
 
-                  {/* Fabric lighting */}
+                  {/* Fabric light */}
                   <linearGradient
                     id="fabricLight"
                     x1="0"
@@ -267,11 +259,35 @@ export default function IndependencePage() {
                     x2="1"
                     y2="0"
                   >
-                    <stop offset="0%" stopColor="#000" stopOpacity="0.2" />
-                    <stop offset="20%" stopColor="#fff" stopOpacity="0.02" />
-                    <stop offset="50%" stopColor="#fff" stopOpacity="0.12" />
-                    <stop offset="80%" stopColor="#000" stopOpacity="0.02" />
-                    <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
+                    <stop
+                      offset="0%"
+                      stopColor="#000000"
+                      stopOpacity="0.20"
+                    />
+
+                    <stop
+                      offset="20%"
+                      stopColor="#ffffff"
+                      stopOpacity="0.02"
+                    />
+
+                    <stop
+                      offset="50%"
+                      stopColor="#ffffff"
+                      stopOpacity="0.12"
+                    />
+
+                    <stop
+                      offset="80%"
+                      stopColor="#000000"
+                      stopOpacity="0.02"
+                    />
+
+                    <stop
+                      offset="100%"
+                      stopColor="#000000"
+                      stopOpacity="0.18"
+                    />
                   </linearGradient>
 
                   {/* Flag shadow */}
@@ -291,20 +307,20 @@ export default function IndependencePage() {
                     />
                   </filter>
 
-                  {/* Fabric clip */}
+                  {/* Flag shape */}
                   <clipPath id="flagShape">
                     <path
                       d="
-                        M 3 2
-                        C 28 8, 42 -4, 66 3
-                        C 92 11, 105 -5, 132 3
-                        C 159 11, 175 -4, 199 3
-                        C 215 8, 229 1, 239 4
-                        L 239 141
-                        C 215 136, 201 147, 178 140
-                        C 152 133, 133 149, 107 141
-                        C 80 133, 61 148, 37 141
-                        C 22 136, 11 142, 3 139
+                        M3 2
+                        C28 8 42 -4 66 3
+                        C92 11 105 -5 132 3
+                        C159 11 175 -4 199 3
+                        C215 8 229 1 239 4
+                        L239 141
+                        C215 136 201 147 178 140
+                        C152 133 133 149 107 141
+                        C80 133 61 148 37 141
+                        C22 136 11 142 3 139
                         Z
                       "
                     />
@@ -322,7 +338,7 @@ export default function IndependencePage() {
                       fill="url(#uzBlue)"
                     />
 
-                    {/* RED LINE */}
+                    {/* RED */}
                     <rect
                       x="0"
                       y="47"
@@ -340,7 +356,7 @@ export default function IndependencePage() {
                       fill="#FFFFFF"
                     />
 
-                    {/* RED LINE */}
+                    {/* RED */}
                     <rect
                       x="0"
                       y="94"
@@ -367,7 +383,7 @@ export default function IndependencePage() {
                       fill="url(#fabricLight)"
                     />
 
-                    {/* Vertical fabric folds */}
+                    {/* Fabric folds */}
                     <path
                       d="M30 0 C20 35 40 75 25 145"
                       fill="none"
@@ -400,7 +416,10 @@ export default function IndependencePage() {
                       strokeWidth="10"
                     />
 
-                    {/* Crescent */}
+                    {/* ================================================= */}
+                    {/* CRESCENT */}
+                    {/* ================================================= */}
+
                     <circle
                       cx="31"
                       cy="25"
@@ -415,54 +434,46 @@ export default function IndependencePage() {
                       fill="#1EB4E8"
                     />
 
-                    {/* Stars */}
-                    <g
-                      fill="white"
-                      fontFamily="Arial, sans-serif"
-                      fontSize="7"
-                      fontWeight="700"
-                    >
-                      <text x="51" y="14">
-                        ★
-                      </text>
-                      <text x="61" y="14">
-                        ★
-                      </text>
-                      <text x="71" y="14">
-                        ★
-                      </text>
-                      <text x="81" y="14">
-                        ★
-                      </text>
+                    {/* ================================================= */}
+                    {/* 12 STARS — 3 / 4 / 5 */}
+                    {/* ================================================= */}
 
-                      <text x="56" y="23">
-                        ★
-                      </text>
-                      <text x="66" y="23">
-                        ★
-                      </text>
-                      <text x="76" y="23">
-                        ★
-                      </text>
-                      <text x="86" y="23">
-                        ★
-                      </text>
+                    <g fill="white">
+                      {/* TOP ROW — 3 */}
 
-                      <text x="61" y="32">
-                        ★
-                      </text>
-                      <text x="71" y="32">
-                        ★
-                      </text>
-                      <text x="81" y="32">
-                        ★
-                      </text>
-                      <text x="91" y="32">
-                        ★
-                      </text>
+                      <path d="M57 8 L58.7 12.7 L63.7 12.9 L59.8 15.9 L61.1 20.7 L57 18 L52.9 20.7 L54.2 15.9 L50.3 12.9 L55.3 12.7 Z" />
+
+                      <path d="M69 8 L70.7 12.7 L75.7 12.9 L71.8 15.9 L73.1 20.7 L69 18 L64.9 20.7 L66.2 15.9 L62.3 12.9 L67.3 12.7 Z" />
+
+                      <path d="M81 8 L82.7 12.7 L87.7 12.9 L83.8 15.9 L85.1 20.7 L81 18 L76.9 20.7 L78.2 15.9 L74.3 12.9 L79.3 12.7 Z" />
+
+                      {/* MIDDLE ROW — 4 */}
+
+                      <path d="M51 21 L52.7 25.7 L57.7 25.9 L53.8 28.9 L55.1 33.7 L51 31 L46.9 33.7 L48.2 28.9 L44.3 25.9 L49.3 25.7 Z" />
+
+                      <path d="M63 21 L64.7 25.7 L69.7 25.9 L65.8 28.9 L67.1 33.7 L63 31 L58.9 33.7 L60.2 28.9 L56.3 25.9 L61.3 25.7 Z" />
+
+                      <path d="M75 21 L76.7 25.7 L81.7 25.9 L77.8 28.9 L79.1 33.7 L75 31 L70.9 33.7 L72.2 28.9 L68.3 25.9 L73.3 25.7 Z" />
+
+                      <path d="M87 21 L88.7 25.7 L93.7 25.9 L89.8 28.9 L91.1 33.7 L87 31 L82.9 33.7 L84.2 28.9 L80.3 25.9 L85.3 25.7 Z" />
+
+                      {/* BOTTOM ROW — 5 */}
+
+                      <path d="M45 34 L46.7 38.7 L51.7 38.9 L47.8 41.9 L49.1 46.7 L45 44 L40.9 46.7 L42.2 41.9 L38.3 38.9 L43.3 38.7 Z" />
+
+                      <path d="M55 34 L56.7 38.7 L61.7 38.9 L57.8 41.9 L59.1 46.7 L55 44 L50.9 46.7 L52.2 41.9 L48.3 38.9 L53.3 38.7 Z" />
+
+                      <path d="M65 34 L66.7 38.7 L71.7 38.9 L67.8 41.9 L69.1 46.7 L65 44 L60.9 46.7 L62.2 41.9 L58.3 38.9 L63.3 38.7 Z" />
+
+                      <path d="M75 34 L76.7 38.7 L81.7 38.9 L77.8 41.9 L79.1 46.7 L75 44 L70.9 46.7 L72.2 41.9 L68.3 38.9 L73.3 38.7 Z" />
+
+                      <path d="M85 34 L86.7 38.7 L91.7 38.9 L87.8 41.9 L89.1 46.7 L85 44 L80.9 46.7 L82.2 41.9 L78.3 38.9 L83.3 38.7 Z" />
                     </g>
 
-                    {/* Moving reflection */}
+                    {/* ================================================= */}
+                    {/* MOVING LIGHT REFLECTION */}
+                    {/* ================================================= */}
+
                     <rect
                       x="-80"
                       y="0"
@@ -478,13 +489,13 @@ export default function IndependencePage() {
               </svg>
             </div>
 
-            {/* Small bottom shine */}
+            {/* Small light under flag */}
             <div className="absolute -bottom-5 left-1/2 h-px w-28 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
 
-          {/* ================================================= */}
-          {/* DATE / EDITORIAL NUMBER                              */}
-          {/* ================================================= */}
+          {/* ===================================================== */}
+          {/* DATE                                                     */}
+          {/* ===================================================== */}
 
           <div
             className={`mb-3 flex items-center gap-3 transition-all duration-1000 delay-500 ${
@@ -510,9 +521,9 @@ export default function IndependencePage() {
             </span>
           </div>
 
-          {/* ================================================= */}
-          {/* MAIN TITLE                                           */}
-          {/* ================================================= */}
+          {/* ===================================================== */}
+          {/* MAIN TITLE                                             */}
+          {/* ===================================================== */}
 
           <h1
             className={`relative text-[clamp(3.4rem,11vw,9rem)] font-black leading-[0.82] tracking-[-0.055em] transition-all duration-[1300ms] delay-500 ${
@@ -526,9 +537,26 @@ export default function IndependencePage() {
             </span>
           </h1>
 
-          {/* ================================================= */}
-          {/* SUBTITLE                                            */}
-          {/* ================================================= */}
+          {/* Decorative separator */}
+          <div
+            className={`mt-7 flex items-center gap-3 transition-all duration-1000 delay-600 ${
+              mounted ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="h-px w-10 bg-gradient-to-r from-transparent to-[#1EB4E8]/50" />
+
+            <div className="h-1 w-1 rounded-full bg-[#CE1126]" />
+
+            <div className="h-px w-16 bg-white/10" />
+
+            <div className="h-1 w-1 rounded-full bg-[#1EB53A]" />
+
+            <div className="h-px w-10 bg-gradient-to-l from-transparent to-[#1EB53A]/50" />
+          </div>
+
+          {/* ===================================================== */}
+          {/* DESCRIPTION                                            */}
+          {/* ===================================================== */}
 
           <div
             className={`mt-7 max-w-xl transition-all duration-1000 delay-700 ${
@@ -544,9 +572,9 @@ export default function IndependencePage() {
             </p>
           </div>
 
-          {/* ================================================= */}
-          {/* CYCLE INFORMATION                                    */}
-          {/* ================================================= */}
+          {/* ===================================================== */}
+          {/* CYCLE INFORMATION                                      */}
+          {/* ===================================================== */}
 
           <div
             className={`mt-10 transition-all duration-1000 delay-[800ms] ${
@@ -556,10 +584,11 @@ export default function IndependencePage() {
             }`}
           >
             <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025] backdrop-blur-2xl">
-              {/* National color top border */}
+              {/* National color line */}
               <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-[#1EB4E8] via-white to-[#1EB53A]" />
 
               <div className="flex flex-col items-center gap-5 px-7 py-5 sm:flex-row sm:gap-10 sm:px-9">
+                {/* Current cycle */}
                 <div className="text-center sm:text-left">
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-600">
                     Current Cycle
@@ -572,6 +601,7 @@ export default function IndependencePage() {
 
                 <div className="hidden h-8 w-px bg-white/[0.08] sm:block" />
 
+                {/* Duration */}
                 <div className="text-center sm:text-left">
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-600">
                     Duration
@@ -584,8 +614,9 @@ export default function IndependencePage() {
 
                 <div className="hidden h-8 w-px bg-white/[0.08] sm:block" />
 
+                {/* Active */}
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#1EB53A] shadow-[0_0_12px_rgba(30,181,58,.8)] animate-pulse" />
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-[#1EB53A] shadow-[0_0_12px_rgba(30,181,58,.8)]" />
 
                   <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1EB53A]">
                     Active
@@ -595,9 +626,9 @@ export default function IndependencePage() {
             </div>
           </div>
 
-          {/* ================================================= */}
-          {/* SECTIONS                                             */}
-          {/* ================================================= */}
+          {/* ===================================================== */}
+          {/* SECTIONS                                               */}
+          {/* ===================================================== */}
 
           <div
             className={`mt-8 grid w-full max-w-5xl grid-cols-2 gap-3 transition-all duration-1000 delay-[1000ms] sm:grid-cols-5 ${
@@ -637,9 +668,9 @@ export default function IndependencePage() {
             />
           </div>
 
-          {/* ================================================= */}
-          {/* BOTTOM PHRASE                                        */}
-          {/* ================================================= */}
+          {/* ===================================================== */}
+          {/* BOTTOM MESSAGE                                         */}
+          {/* ===================================================== */}
 
           <div
             className={`mt-10 flex items-center gap-3 transition-all duration-1000 delay-[1100ms] ${
@@ -658,10 +689,14 @@ export default function IndependencePage() {
       </div>
 
       {/* ========================================================= */}
-      {/* ANIMATIONS                                                 */}
+      {/* ANIMATIONS                                                */}
       {/* ========================================================= */}
 
       <style jsx global>{`
+        /* ======================================================= */
+        /* FLAG WAVE                                                */
+        /* ======================================================= */
+
         @keyframes flagWave {
           0%,
           100% {
@@ -710,6 +745,10 @@ export default function IndependencePage() {
           }
         }
 
+        /* ======================================================= */
+        /* FLAG LIGHT                                                */
+        /* ======================================================= */
+
         @keyframes flagReflection {
           0% {
             transform: translateX(-100px) skewX(-16deg);
@@ -730,6 +769,10 @@ export default function IndependencePage() {
             opacity: 0;
           }
         }
+
+        /* ======================================================= */
+        /* BACKGROUND ATMOSPHERE                                     */
+        /* ======================================================= */
 
         @keyframes atmosphereLeft {
           0%,
@@ -766,6 +809,10 @@ export default function IndependencePage() {
           }
         }
 
+        /* ======================================================= */
+        /* STARS                                                     */
+        /* ======================================================= */
+
         @keyframes starPulse {
           0%,
           100% {
@@ -778,6 +825,10 @@ export default function IndependencePage() {
             transform: scale(1.3);
           }
         }
+
+        /* ======================================================= */
+        /* FLOATING LIGHTS                                           */
+        /* ======================================================= */
 
         @keyframes lightFloat {
           0%,
@@ -800,6 +851,10 @@ export default function IndependencePage() {
             transform: translate3d(-10px, -65px, 0) scale(0.9);
           }
         }
+
+        /* ======================================================= */
+        /* REDUCED MOTION                                            */
+        /* ======================================================= */
 
         @media (max-width: 640px) {
           @keyframes flagWave {
@@ -890,9 +945,9 @@ function CycleCard({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.018] px-4 py-5 backdrop-blur-xl transition-all duration-400 hover:-translate-y-1 ${style.border} ${style.glow}`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.018] px-4 py-5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.glow}`}
     >
-      {/* Hover line */}
+      {/* Hover accent */}
       <div
         className={`absolute left-1/2 top-0 h-px w-0 -translate-x-1/2 bg-gradient-to-r from-transparent ${style.line} to-transparent transition-all duration-500 group-hover:w-2/3`}
       />
