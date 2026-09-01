@@ -157,9 +157,16 @@ export default function AccountPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("========== /api/update-avatar ERROR ==========");
+        console.error("Status:", res.status);
+        console.error("Status Text:", res.statusText);
+        console.error("Response:", data);
+        console.error("Current User:", user);
+        console.error("==============================================");
+
         alert(
-          data.error ||
-            "Avatarni o'zgartirib bo'lmadi."
+          data?.error ||
+            `Failed to update avatar (${res.status})`
         );
 
         return;

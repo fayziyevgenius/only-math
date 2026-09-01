@@ -9,8 +9,9 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser");
@@ -22,11 +23,10 @@ export default function LoginPage() {
 
   async function handleLogin() {
     if (!username.trim() || !password) {
-      setError("Please fill in all fields.");
+      alert("Please fill in all fields.");
       return;
     }
 
-    setError("");
     setLoading(true);
 
     try {
@@ -37,19 +37,14 @@ export default function LoginPage() {
         },
         body: JSON.stringify({
           username: username.trim(),
-          password: password,
+          password,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Invalid username or password.");
-        return;
-      }
-
-      if (!data.success || !data.user) {
-        setError("Login failed. User data was not returned.");
+        alert(data.error || "Invalid username or password.");
         return;
       }
 
@@ -62,9 +57,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Login error:", error);
 
-      setError(
-        "Unable to connect to the server. Please try again."
-      );
+      alert("Server error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +113,7 @@ export default function LoginPage() {
 
       </div>
 
-      {/* BACKGROUND DOTS */}
+      {/* DOTS */}
 
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -131,7 +124,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* FLOATING STARS */}
+      {/* STARS */}
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
 
@@ -301,17 +294,10 @@ export default function LoginPage() {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !loading) {
-                  handleLogin();
-                }
-              }}
+              onChange={(e) =>
+                setUsername(e.target.value)
+              }
               autoComplete="username"
-              disabled={loading}
               className="
                 w-full
                 h-14
@@ -328,7 +314,6 @@ export default function LoginPage() {
                 outline-none
                 focus:border-purple-400
                 transition
-                disabled:opacity-60
               "
             />
 
@@ -336,74 +321,133 @@ export default function LoginPage() {
 
           {/* PASSWORD */}
 
-          <div className="w-full">
+<div className="w-full">
 
-            <label
-              htmlFor="password"
-              className="text-xl md:text-3xl font-bold"
-            >
-              Password:
-            </label>
+  <label
+    htmlFor="password"
+    className="text-xl md:text-3xl font-bold"
+  >
+    Password:
+  </label>
 
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !loading) {
-                  handleLogin();
-                }
-              }}
-              autoComplete="current-password"
-              disabled={loading}
-              className="
-                w-full
-                h-14
-                md:h-16
-                mt-3
-                rounded-xl
-                border-2
-                border-white
-                bg-black
-                px-5
-                text-lg
-                md:text-2xl
-                text-white
-                outline-none
-                focus:border-purple-400
-                transition
-                disabled:opacity-60
-              "
-            />
+  <div className="relative mt-3">
 
-          </div>
+    <input
+      id="password"
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !loading) {
+          handleLogin();
+        }
+      }}
+      autoComplete="current-password"
+      className="
+        w-full
+        h-14
+        md:h-16
+        rounded-xl
+        border-2
+        border-white
+        bg-black
+        px-5
+        pr-16
+        text-lg
+        md:text-2xl
+        text-white
+        outline-none
+        focus:border-purple-400
+        transition
+      "
+    />
 
-          {/* ERROR */}
+    {/* EYE BUTTON */}
 
-          {error && (
-            <div
-              className="
-                w-full
-                mt-5
-                rounded-xl
-                border
-                border-red-500/50
-                bg-red-500/10
-                px-4
-                py-3
-                text-center
-                text-red-400
-                text-base
-                md:text-lg
-              "
-            >
-              {error}
-            </div>
-          )}
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="
+        absolute
+        right-3
+        top-1/2
+        -translate-y-1/2
+        w-10
+        h-10
+        flex
+        items-center
+        justify-center
+        rounded-lg
+        text-white
+        hover:bg-white/10
+        hover:text-purple-400
+        transition
+        cursor-pointer
+      "
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      {showPassword ? (
+        /* EYE OFF */
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 3l18 18"
+          />
+
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.6 10.6a2 2 0 002.8 2.8"
+          />
+
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9.9 4.2A10.8 10.8 0 0112 4c5 0 8.7 4.2 10 8-0.5 1.5-1.4 3-2.6 4.2"
+          />
+
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6.6 6.6C4.8 7.8 3.6 9.5 2 12c1.3 3.8 5 8 10 8 1.3 0 2.5-.3 3.6-.8"
+          />
+        </svg>
+      ) : (
+        /* EYE */
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"
+          />
+
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+          />
+        </svg>
+      )}
+    </button>
+
+  </div>
+
+</div>
 
           {/* SIGN IN */}
 
@@ -428,10 +472,12 @@ export default function LoginPage() {
               disabled:cursor-not-allowed
             "
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading
+              ? "Signing in..."
+              : "Sign in"}
           </button>
 
-          {/* FORGOT */}
+          {/* FORGOT PASSWORD */}
 
           <Link
             href="/forgot"

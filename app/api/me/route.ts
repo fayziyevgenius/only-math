@@ -4,20 +4,50 @@ import { getTitle } from "@/lib/title";
 
 export async function POST(req: Request) {
   try {
-    const { username } = await req.json();
+    const body = await req.json();
 
-    if (!username) {
+    const identifier = String(
+      body?.username || body?.email || ""
+    ).trim();
+
+    if (!identifier) {
       return NextResponse.json(
-        { error: "Username is required" },
+        { error: "Username or email is required" },
         { status: 400 }
       );
     }
 
+    console.log("=================================");
+    console.log("API /ME");
+    console.log("Identifier:", identifier);
+    console.log("=================================");
+
     const db = await connectDB();
     const users = db.collection("users");
 
+    /* =====================================================
+       FIND USER
+       Username OR Email
+       Case-insensitive
+    ===================================================== */
+
     const user = await users.findOne(
-      { username },
+      {
+        $or: [
+          {
+            username: {
+              $regex: `^${escapeRegex(identifier)}$`,
+              $options: "i",
+            },
+          },
+          {
+            email: {
+              $regex: `^${escapeRegex(identifier)}$`,
+              $options: "i",
+            },
+          },
+        ],
+      },
       {
         projection: {
           password: 0,
@@ -25,10 +55,29 @@ export async function POST(req: Request) {
       }
     );
 
+    console.log(
+      "USER RESULT:",
+      user
+        ? {
+            username: user.username,
+            email: user.email,
+          }
+        : null
+    );
+
     if (!user) {
+      console.log(
+        "USER NOT FOUND:",
+        identifier
+      );
+
       return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
+        {
+          error: "User not found",
+        },
+        {
+          status: 404,
+        }
       );
     }
 
@@ -45,11 +94,7 @@ export async function POST(req: Request) {
     );
 
     /*
-     * Eski Certificate natijasini ham tekshiramiz.
-     *
-     * Agar oldingi test 20/20 bo'lib,
-     * stats.national.attempts noto'g'ri 1 bo'lib qolgan bo'lsa,
-     * uni 20/20 sifatida hisoblaymiz.
+     * Eski Certificate natijalarini ham tekshiramiz.
      */
 
     const certificateCycles =
@@ -59,15 +104,17 @@ export async function POST(req: Request) {
       "genesis",
       "independence",
     ]) {
-      const cycle = certificateCycles[cycleName];
+      const cycle =
+        certificateCycles[cycleName];
 
       if (
         cycle?.solved === true &&
-        Number(cycle?.totalQuestions ?? 0) === 20
+        Number(
+          cycle?.totalQuestions ?? 0
+        ) === 20
       ) {
-        const cycleCorrect = Number(
-          cycle?.correct ?? 0
-        );
+        const cycleCorrect =
+          Number(cycle?.correct ?? 0);
 
         if (nationalAttempts < 20) {
           nationalAttempts = 20;
@@ -98,32 +145,43 @@ export async function POST(req: Request) {
        OLYMPIAD
     ===================================================== */
 
-    const olympiadBaseAttempts = Number(
-      user.stats?.olympiad?.attempts ?? 0
-    );
+    const olympiadBaseAttempts =
+      Number(
+        user.stats?.olympiad?.attempts ?? 0
+      );
 
-    const olympiadBaseCorrect = Number(
-      user.stats?.olympiad?.correct ?? 0
-    );
+    const olympiadBaseCorrect =
+      Number(
+        user.stats?.olympiad?.correct ?? 0
+      );
 
-    const olympiadGenesisAttempts = Number(
-      user.stats?.olympiad?.genesis?.attempts ?? 0
-    );
+    const olympiadGenesisAttempts =
+      Number(
+        user.stats?.olympiad?.genesis
+          ?.attempts ?? 0
+      );
 
-    const olympiadGenesisCorrect = Number(
-      user.stats?.olympiad?.genesis?.correct ?? 0
-    );
+    const olympiadGenesisCorrect =
+      Number(
+        user.stats?.olympiad?.genesis
+          ?.correct ?? 0
+      );
 
-    const olympiadIndependenceAttempts = Number(
-      user.stats?.olympiad?.independence?.attempts ?? 0
-    );
+    const olympiadIndependenceAttempts =
+      Number(
+        user.stats?.olympiad?.independence
+          ?.attempts ?? 0
+      );
 
-    const olympiadIndependenceCorrect = Number(
-      user.stats?.olympiad?.independence?.correct ?? 0
-    );
+    const olympiadIndependenceCorrect =
+      Number(
+        user.stats?.olympiad?.independence
+          ?.correct ?? 0
+      );
 
     /*
-     * Barcha Olympiad natijalarini birlashtiramiz.
+     * Barcha Olympiad natijalarini
+     * birlashtiramiz.
      */
 
     const olympiadAttempts =
@@ -158,15 +216,18 @@ export async function POST(req: Request) {
       ),
 
       highestScore: Number(
-        user.stats?.mathSpirit?.highestScore ?? 0
+        user.stats?.mathSpirit
+          ?.highestScore ?? 0
       ),
 
       totalScore: Number(
-        user.stats?.mathSpirit?.totalScore ?? 0
+        user.stats?.mathSpirit
+          ?.totalScore ?? 0
       ),
 
       bestCombo: Number(
-        user.stats?.mathSpirit?.bestCombo ?? 0
+        user.stats?.mathSpirit
+          ?.bestCombo ?? 0
       ),
     };
 
@@ -190,13 +251,17 @@ export async function POST(req: Request) {
         correct: olympiadCorrect,
 
         genesis: {
-          attempts: olympiadGenesisAttempts,
-          correct: olympiadGenesisCorrect,
+          attempts:
+            olympiadGenesisAttempts,
+          correct:
+            olympiadGenesisCorrect,
         },
 
         independence: {
-          attempts: olympiadIndependenceAttempts,
-          correct: olympiadIndependenceCorrect,
+          attempts:
+            olympiadIndependenceAttempts,
+          correct:
+            olympiadIndependenceCorrect,
         },
       },
 
@@ -233,20 +298,28 @@ export async function POST(req: Request) {
        SELF-HEAL OLD CERTIFICATE DATA
     ===================================================== */
 
-    /*
-     * Agar eski Certificate natijasi MongoDB'da
-     * 1 attempt bo'lib qolgan bo'lsa, uni 20 ga to'g'rilaymiz.
-     *
-     * Bu eski 20/20 natijani yo'qotmaydi.
-     */
+    const oldNationalAttempts =
+      Number(
+        user.stats?.national?.attempts ?? 0
+      );
+
+    const oldNationalCorrect =
+      Number(
+        user.stats?.national?.correct ?? 0
+      );
 
     if (
       nationalAttempts === 20 &&
       nationalCorrect === 20 &&
-      Number(user.stats?.national?.attempts ?? 0) !== 20
+      (
+        oldNationalAttempts !== 20 ||
+        oldNationalCorrect !== 20
+      )
     ) {
       await users.updateOne(
-        { username },
+        {
+          _id: user._id,
+        },
         {
           $set: {
             "stats.national.attempts": 20,
@@ -260,7 +333,7 @@ export async function POST(req: Request) {
        RESPONSE
     ===================================================== */
 
-    return NextResponse.json({
+    const responseUser = {
       ...user,
 
       title: getTitle(
@@ -270,7 +343,18 @@ export async function POST(req: Request) {
       stats,
 
       perfectTrio,
-    });
+    };
+
+    console.log(
+      "API /ME SUCCESS:",
+      user.username
+    );
+
+    console.log("=================================");
+
+    return NextResponse.json(
+      responseUser
+    );
   } catch (error) {
     console.error(
       "API /me ERROR:",
@@ -286,4 +370,15 @@ export async function POST(req: Request) {
       }
     );
   }
+}
+
+/* =====================================================
+   ESCAPE REGEX
+===================================================== */
+
+function escapeRegex(value: string) {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
 }
