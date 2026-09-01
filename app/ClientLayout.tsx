@@ -1057,16 +1057,16 @@ export default function ClientLayout({
             </Link>
 
             <Link
-              href="/training"
+              href="/guess-password"
               className={getLinkClass(
-                "/training"
+                "/guess-password"
               )}
             >
               <BookOpen
                 size={19}
                 className="shrink-0"
               />
-              <span>Training</span>
+              <span>Guess the Password</span>
 
               <span className="ml-auto rounded-full bg-green-500/10 px-2 py-0.5 text-[8px] font-black uppercase text-green-400">
                 New

@@ -12,7 +12,7 @@ type Question = {
 
 function generateQuestion(): Question {
   const type = Math.floor(Math.random() * 4);
-  
+
   if (type === 0) {
     const a = Math.floor(Math.random() * 50) + 1;
     const b = Math.floor(Math.random() * 50) + 1;
@@ -56,488 +56,660 @@ function generateQuestion(): Question {
     answer,
   };
 }
+
 export default function MathSprintPage() {
+  const [started, setStarted] = useState(false);
+  const [showRankUp, setShowRankUp] = useState(false);
 
-async function saveScore() {
-  const currentUser = JSON.parse(
-    localStorage.getItem("currentUser") || "{}"
-  );
+  const [rankData, setRankData] = useState<{
+    oldRank: string;
+    newRank: string;
+  } | null>(null);
 
-  if (!currentUser.username) return;
+  const rankupSound = useRef<HTMLAudioElement | null>(null);
 
-  try {
-    const res = await fetch("/api/math-spirit/submit", {
-      method: "POST",
+  const [question, setQuestion] = useState<Question>({
+    question: "",
+    answer: 0,
+  });
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+  const [input, setInput] = useState("");
+  const [score, setScore] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  const [wrong, setWrong] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [gameOver, setGameOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [highScore, setHighScore] = useState(0);
+  const [flash, setFlash] = useState<"green" | "red" | null>(null);
+  const [showPlus, setShowPlus] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
+  const [showCombo, setShowCombo] = useState(false);
 
-      body: JSON.stringify({
-        username: currentUser.username,
-        score: finalScore,
-        correct,
-        wrong,
-        bestCombo,
-      }),
-    });
+  const finalScore = score + bestCombo;
 
-    const data = await res.json();
+  const correctSound = useRef<HTMLAudioElement | null>(null);
+  const wrongSound = useRef<HTMLAudioElement | null>(null);
+  const comboSound = useRef<HTMLAudioElement | null>(null);
+  const startSound = useRef<HTMLAudioElement | null>(null);
+  const gameOverSound = useRef<HTMLAudioElement | null>(null);
+  const recordSound = useRef<HTMLAudioElement | null>(null);
 
-    if (!res.ok) {
-      console.error(data.error);
-      return;
-    }
+  // =========================================
+  // SECRET NUMBER
+  // =========================================
 
-    // =========================
-    // RANK UP
-    // =========================
+  const SECRET_NUMBER = "M";
 
-    if (data.rankUp) {
-      setRankData({
-        oldRank: data.oldRank,
-        newRank: data.newRank,
+  // =========================================
+  // MISSION STATE
+  // =========================================
+
+  const [showSecretNumber, setShowSecretNumber] =
+    useState(false);
+
+  useEffect(() => {
+    setQuestion(generateQuestion());
+  }, []);
+
+  async function saveScore() {
+    const currentUser = JSON.parse(
+      localStorage.getItem("currentUser") || "{}"
+    );
+
+    if (!currentUser.username) return;
+
+    try {
+      const res = await fetch("/api/math-spirit/submit", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          username: currentUser.username,
+          score: finalScore,
+          correct,
+          wrong,
+          bestCombo,
+        }),
       });
 
-      rankupSound.current?.play();
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(data.error);
+        return;
+      }
+
+      // =========================
+      // RANK UP
+      // =========================
+
+      if (data.rankUp) {
+        setRankData({
+          oldRank: data.oldRank,
+          newRank: data.newRank,
+        });
+
+        rankupSound.current?.play();
+
+        confetti({
+          particleCount: 220,
+          spread: 100,
+          origin: {
+            y: 0.6,
+          },
+        });
+
+        setTimeout(() => {
+          setShowRankUp(true);
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Math Spirit save error:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (gameOver) {
+      saveScore();
+    }
+  }, [gameOver]);
+
+  // =========================================
+  // SECRET NUMBER
+  // SCORE >= 50
+  // =========================================
+
+  useEffect(() => {
+    if (!gameOver) return;
+
+    if (finalScore >= 50) {
+      setShowSecretNumber(true);
 
       confetti({
-        particleCount: 220,
-        spread: 100,
+        particleCount: 250,
+        spread: 120,
+        startVelocity: 40,
         origin: {
           y: 0.6,
         },
       });
-
-      setTimeout(() => {
-        setShowRankUp(true);
-      }, 500);
     }
+  }, [gameOver]);
 
-  } catch (error) {
-    console.error("Math Spirit save error:", error);
-  }
-}
-  const [started, setStarted] = useState(false);
-  const [showRankUp, setShowRankUp] = useState(false);
+  useEffect(() => {
+    if (!gameOver) return;
 
-const [rankData, setRankData] = useState<{
-  oldRank: string;
-  newRank: string;
-} | null>(null);
+    if (finalScore > highScore) {
+      setHighScore(finalScore);
 
-const rankupSound = useRef<HTMLAudioElement | null>(null);
-  const [question, setQuestion] = useState<Question>({
-  question: "",
-  answer: 0,
-});
+      localStorage.setItem(
+        "mathSprintHighScore",
+        String(finalScore)
+      );
+    }
+  }, [gameOver]);
 
-useEffect(() => {
-  setQuestion(generateQuestion());
-}, []);
-const [input, setInput] = useState("");
-const [score, setScore] = useState(0);
-const [correct, setCorrect] = useState(0);
-const [wrong, setWrong] = useState(0);
-const [timeLeft, setTimeLeft] = useState(60);
-const [gameOver, setGameOver] = useState(false);
-const inputRef = useRef<HTMLInputElement>(null);
-const [highScore, setHighScore] = useState(0);
-const [flash, setFlash] = useState<"green" | "red" | null>(null);
-const [showPlus, setShowPlus] = useState(false);
-const [shake, setShake] = useState(false);
-const [combo, setCombo] = useState(0);
-const [bestCombo, setBestCombo] = useState(0);
-const [showCombo, setShowCombo] = useState(false);
-const finalScore = score + bestCombo;
-
-const correctSound = useRef<HTMLAudioElement | null>(null);
-const wrongSound = useRef<HTMLAudioElement | null>(null);
-const comboSound = useRef<HTMLAudioElement | null>(null);
-const startSound = useRef<HTMLAudioElement | null>(null);
-const gameOverSound = useRef<HTMLAudioElement | null>(null);
-const recordSound = useRef<HTMLAudioElement | null>(null);
-useEffect(() => {
-  correctSound.current = new Audio("/sounds/correct.mp3");
-  wrongSound.current = new Audio("/sounds/wrong.mp3");
-  comboSound.current = new Audio("/sounds/combo.mp3");
-  startSound.current = new Audio("/sounds/start.mp3");
-  gameOverSound.current = new Audio("/sounds/gameover.mp3");
-  recordSound.current = new Audio("/sounds/newrecord.mp3");
-  rankupSound.current = new Audio("/sounds/rankup.mp3");
-  correctSound.current.volume = 0.5;
-  wrongSound.current.volume = 0.5;
-  comboSound.current.volume = 0.7;
-  startSound.current.volume = 0.8;
-  gameOverSound.current.volume = 0.8;
-  recordSound.current.volume = 1;
-}, []);
-
-useEffect(() => {
-
-  if (gameOver) {
-    saveScore();
-  }
-
-}, [gameOver]);
-
-useEffect(() => {
-  if (!gameOver) return;
-
-  const finalScore = score + bestCombo;
-
-  if (finalScore > highScore) {
-    setHighScore(finalScore);
-
-    localStorage.setItem(
-      "mathSprintHighScore",
-      String(finalScore)
+  useEffect(() => {
+    const saved = localStorage.getItem(
+      "mathSprintHighScore"
     );
-  }
-}, [gameOver]);
 
-useEffect(() => {
-  const saved = localStorage.getItem("mathSprintHighScore");
+    if (saved) {
+      setHighScore(Number(saved));
+    }
+  }, []);
 
-  if (saved) {
-    setHighScore(Number(saved));
-  }
-}, []);
+  useEffect(() => {
+    if (started && !gameOver) {
+      inputRef.current?.focus();
+    }
+  }, [question, started, gameOver]);
 
-useEffect(() => {
-  if (started && !gameOver) {
-    inputRef.current?.focus();
-  }
-  
-}, [question, started, gameOver]);
   function checkAnswer() {
     if (input.trim() === "") {
-  return;
-}
-  if (Number(input) === question.answer) {
-    setFlash("green");
-setShowPlus(true);
-
-setTimeout(() => {
-  setFlash(null);
-}, 150);
-
-setTimeout(() => {
-  setShowPlus(false);
-}, 600);
-    if (correctSound.current) {
-  correctSound.current.currentTime = 0;
-  correctSound.current.play();
-}
-    const newScore = score + 1;
-
-    setScore(newScore);
-    setCorrect((c) => c + 1);
-    const finalScore = score + bestCombo;
-
-
-    // High Score
-    
-
-    // Combo
-    const newCombo = combo + 1;
-    setCombo(newCombo);
-    if (newCombo >= 5 && newCombo % 5 === 0) {
-  if (comboSound.current) {
-  comboSound.current.currentTime = 0;
-  comboSound.current.play();
-}
-}
-
-    if (newCombo > bestCombo) {
-      setBestCombo(newCombo);
+      return;
     }
 
-    setShowCombo(true);
+    if (Number(input) === question.answer) {
+      setFlash("green");
+      setShowPlus(true);
 
-    setTimeout(() => {
-      setShowCombo(false);
-    }, 500);
+      setTimeout(() => {
+        setFlash(null);
+      }, 150);
 
-  } else {
-    if (wrongSound.current) {
+      setTimeout(() => {
+        setShowPlus(false);
+      }, 600);
+
+      if (correctSound.current) {
+        correctSound.current.currentTime = 0;
+        correctSound.current.play();
+      }
+
+      const newScore = score + 1;
+
+      setScore(newScore);
+      setCorrect((c) => c + 1);
+
+      const newCombo = combo + 1;
+
+      setCombo(newCombo);
+
+      if (
+        newCombo >= 5 &&
+        newCombo % 5 === 0
+      ) {
+        if (comboSound.current) {
+          comboSound.current.currentTime = 0;
+          comboSound.current.play();
+        }
+      }
+
+      if (newCombo > bestCombo) {
+        setBestCombo(newCombo);
+      }
+
+      setShowCombo(true);
+
+      setTimeout(() => {
+        setShowCombo(false);
+      }, 500);
+    } else {
+      if (wrongSound.current) {
         setFlash("red");
-setShake(true);
+        setShake(true);
 
-setTimeout(() => {
-  setFlash(null);
-}, 150);
+        setTimeout(() => {
+          setFlash(null);
+        }, 150);
 
-setTimeout(() => {
-  setShake(false);
-}, 300);
-  wrongSound.current.currentTime = 0;
-  wrongSound.current.play();
-}
-    setWrong((w) => w + 1);
+        setTimeout(() => {
+          setShake(false);
+        }, 300);
 
-    // Combo reset
-    setCombo(0);
+        wrongSound.current.currentTime = 0;
+        wrongSound.current.play();
+      }
+
+      setWrong((w) => w + 1);
+
+      setCombo(0);
+    }
+
+    setQuestion(generateQuestion());
+    setInput("");
   }
 
-  setQuestion(generateQuestion());
-  setInput("");
-}
-useEffect(() => {
-  if (!gameOver) return;
+  useEffect(() => {
+    if (!gameOver) return;
 
-  if (finalScore > highScore) {
-    setHighScore(finalScore);
+    if (finalScore > highScore) {
+      setHighScore(finalScore);
 
-    localStorage.setItem(
-      "mathSprintHighScore",
-      String(finalScore)
+      localStorage.setItem(
+        "mathSprintHighScore",
+        String(finalScore)
+      );
+
+      if (recordSound.current) {
+        recordSound.current.currentTime = 0;
+        recordSound.current.play();
+      }
+    }
+  }, [gameOver]);
+
+  useEffect(() => {
+    if (!started || gameOver) return;
+
+    if (timeLeft <= 0) {
+      gameOverSound.current?.play();
+      setGameOver(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [started, timeLeft, gameOver]);
+
+  useEffect(() => {
+    correctSound.current = new Audio(
+      "/sounds/correct.mp3"
     );
 
-    if (recordSound.current) {
-  recordSound.current.currentTime = 0;
-  recordSound.current.play();
-}
-  }
-}, [gameOver]);
+    wrongSound.current = new Audio(
+      "/sounds/wrong.mp3"
+    );
 
-useEffect(() => {
-  if (!started || gameOver) return;
+    comboSound.current = new Audio(
+      "/sounds/combo.mp3"
+    );
 
-  if (timeLeft <= 0) {
-    gameOverSound.current?.play();
-    setGameOver(true);
-    return;
-  }
+    startSound.current = new Audio(
+      "/sounds/start.mp3"
+    );
 
-  const timer = setTimeout(() => {
-    setTimeLeft((t) => t - 1);
-  }, 1000);
+    gameOverSound.current = new Audio(
+      "/sounds/gameover.mp3"
+    );
 
-  return () => clearTimeout(timer);
-}, [started, timeLeft, gameOver]);
-if (gameOver) {
-  return (
-    <div className="min-h-[85vh] flex items-center justify-center px-6">
+    recordSound.current = new Audio(
+      "/sounds/newrecord.mp3"
+    );
 
-      <div className="w-full max-w-3xl rounded-[36px] border border-zinc-800 bg-zinc-900/70 backdrop-blur-xl shadow-2xl shadow-green-500/10 p-10">
+    rankupSound.current = new Audio(
+      "/sounds/rankup.mp3"
+    );
 
-        {/* Header */}
-        <div className="text-center">
+    correctSound.current.volume = 0.5;
+    wrongSound.current.volume = 0.5;
+    comboSound.current.volume = 0.7;
+    startSound.current.volume = 0.8;
+    gameOverSound.current.volume = 0.8;
+    recordSound.current.volume = 1;
+  }, []);
 
-          <div className="text-7xl mb-4">🏆</div>
+  // =========================================
+  // GAME OVER
+  // =========================================
 
-          <h1 className="text-5xl font-black">
-            Game Over
-          </h1>
+  if (gameOver) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center px-6">
 
-          <p className="text-zinc-400 mt-3 text-lg">
-            You did an amazing job!
-          </p>
+        <div className="w-full max-w-3xl rounded-[36px] border border-zinc-800 bg-zinc-900/70 backdrop-blur-xl shadow-2xl shadow-green-500/10 p-10">
 
-          <div className="mt-10">
+          {/* Header */}
+          <div className="text-center">
 
-            <p className="text-zinc-400 text-xl">
-              Final Score
+            <div className="text-7xl mb-4">
+              🏆
+            </div>
+
+            <h1 className="text-5xl font-black">
+              Game Over
+            </h1>
+
+            <p className="text-zinc-400 mt-3 text-lg">
+              You did an amazing job!
             </p>
 
-            <h2 className="text-8xl font-black text-green-400 mt-2">
-              {finalScore}
-            </h2>
+            <div className="mt-10">
 
-            <p className="text-zinc-500 mt-3">
-              {score} + {bestCombo} Combo Bonus
-            </p>
+              <p className="text-zinc-400 text-xl">
+                Final Score
+              </p>
+
+              <h2 className="text-8xl font-black text-green-400 mt-2">
+                {finalScore}
+              </h2>
+
+              <p className="text-zinc-500 mt-3">
+                {score} + {bestCombo} Combo Bonus
+              </p>
+
+            </div>
 
           </div>
 
-        </div>
+          {/* =====================================
+              SECRET NUMBER
+          ====================================== */}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-12">
+          {showSecretNumber && (
+            <div className="mt-10 relative overflow-hidden rounded-[32px] border border-green-500/30 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent p-8 text-center">
 
-          <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
-            <p className="text-zinc-500">✅ Correct</p>
-            <h2 className="text-5xl font-black text-green-400 mt-3">
-              {correct}
-            </h2>
+              {/* Glow */}
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-green-500/20 blur-[90px] rounded-full" />
+
+              <div className="relative">
+
+                <div className="text-6xl mb-4 animate-bounce">
+                  🔓
+                </div>
+
+                <p className="text-green-400 font-bold uppercase tracking-[0.3em] text-sm">
+                  Mission Complete
+                </p>
+
+                <h2 className="text-3xl md:text-4xl font-black mt-3">
+                  Siz yashirin raqamni topdingiz!
+                </h2>
+
+                <p className="text-zinc-400 mt-3">
+                  50 yoki undan yuqori ball oldingiz.
+                </p>
+
+                <div className="mt-7 rounded-2xl bg-black/50 border border-green-500/20 py-6">
+
+                  <p className="text-zinc-500 text-sm uppercase tracking-widest">
+                    Secret Number
+                  </p>
+
+                  <p className="text-6xl md:text-7xl font-black text-green-400 mt-3 tracking-[0.25em]">
+                    {SECRET_NUMBER}
+                  </p>
+
+                </div>
+
+                <p className="text-zinc-500 text-sm mt-5">
+                  Bu raqamni eslab qoling. Keyingi bosqichda
+                  sizga kerak bo'ladi.
+                </p>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-12">
+
+            <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
+
+              <p className="text-zinc-500">
+                ✅ Correct
+              </p>
+
+              <h2 className="text-5xl font-black text-green-400 mt-3">
+                {correct}
+              </h2>
+
+            </div>
+
+            <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
+
+              <p className="text-zinc-500">
+                ❌ Wrong
+              </p>
+
+              <h2 className="text-5xl font-black text-red-400 mt-3">
+                {wrong}
+              </h2>
+
+            </div>
+
+            <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
+
+              <p className="text-zinc-500">
+                🔥 Best Combo
+              </p>
+
+              <h2 className="text-5xl font-black text-orange-400 mt-3">
+                x{bestCombo}
+              </h2>
+
+            </div>
+
+            <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
+
+              <p className="text-zinc-500">
+                🏆 Personal Best
+              </p>
+
+              <h2 className="text-5xl font-black text-yellow-400 mt-3">
+                {highScore}
+              </h2>
+
+            </div>
+
           </div>
 
-          <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
-            <p className="text-zinc-500">❌ Wrong</p>
-            <h2 className="text-5xl font-black text-red-400 mt-3">
-              {wrong}
-            </h2>
+          {/* Buttons */}
+          <div className="flex flex-col md:flex-row gap-5 mt-12">
+
+            <button
+              onClick={() => {
+                setScore(0);
+                setCorrect(0);
+                setWrong(0);
+                setCombo(0);
+                setBestCombo(0);
+                setShowCombo(false);
+                setTimeLeft(60);
+                setQuestion(generateQuestion());
+                setInput("");
+                setGameOver(false);
+                setStarted(false);
+                setShowSecretNumber(false);
+              }}
+              className="flex-1 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 py-5 text-2xl font-bold hover:scale-105 transition duration-300"
+            >
+              🔄 Play Again
+            </button>
+
+            <button
+              onClick={() =>
+                (window.location.href = "/afterregister")
+              }
+              className="flex-1 rounded-2xl border border-zinc-700 bg-zinc-800 py-5 text-2xl font-bold hover:bg-zinc-700 transition duration-300"
+            >
+              🏠 Dashboard
+            </button>
+
           </div>
-
-          <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
-            <p className="text-zinc-500">🔥 Best Combo</p>
-            <h2 className="text-5xl font-black text-orange-400 mt-3">
-              x{bestCombo}
-            </h2>
-          </div>
-
-          <div className="rounded-3xl bg-black/40 border border-zinc-800 p-6 text-center">
-            <p className="text-zinc-500">🏆 Personal Best</p>
-            <h2 className="text-5xl font-black text-yellow-400 mt-3">
-              {highScore}
-            </h2>
-          </div>
-
-        </div>
-
-        {/* Buttons */}
-        <div className="flex flex-col md:flex-row gap-5 mt-12">
-
-          <button
-            onClick={() => {
-              setScore(0);
-              setCorrect(0);
-              setWrong(0);
-              setCombo(0);
-              setBestCombo(0);
-              setShowCombo(false);
-              setTimeLeft(60);
-              setQuestion(generateQuestion());
-              setInput("");
-              setGameOver(false);
-              setStarted(false);
-            }}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 py-5 text-2xl font-bold hover:scale-105 transition duration-300"
-          >
-            🔄 Play Again
-          </button>
-
-          <button
-            onClick={() => window.location.href = "/afterregister"}
-            className="flex-1 rounded-2xl border border-zinc-700 bg-zinc-800 py-5 text-2xl font-bold hover:bg-zinc-700 transition duration-300"
-          >
-            🏠 Dashboard
-          </button>
 
         </div>
 
       </div>
+    );
+  }
 
-    </div>
-  );
-}
-if (started) {
-  return (
-    <>
-      <div
-        className={`
-          fixed inset-0 z-[999] pointer-events-none
-          transition-opacity duration-150
-          ${
-            flash === "green"
-              ? "bg-green-500/20 opacity-100"
-              : flash === "red"
-              ? "bg-red-500/20 opacity-100"
-              : "opacity-0"
-          }
-        `}
-      />
+  // =========================================
+  // GAME STARTED
+  // =========================================
 
-      <div className="max-w-4xl mx-auto py-16">
-
-        <div className="flex justify-between items-center mb-10">
-
-          <div>
-            <p className="text-zinc-400">Score</p>
-            <h2 className="text-4xl font-bold">{score}</h2>
-          </div>
-
-          <div>
-            <p className="text-zinc-400">Correct</p>
-            <h2 className="text-4xl font-bold text-green-400">
-              {correct}
-            </h2>
-          </div>
-
-          <div>
-            <p className="text-zinc-400">Wrong</p>
-            <h2 className="text-4xl font-bold text-red-400">
-              {wrong}
-            </h2>
-          </div>
-
-          <div>
-            <p className="text-zinc-400">Time</p>
-            <h2 className="text-4xl font-bold text-yellow-400">
-              {timeLeft}s
-            </h2>
-          </div>
-
-          <div>
-            <p className="text-zinc-400">Combo</p>
-            <h2 className="text-4xl font-bold text-orange-400">
-              x{combo}
-            </h2>
-          </div>
-
-        </div>
-
+  if (started) {
+    return (
+      <>
         <div
           className={`
-            bg-zinc-900
-            rounded-3xl
-            border
-            border-zinc-800
-            p-12
-            transition-all
-
-            ${shake ? "animate-[wiggle_.3s_ease-in-out]" : ""}
+            fixed inset-0 z-[999] pointer-events-none
+            transition-opacity duration-150
+            ${
+              flash === "green"
+                ? "bg-green-500/20 opacity-100"
+                : flash === "red"
+                ? "bg-red-500/20 opacity-100"
+                : "opacity-0"
+            }
           `}
-        >
+        />
 
-          {showPlus && (
-            <div className="text-center mb-4 animate-bounce">
-              <h2 className="text-5xl font-black text-green-400">
-                +1
+        <div className="max-w-4xl mx-auto py-16">
+
+          <div className="flex justify-between items-center mb-10">
+
+            <div>
+              <p className="text-zinc-400">
+                Score
+              </p>
+
+              <h2 className="text-4xl font-bold">
+                {score}
               </h2>
             </div>
-          )}
 
-          {showCombo && combo >= 2 && (
-            <div className="text-center mb-6 animate-bounce">
-              <h2 className="text-5xl font-black text-orange-400">
-                🔥 Combo x{combo}
+            <div>
+              <p className="text-zinc-400">
+                Correct
+              </p>
+
+              <h2 className="text-4xl font-bold text-green-400">
+                {correct}
               </h2>
             </div>
-          )}
 
-          <h1 className="text-6xl font-bold text-center mb-10">
-            {question.question} = ?
-          </h1>
+            <div>
+              <p className="text-zinc-400">
+                Wrong
+              </p>
 
-          <input
-            ref={inputRef}
-            type="number"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                checkAnswer();
-              }
-            }}
-            placeholder="Answer..."
-            className="w-full bg-black border border-zinc-700 rounded-2xl p-6 text-3xl outline-none"
-          />
+              <h2 className="text-4xl font-bold text-red-400">
+                {wrong}
+              </h2>
+            </div>
 
-          <button
-            onClick={checkAnswer}
-            className="mt-6 w-full rounded-2xl bg-green-600 hover:bg-green-700 py-5 text-2xl font-bold transition"
+            <div>
+              <p className="text-zinc-400">
+                Time
+              </p>
+
+              <h2 className="text-4xl font-bold text-yellow-400">
+                {timeLeft}s
+              </h2>
+            </div>
+
+            <div>
+              <p className="text-zinc-400">
+                Combo
+              </p>
+
+              <h2 className="text-4xl font-bold text-orange-400">
+                x{combo}
+              </h2>
+            </div>
+
+          </div>
+
+          <div
+            className={`
+              bg-zinc-900
+              rounded-3xl
+              border
+              border-zinc-800
+              p-12
+              transition-all
+              ${shake ? "animate-[wiggle_.3s_ease-in-out]" : ""}
+            `}
           >
-            Submit
-          </button>
+
+            {showPlus && (
+              <div className="text-center mb-4 animate-bounce">
+
+                <h2 className="text-5xl font-black text-green-400">
+                  +1
+                </h2>
+
+              </div>
+            )}
+
+            {showCombo && combo >= 2 && (
+              <div className="text-center mb-6 animate-bounce">
+
+                <h2 className="text-5xl font-black text-orange-400">
+                  🔥 Combo x{combo}
+                </h2>
+
+              </div>
+            )}
+
+            <h1 className="text-6xl font-bold text-center mb-10">
+              {question.question} = ?
+            </h1>
+
+            <input
+              ref={inputRef}
+              type="number"
+              value={input}
+              onChange={(e) =>
+                setInput(e.target.value)
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  checkAnswer();
+                }
+              }}
+              placeholder="Answer..."
+              className="w-full bg-black border border-zinc-700 rounded-2xl p-6 text-3xl outline-none"
+            />
+
+            <button
+              onClick={checkAnswer}
+              className="mt-6 w-full rounded-2xl bg-green-600 hover:bg-green-700 py-5 text-2xl font-bold transition"
+            >
+              Submit
+            </button>
+
+          </div>
 
         </div>
+      </>
+    );
+  }
 
-      </div>
-    </>
-  );
-}
+  // =========================================
+  // START SCREEN
+  // =========================================
 
   return (
     <div className="relative min-h-[85vh] overflow-hidden rounded-3xl">
@@ -582,7 +754,10 @@ if (started) {
 
           <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-5 py-2 mb-8">
 
-            <Zap className="text-green-400" size={18} />
+            <Zap
+              className="text-green-400"
+              size={18}
+            />
 
             <span className="text-green-300 font-semibold">
               NEW GAME MODE
@@ -591,16 +766,16 @@ if (started) {
           </div>
 
           <h1 className="text-6xl md:text-7xl font-black tracking-tight mb-6">
-
             Math Sprint
-
           </h1>
 
           <p className="text-zinc-400 text-xl max-w-2xl mx-auto leading-9">
 
-            Solve as many math questions as possible before the timer reaches zero.
+            Solve as many math questions as possible
+            before the timer reaches zero.
 
-            Compete with yourself, improve your speed, and climb the leaderboard.
+            Compete with yourself, improve your speed,
+            and climb the leaderboard.
 
           </p>
 
@@ -610,7 +785,10 @@ if (started) {
 
           <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 hover:border-green-500 transition">
 
-            <Timer size={38} className="text-green-400 mb-5" />
+            <Timer
+              size={38}
+              className="text-green-400 mb-5"
+            />
 
             <h3 className="text-3xl font-bold">
               60 Seconds
@@ -624,7 +802,10 @@ if (started) {
 
           <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 hover:border-green-500 transition">
 
-            <Zap size={38} className="text-yellow-400 mb-5" />
+            <Zap
+              size={38}
+              className="text-yellow-400 mb-5"
+            />
 
             <h3 className="text-3xl font-bold">
               Random Questions
@@ -638,18 +819,18 @@ if (started) {
 
           <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 hover:border-green-500 transition">
 
-            <Trophy size={38} className="text-orange-400 mb-5" />
+            <Trophy
+              size={38}
+              className="text-orange-400 mb-5"
+            />
 
+            <h3 className="text-3xl font-bold">
+              High Score
+            </h3>
 
-  <h3 className="text-3xl font-bold">
-    High Score
-  </h3>
-
-  <p className="text-5xl font-black mt-5 text-green-400">
-    {highScore}
-  </p>
-
-
+            <p className="text-5xl font-black mt-5 text-green-400">
+              {highScore}
+            </p>
 
             <p className="text-zinc-400 mt-3">
               Improve your personal record every day.
@@ -663,24 +844,24 @@ if (started) {
 
           <button
             onClick={() => {
-  if (startSound.current) {
-  startSound.current.currentTime = 0;
-  startSound.current.play();
-}
+              if (startSound.current) {
+                startSound.current.currentTime = 0;
+                startSound.current.play();
+              }
 
-  setStarted(true);
+              setStarted(true);
 
-  setTimeLeft(60);
-  setScore(0);
-  setCorrect(0);
-  setWrong(0);
+              setTimeLeft(60);
+              setScore(0);
+              setCorrect(0);
+              setWrong(0);
 
-  setCombo(0);
-  setBestCombo(0);
-  setShowCombo(false);
+              setCombo(0);
+              setBestCombo(0);
+              setShowCombo(false);
 
-  setQuestion(generateQuestion());
-}}
+              setQuestion(generateQuestion());
+            }}
             className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-10 py-5 text-2xl font-bold shadow-lg shadow-green-500/30 transition duration-300 hover:scale-105"
           >
 
@@ -696,15 +877,18 @@ if (started) {
         </div>
 
       </div>
+
       <RankUpModal
-  open={showRankUp}
-  oldRank={rankData?.oldRank ?? ""}
-  newRank={rankData?.newRank ?? ""}
-  onClose={() => {
-    setShowRankUp(false);
-    setRankData(null);
-  }}
-/>
+        open={showRankUp}
+        oldRank={rankData?.oldRank ?? ""}
+        newRank={rankData?.newRank ?? ""}
+        onClose={() => {
+          setShowRankUp(false);
+          setRankData(null);
+        }}
+      />
+
     </div>
   );
 }
+// M7

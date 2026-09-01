@@ -301,18 +301,6 @@ export default function SATPage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
-  /*
-    MUHIM:
-    answers endi option text emas,
-    A/B/C/D saqlaydi.
-
-    Masalan:
-    {
-      1: "C",
-      2: "A",
-      3: "D"
-    }
-  */
   const [answers, setAnswers] =
     useState<Record<number, string>>({});
 
@@ -508,11 +496,6 @@ export default function SATPage() {
       ? questions[currentQuestion]
       : null;
 
-  /*
-    MUHIM:
-    selectedAnswer endi "A", "B", "C", "D"
-    bo'ladi.
-  */
   const selectedAnswer =
     question
       ? answers[question.id]
@@ -524,6 +507,25 @@ export default function SATPage() {
           questions.length) *
         100
       : 0;
+
+  /* =======================================================
+     SECRET NUMBER
+     
+     SAT 50%+  =>  SECRET NUMBER = 0
+  ======================================================= */
+
+  const satPercentage =
+    result && result.total > 0
+      ? (result.correct /
+          result.total) *
+        100
+      : 0;
+
+  const passedMission =
+    result !== null &&
+    satPercentage >= 50;
+
+  const secretNumber = "0";
 
   /* =======================================================
      IMAGE
@@ -542,19 +544,6 @@ export default function SATPage() {
   /* =======================================================
      SELECT ANSWER
   ======================================================= */
-
-  /*
-    MUHIM FIX:
-
-    Old:
-      selectAnswer(option)
-
-    New:
-      selectAnswer("A")
-      selectAnswer("B")
-      selectAnswer("C")
-      selectAnswer("D")
-  */
 
   function selectAnswer(
     letter: string
@@ -576,7 +565,7 @@ export default function SATPage() {
 
     if (!selectedAnswer) {
       alert(
-        "Please select an answer."
+        "Iltimos, javobni tanlang."
       );
       return;
     }
@@ -629,7 +618,7 @@ export default function SATPage() {
 
     if (!currentUser) {
       alert(
-        "Please sign in first."
+        "Avval tizimga kiring."
       );
       return;
     }
@@ -640,14 +629,14 @@ export default function SATPage() {
       questions.length
     ) {
       alert(
-        "Please answer all questions."
+        "Iltimos, barcha savollarga javob bering."
       );
       return;
     }
 
     if (!cycle) {
       alert(
-        "The SAT cycle is not available yet."
+        "SAT cycle hozircha mavjud emas."
       );
       return;
     }
@@ -661,14 +650,14 @@ export default function SATPage() {
         JSON.parse(currentUser);
     } catch {
       alert(
-        "Invalid user session."
+        "Foydalanuvchi sessiyasi noto'g'ri."
       );
       return;
     }
 
     if (!user.username) {
       alert(
-        "Invalid user session."
+        "Foydalanuvchi sessiyasi noto'g'ri."
       );
       return;
     }
@@ -676,23 +665,6 @@ export default function SATPage() {
     setLoading(true);
 
     try {
-      /*
-        Backendga quyidagidek yuboriladi:
-
-        {
-          username: "...",
-          answers: {
-            1: "C",
-            2: "A",
-            3: "D"
-          },
-          cycle: "genesis"
-        }
-
-        Bu backenddagi answer key bilan
-        to'g'ridan-to'g'ri mos keladi.
-      */
-
       console.log(
         "SAT answers being submitted:",
         answers
@@ -811,10 +783,6 @@ export default function SATPage() {
           .catch(() => {});
       }
 
-      /*
-        Natija chiqqandan keyin
-        eski answersni tozalaymiz.
-      */
       setAnswers({});
       setCurrentQuestion(0);
     } catch (error) {
@@ -845,18 +813,17 @@ export default function SATPage() {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-            SAT is coming soon
+            SAT tez orada boshlanadi
           </h2>
 
           <p className="text-zinc-400 text-sm sm:text-base leading-7">
-            The first SAT cycle will begin
-            on August 17.
+            Birinchi SAT cycle 17-avgustda boshlanadi.
           </p>
 
           <div className="mt-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
 
             <p className="text-zinc-500 text-sm">
-              Genesis Cycle starts in
+              Genesis Cycle boshlanishigacha
             </p>
 
             <p className="text-green-400 font-bold text-xl sm:text-2xl mt-2">
@@ -882,7 +849,7 @@ export default function SATPage() {
           <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
 
           <p className="text-gray-400 text-sm sm:text-base">
-            Loading SAT...
+            SAT yuklanmoqda...
           </p>
 
         </div>
@@ -906,18 +873,17 @@ export default function SATPage() {
           </div>
 
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
-            SAT unavailable
+            SAT mavjud emas
           </h2>
 
           <p className="text-zinc-400 text-sm sm:text-base leading-6">
-            The SAT questions are
-            currently unavailable.
+            SAT savollari hozircha mavjud emas.
           </p>
 
           <div className="mt-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
 
             <p className="text-zinc-500 text-sm">
-              Next Cycle
+              Keyingi Cycle
             </p>
 
             <p className="text-green-400 font-bold text-lg mt-2">
@@ -941,7 +907,7 @@ export default function SATPage() {
         <div className="text-center">
 
           <p className="text-red-400 font-bold">
-            Unable to load this question.
+            Savolni yuklab bo'lmadi.
           </p>
 
           <button
@@ -951,7 +917,7 @@ export default function SATPage() {
             }
             className="mt-5 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold"
           >
-            Restart
+            Qayta boshlash
           </button>
 
         </div>
@@ -982,7 +948,7 @@ export default function SATPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-gray-400">
-              Solve the questions below and earn Genius Points.
+              Savollarni yeching va Genius Points to'plang.
             </p>
 
           </div>
@@ -1002,7 +968,7 @@ export default function SATPage() {
         <div className="flex justify-between items-center mb-2">
 
           <span className="text-xs sm:text-sm text-gray-400 font-medium">
-            Question {currentQuestion + 1} /{" "}
+            Savol {currentQuestion + 1} /{" "}
             {questions.length}
           </span>
 
@@ -1036,11 +1002,11 @@ export default function SATPage() {
           <div>
 
             <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">
-              Question {currentQuestion + 1}
+              Savol {currentQuestion + 1}
             </p>
 
             <h2 className="text-base sm:text-xl font-bold text-white">
-              Solve the problem
+              Masalani yeching
             </h2>
 
           </div>
@@ -1099,15 +1065,13 @@ export default function SATPage() {
             <div className="mb-5 rounded-xl border border-red-900/50 bg-red-950/20 p-4 text-center">
 
               <p className="text-red-400 text-sm font-semibold">
-                Diagram could not be loaded.
+                Diagramni yuklab bo'lmadi.
               </p>
 
             </div>
           )}
 
-        {/* =================================================
-            OPTIONS
-        ================================================= */}
+        {/* OPTIONS */}
 
         <div className="space-y-2.5 sm:space-y-3">
 
@@ -1117,24 +1081,10 @@ export default function SATPage() {
               index
             ) => {
 
-              /*
-                A = 0
-                B = 1
-                C = 2
-                D = 3
-              */
-
               const letter =
                 String.fromCharCode(
                   65 + index
                 );
-
-              /*
-                MUHIM FIX:
-
-                answers ichida option text emas,
-                A/B/C/D turadi.
-              */
 
               const selected =
                 selectedAnswer ===
@@ -1156,8 +1106,6 @@ export default function SATPage() {
                   }`}
                 >
 
-                  {/* LETTER */}
-
                   <span
                     className={`shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-sm sm:text-base ${
                       selected
@@ -1168,8 +1116,6 @@ export default function SATPage() {
                     {letter}
                   </span>
 
-                  {/* OPTION */}
-
                   <span className="min-w-0 flex-1 overflow-x-auto text-white">
 
                     <MathOption
@@ -1179,8 +1125,6 @@ export default function SATPage() {
                     />
 
                   </span>
-
-                  {/* CHECK */}
 
                   {selected && (
                     <span className="shrink-0 text-green-400 text-lg sm:text-xl">
@@ -1211,7 +1155,7 @@ export default function SATPage() {
             }
             className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-sm sm:text-base font-bold disabled:opacity-30 disabled:cursor-not-allowed transition"
           >
-            ← Previous
+            ← Oldingi
           </button>
 
           {currentQuestion ===
@@ -1229,8 +1173,8 @@ export default function SATPage() {
               className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading
-                ? "Submitting..."
-                : "Submit Test ✓"}
+                ? "Yuborilmoqda..."
+                : "Testni topshirish ✓"}
             </button>
 
           ) : (
@@ -1246,7 +1190,7 @@ export default function SATPage() {
               }
               className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              Next Question →
+              Keyingi savol →
             </button>
 
           )}
@@ -1260,12 +1204,14 @@ export default function SATPage() {
       =================================================== */}
 
       {result && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-5">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
 
           <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-h-[90vh] overflow-y-auto">
 
+            {/* RESULT HEADER */}
+
             <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
-              🏆 SAT Results
+              🏆 SAT Natijasi
             </h1>
 
             <div className="space-y-3 text-base sm:text-lg">
@@ -1278,25 +1224,48 @@ export default function SATPage() {
               </p>
 
               <p>
-                ✅ Correct:{" "}
+                ✅ To'g'ri:{" "}
                 <span className="text-green-400 font-bold">
                   {result.correct}
                 </span>
               </p>
 
               <p>
-                ❌ Incorrect:{" "}
+                ❌ Noto'g'ri:{" "}
                 <span className="text-red-400 font-bold">
                   {result.incorrect}
                 </span>
               </p>
 
               <p>
-                📊 Total:{" "}
+                📊 Jami:{" "}
                 <span className="text-white font-bold">
                   {result.total}
                 </span>
               </p>
+
+              {/* PERCENTAGE */}
+
+              <div className="mt-5 bg-black border border-zinc-800 rounded-2xl p-4 text-center">
+
+                <p className="text-zinc-500 text-sm">
+                  Natija
+                </p>
+
+                <p
+                  className={`text-4xl font-black mt-2 ${
+                    passedMission
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {Math.round(
+                    satPercentage
+                  )}
+                  %
+                </p>
+
+              </div>
 
               {result.rankUp && (
                 <p className="text-yellow-400 font-bold text-center">
@@ -1306,12 +1275,87 @@ export default function SATPage() {
 
             </div>
 
+            {/* =================================================
+                SECRET NUMBER
+            ================================================= */}
+
+            {passedMission ? (
+              <div className="mt-7 relative overflow-hidden rounded-3xl border border-green-500/40 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent p-6 text-center">
+
+                {/* Decorative glow */}
+
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-green-500/20 blur-3xl rounded-full" />
+
+                <div className="relative">
+
+                  <div className="text-5xl mb-3">
+                    🔓
+                  </div>
+
+                  <p className="text-green-400 font-black text-sm uppercase tracking-[0.2em]">
+                    1-MISSION BAJARILDI
+                  </p>
+
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-3">
+                    Secret Number
+                  </h2>
+
+                  <p className="text-zinc-400 text-sm mt-2">
+                    Siz SAT testida 50%+ natija oldingiz!
+                  </p>
+
+                  <div className="mt-5 mx-auto w-28 h-28 rounded-3xl bg-black border border-green-500/50 flex items-center justify-center shadow-lg shadow-green-500/20">
+
+                    <span className="text-6xl font-black text-green-400">
+                      {secretNumber}
+                    </span>
+
+                  </div>
+
+                  <p className="text-green-300 font-bold mt-4">
+                    🔐 Bu kodni Guess Password o'yiniga kiriting.
+                  </p>
+
+                </div>
+
+              </div>
+            ) : (
+              <div className="mt-7 rounded-3xl border border-red-500/30 bg-red-500/5 p-6 text-center">
+
+                <div className="text-5xl mb-3">
+                  🔒
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-black text-white">
+                  Mission bajarilmadi
+                </h2>
+
+                <p className="text-zinc-400 text-sm mt-2 leading-6">
+                  Secret numberni olish uchun
+                  SAT testidan kamida{" "}
+                  <span className="text-green-400 font-bold">
+                    50%
+                  </span>{" "}
+                  natija olishingiz kerak.
+                </p>
+
+                <p className="text-red-400 font-bold mt-3">
+                  Sizning natijangiz:{" "}
+                  {Math.round(
+                    satPercentage
+                  )}
+                  %
+                </p>
+
+              </div>
+            )}
+
             {/* NEXT CYCLE */}
 
             <div className="mt-6 bg-black border border-zinc-800 rounded-2xl p-5 text-center">
 
               <p className="text-zinc-500 text-sm">
-                ⏳ Next SAT Cycle
+                ⏳ Keyingi SAT Cycle
               </p>
 
               <h2 className="text-green-400 font-bold text-xl sm:text-2xl mt-2">
@@ -1363,7 +1407,7 @@ export default function SATPage() {
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-base sm:text-lg transition"
             >
-              Continue
+              Davom etish
             </button>
 
           </div>
@@ -1376,24 +1420,24 @@ export default function SATPage() {
       =================================================== */}
 
       {completed && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-5">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
 
           <div className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-h-[90vh] overflow-y-auto">
 
             <h1 className="text-2xl sm:text-4xl font-bold text-center mb-5">
-              🧮 SAT Completed
+              🧮 SAT tugallangan
             </h1>
 
             <p className="text-center text-zinc-300 text-sm sm:text-lg leading-7">
-              Congratulations! 🎉
+              Tabriklaymiz! 🎉
               <br />
-              You have already completed this SAT test.
+              Siz ushbu SAT testini allaqachon bajargansiz.
             </p>
 
             <div className="bg-black rounded-xl sm:rounded-2xl p-5 mt-6 text-center">
 
               <p className="text-zinc-400 text-sm">
-                ⏳ Next SAT Cycle
+                ⏳ Keyingi SAT Cycle
               </p>
 
               <h2 className="text-xl sm:text-2xl font-bold mt-2 text-green-400">
@@ -1412,19 +1456,19 @@ export default function SATPage() {
             <div className="mt-6 space-y-3 text-sm sm:text-base">
 
               <p className="font-semibold">
-                🔓 When the next SAT Cycle becomes available:
+                🔓 Keyingi SAT Cycle ochilganda:
               </p>
 
               <p>
-                ✅ Brand New SAT Questions
+                ✅ Yangi SAT savollari
               </p>
 
               <p>
-                📚 New Problems
+                📚 Yangi masalalar
               </p>
 
               <p>
-                ⭐ Earn More Genius Points
+                ⭐ Yana Genius Points
               </p>
 
             </div>
@@ -1432,7 +1476,10 @@ export default function SATPage() {
             <div className="mt-6 p-4 rounded-xl bg-zinc-800">
 
               <p className="text-zinc-300 text-sm leading-6">
-                💡 While you wait, keep earning Genius Points by solving Olympiad, Certificate, Daily Problems and Math Sprint.
+                💡 Kutish vaqtida Olympiad,
+                Certificate, Daily Problems
+                va Math Sprint orqali
+                Genius Points to'plashda davom eting.
               </p>
 
             </div>
@@ -1446,7 +1493,7 @@ export default function SATPage() {
               }
               className="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl text-base sm:text-lg font-bold transition"
             >
-              Got it
+              Tushunarli
             </button>
 
           </div>

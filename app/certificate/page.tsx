@@ -361,17 +361,6 @@ export default function CertificatePage() {
     useState(0);
 
   /*
-    MUHIM:30
-
-    Old:
-    Record<number, string>
-
-    New:
-    Record<number, number>
-
-    Chunki backend correct answerni
-    index orqali tekshiradi.
-
     A = 0
     B = 1
     C = 2
@@ -546,10 +535,6 @@ export default function CertificatePage() {
       const info =
         getCycleInfo();
 
-      /* =====================================================
-         BEFORE NEXT CYCLE
-      ===================================================== */
-
       if (
         info.isBeforeCycle &&
         info.next
@@ -575,10 +560,6 @@ export default function CertificatePage() {
         return;
       }
 
-      /* =====================================================
-         CURRENT CYCLE
-      ===================================================== */
-
       if (info.current) {
         const target =
           new Date(
@@ -600,10 +581,6 @@ export default function CertificatePage() {
 
         return;
       }
-
-      /* =====================================================
-         NO CYCLE
-      ===================================================== */
 
       setCountdownTitle(
         "Next Cycle"
@@ -634,16 +611,6 @@ export default function CertificatePage() {
     questions.length > 0
       ? questions[currentQuestion]
       : null;
-
-  /*
-    selectedAnswer endi option index.
-
-    Masalan:
-    A -> 0
-    B -> 1
-    C -> 2
-    D -> 3
-  */
 
   const selectedAnswer =
     question
@@ -771,11 +738,6 @@ export default function CertificatePage() {
       return;
     }
 
-    /*
-      Barcha savollarga javob berilganini
-      tekshiramiz.
-    */
-
     if (
       Object.keys(answers)
         .length !==
@@ -829,18 +791,6 @@ export default function CertificatePage() {
             body: JSON.stringify({
               username:
                 user.username,
-
-              /*
-                answers endi:
-
-                {
-                  "1": 0,
-                  "2": 2,
-                  "3": 1
-                }
-
-                ko'rinishida yuboriladi.
-              */
 
               answers,
 
@@ -929,12 +879,6 @@ export default function CertificatePage() {
           ?.play()
           .catch(() => {});
       }
-
-      /*
-        Javoblarni tozalaymiz.
-
-        Result modal ochiq qoladi.
-      */
 
       setAnswers({});
       setCurrentQuestion(0);
@@ -1235,18 +1179,6 @@ export default function CertificatePage() {
                   65 + index
                 );
 
-              /*
-                MUHIM:
-
-                selectedAnswer = index
-
-                Masalan:
-                A -> 0
-                B -> 1
-                C -> 2
-                D -> 3
-              */
-
               const selected =
                 selectedAnswer ===
                 index;
@@ -1368,95 +1300,161 @@ export default function CertificatePage() {
           RESULT MODAL
       ===================================================== */}
 
-      {result && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-5">
+      {result && (() => {
+        const percentage =
+          result.totalQuestions > 0
+            ? (result.correct /
+                result.totalQuestions) *
+              100
+            : 0;
 
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-h-[90vh] overflow-y-auto">
+        const passed =
+          percentage >= 50;
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
-              🏆 {certificateTitle} Results
-            </h1>
+        return (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-5">
 
-            <div className="space-y-3 text-base sm:text-lg">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-h-[90vh] overflow-y-auto">
 
-              <p>
-                ⭐ Genius Points:{" "}
-                <span className="text-green-400 font-bold">
-                  +{result.points}
-                </span>
-              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
+                🏆 {certificateTitle} Results
+              </h1>
 
-              <p>
-                ✅ Correct:{" "}
-                <span className="text-green-400 font-bold">
-                  {result.correct}
-                </span>
-              </p>
+              <div className="space-y-3 text-base sm:text-lg">
 
-              <p>
-                ❌ Incorrect:{" "}
-                <span className="text-red-400 font-bold">
-                  {result.incorrect}
-                </span>
-              </p>
-
-              <p>
-                📊 Total:{" "}
-                <span className="text-white font-bold">
-                  {
-                    result.totalQuestions
-                  }
-                </span>
-              </p>
-
-              {result.rankUp && (
-                <p className="text-yellow-400 font-bold text-center">
-                  🎉 Rank Up!
+                <p>
+                  ⭐ Genius Points:{" "}
+                  <span className="text-green-400 font-bold">
+                    +{result.points}
+                  </span>
                 </p>
+
+                <p>
+                  ✅ Correct:{" "}
+                  <span className="text-green-400 font-bold">
+                    {result.correct}
+                  </span>
+                </p>
+
+                <p>
+                  ❌ Incorrect:{" "}
+                  <span className="text-red-400 font-bold">
+                    {result.incorrect}
+                  </span>
+                </p>
+
+                <p>
+                  📊 Total:{" "}
+                  <span className="text-white font-bold">
+                    {
+                      result.totalQuestions
+                    }
+                  </span>
+                </p>
+
+                {/* =================================================
+                    SCORE %
+                ================================================= */}
+
+                <p>
+                  📈 Score:{" "}
+                  <span
+                    className={`font-bold ${
+                      passed
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {Math.round(
+                      percentage
+                    )}
+                    %
+                  </span>
+                </p>
+
+                {result.rankUp && (
+                  <p className="text-yellow-400 font-bold text-center">
+                    🎉 Rank Up!
+                  </p>
+                )}
+
+              </div>
+
+              {/* =================================================
+                  SECRET
+              ================================================= */}
+
+              {passed ? (
+                <div className="mt-6 rounded-2xl border border-green-500/30 bg-green-500/10 p-5 text-center">
+
+                  <p className="text-zinc-400 text-sm mb-2">
+                    🔐 Secret
+                  </p>
+
+                  <p className="text-green-400 text-3xl sm:text-4xl font-black tracking-widest">
+                    P
+                  </p>
+
+                  <p className="text-zinc-500 text-xs mt-2">
+                    Score 50% or higher
+                  </p>
+
+                </div>
+              ) : (
+                <div className="mt-6 rounded-2xl border border-zinc-800 bg-black p-5 text-center">
+
+                  <p className="text-zinc-500 text-sm">
+                    🔐 Secret
+                  </p>
+
+                  <p className="text-zinc-600 text-sm mt-2">
+                    Reach 50% to unlock the secret.
+                  </p>
+
+                </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => {
+
+                  if (
+                    result.rankUp
+                  ) {
+                    setRankData({
+                      oldRank:
+                        result.oldRank ||
+                        "",
+
+                      newRank:
+                        result.newRank ||
+                        "",
+                    });
+
+                    setResult(null);
+
+                    setShowRankUp(
+                      true
+                    );
+                  } else {
+                    setResult(null);
+
+                    setCompleted(
+                      true
+                    );
+                  }
+
+                }}
+                className="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-base sm:text-lg transition"
+              >
+                Continue
+              </button>
 
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-
-                if (
-                  result.rankUp
-                ) {
-                  setRankData({
-                    oldRank:
-                      result.oldRank ||
-                      "",
-
-                    newRank:
-                      result.newRank ||
-                      "",
-                  });
-
-                  setResult(null);
-
-                  setShowRankUp(
-                    true
-                  );
-                } else {
-                  setResult(null);
-
-                  setCompleted(
-                    true
-                  );
-                }
-
-              }}
-              className="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-base sm:text-lg transition"
-            >
-              Continue
-            </button>
-
           </div>
-
-        </div>
-      )}
+        );
+      })()}
 
       {/* =====================================================
           COMPLETED / NEXT CYCLE MODAL
@@ -1476,10 +1474,6 @@ export default function CertificatePage() {
               <br />
               You have successfully completed this Certificate.
             </p>
-
-            {/* =================================================
-                NEXT CYCLE
-            ================================================= */}
 
             <div className="bg-black border border-zinc-800 rounded-xl sm:rounded-2xl p-5 mt-6 text-center">
 

@@ -2,10 +2,21 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
 /* =========================================================
-   GENESIS CYCLE START
+   CYCLE RESET DATES
 ========================================================= */
 
-const RESET_DATE = new Date("2026-08-17T00:00:00+05:00");
+const CYCLES = [
+  {
+    cycle: 1,
+    name: "Genesis Cycle",
+    resetDate: new Date("2026-08-17T00:00:00+05:00"),
+  },
+  {
+    cycle: 2,
+    name: "Independence Cycle",
+    resetDate: new Date("2026-08-31T00:00:00+05:00"),
+  },
+];
 
 /* =========================================================
    POST
@@ -16,18 +27,15 @@ export async function POST() {
     const now = new Date();
 
     /* =======================================================
-       BEFORE GENESIS START
+       FIND LATEST CYCLE THAT SHOULD HAVE STARTED
     ======================================================= */
 
-    if (now < RESET_DATE) {
-      return NextResponse.json({
-        success: true,
-        reset: false,
-        currentCycle: 1,
-        cycleName: "Genesis Cycle",
-        message:
-          "Genesis Cycle reset is not available yet.",
-      });
+    let currentCycle = CYCLES[0];
+
+    for (const cycle of CYCLES) {
+      if (now >= cycle.resetDate) {
+        currentCycle = cycle;
+      }
     }
 
     /* =======================================================
@@ -39,24 +47,29 @@ export async function POST() {
     const users = db.collection("users");
 
     /* =======================================================
-       CHECK IF GENESIS RESET WAS ALREADY COMPLETED
+       CHECK IF THIS CYCLE RESET WAS ALREADY COMPLETED
     ======================================================= */
 
     const resetMarker = await db
       .collection("system")
       .findOne({
-        key: "cycle-reset-1",
+        key: `cycle-reset-${currentCycle.cycle}`,
       });
 
     if (resetMarker) {
       return NextResponse.json({
         success: true,
+
         reset: false,
+
         alreadyReset: true,
-        currentCycle: 1,
-        cycleName: "Genesis Cycle",
+
+        currentCycle: currentCycle.cycle,
+
+        cycleName: currentCycle.name,
+
         message:
-          "Genesis Cycle reset has already been completed.",
+          `${currentCycle.name} reset has already been completed.`,
       });
     }
 
@@ -109,6 +122,7 @@ export async function POST() {
           ------------------------------------------------ */
 
           "stats.national.attempts": 0,
+
           "stats.national.correct": 0,
 
           /* -----------------------------------------------
@@ -116,6 +130,7 @@ export async function POST() {
           ------------------------------------------------ */
 
           "stats.sat.attempts": 0,
+
           "stats.sat.correct": 0,
 
           /* -----------------------------------------------
@@ -123,6 +138,7 @@ export async function POST() {
           ------------------------------------------------ */
 
           "stats.olympiad.attempts": 0,
+
           "stats.olympiad.correct": 0,
 
           /* -----------------------------------------------
@@ -130,6 +146,7 @@ export async function POST() {
           ------------------------------------------------ */
 
           "stats.daily.attempts": 0,
+
           "stats.daily.correct": 0,
 
           /* -----------------------------------------------
@@ -137,15 +154,18 @@ export async function POST() {
           ------------------------------------------------ */
 
           "stats.mathSpirit.games": 0,
+
           "stats.mathSpirit.highestScore": 0,
+
           "stats.mathSpirit.totalScore": 0,
+
           "stats.mathSpirit.bestCombo": 0,
 
           /* -----------------------------------------------
              CURRENT CYCLE
           ------------------------------------------------ */
 
-          currentCycle: 1,
+          currentCycle: currentCycle.cycle,
 
           /* -----------------------------------------------
              CYCLE RESET DATE
@@ -157,7 +177,7 @@ export async function POST() {
              CYCLE START DATE
           ------------------------------------------------ */
 
-          cycleStartedAt: RESET_DATE,
+          cycleStartedAt: currentCycle.resetDate,
         },
       }
     );
@@ -192,7 +212,7 @@ export async function POST() {
 
         db.collection("leaderboard")
 
-      So the Global Leaderboard collection remains untouched.
+      Global Leaderboard remains untouched.
     */
 
     /* =======================================================
@@ -200,15 +220,15 @@ export async function POST() {
     ======================================================= */
 
     await db.collection("system").insertOne({
-      key: "cycle-reset-1",
+      key: `cycle-reset-${currentCycle.cycle}`,
 
-      cycle: 1,
+      cycle: currentCycle.cycle,
 
-      name: "Genesis Cycle",
+      name: currentCycle.name,
 
       resetAt: now,
 
-      scheduledResetAt: RESET_DATE,
+      scheduledResetAt: currentCycle.resetDate,
 
       usersReset: result.modifiedCount,
 
@@ -228,9 +248,9 @@ export async function POST() {
 
       reset: true,
 
-      cycle: 1,
+      cycle: currentCycle.cycle,
 
-      cycleName: "Genesis Cycle",
+      cycleName: currentCycle.name,
 
       usersReset: result.modifiedCount,
 
@@ -244,18 +264,20 @@ export async function POST() {
         "NOT DELETED",
 
       message:
-        "Genesis Cycle has started. All user progress has been reset successfully.",
+        `${currentCycle.name} has started. All user progress has been reset successfully.`,
     });
   } catch (error) {
     console.error(
-      "GENESIS CYCLE RESET ERROR:",
+      "CYCLE RESET ERROR:",
       error
     );
 
     return NextResponse.json(
       {
         success: false,
-        error: "Genesis Cycle reset failed.",
+
+        error:
+          "Cycle reset failed.",
       },
       {
         status: 500,

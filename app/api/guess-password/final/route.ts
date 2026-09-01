@@ -1,0 +1,449 @@
+import { NextResponse } from "next/server";
+import crypto from "crypto";
+
+import { connectDB } from "@/lib/mongodb";
+
+export const dynamic = "force-dynamic";
+
+/*
+=========================================================
+  VERIFY 4-DIGIT SESSION TOKEN
+=========================================================
+*/
+
+function verifyToken(token: string): boolean {
+  const secret = process.env.GUESS_PASSWORD_SESSION_SECRET;
+
+  if (!secret) {
+    console.error("GUESS_PASSWORD_SESSION_SECRET is missing.");
+    return false;
+  }
+
+  const parts = token.split(".");
+
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const [timestamp, signature] = parts;
+
+  const timestampNumber = Number(timestamp);
+
+  if (!Number.isFinite(timestampNumber)) {
+    return false;
+  }
+
+  const age = Date.now() - timestampNumber;
+
+  if (age < 0 || age > 30 * 60 * 1000) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(`guess-password:${timestamp}`)
+    .digest("hex");
+
+  const signatureBuffer = Buffer.from(signature, "utf8");
+  const expectedBuffer = Buffer.from(expected, "utf8");
+
+  if (signatureBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    signatureBuffer,
+    expectedBuffer
+  );
+}
+
+/*
+=========================================================
+  POST
+=========================================================
+*/
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    /*
+    =====================================================
+      PASSWORD
+    =====================================================
+    */
+
+    const password =
+      typeof body?.password === "string"
+        ? body.password.trim().toUpperCase()
+        : "";
+
+    /*
+    =====================================================
+      TOKEN
+    =====================================================
+    */
+
+    const token =
+      typeof body?.token === "string"
+        ? body.token.trim()
+        : "";
+
+    /*
+    =====================================================
+      USER IDENTIFIER
+      Login'dan username yoki email kelishi mumkin.
+    =====================================================
+    */
+
+    const username =
+      typeof body?.username === "string"
+        ? body.username.trim()
+        : "";
+
+    const email =
+      typeof body?.email === "string"
+        ? body.email.trim()
+        : "";
+
+    const identifier = username || email;
+
+    /*
+    =====================================================
+      1. TOKENNI TEKSHIRISH
+    =====================================================
+    */
+
+    if (!verifyToken(token)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Avval 4 belgili kodni to'g'ri toping.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      2. USER IDENTIFIER
+    =====================================================
+    */
+
+    if (!identifier) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "User aniqlanmadi. Login ma'lumotlari yuborilmadi.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      3. SERVER PASSWORD
+    =====================================================
+    */
+
+    const correctPassword =
+      process.env.GUESS_PASSWORD?.trim().toUpperCase();
+
+    if (!correctPassword) {
+      console.error("GUESS_PASSWORD is missing.");
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Server configuration error.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      PASSWORD CONFIGURATION
+    =====================================================
+    */
+
+    if (!/^[A-Z0-9]{8}$/.test(correctPassword)) {
+      console.error(
+        "GUESS_PASSWORD must contain exactly 8 letters/numbers."
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Server password configuration error.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      4. PASSWORD LENGTH
+    =====================================================
+    */
+
+    if (password.length !== 8) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Password 8 ta belgidan iborat bo'lishi kerak.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      5. PASSWORD CHARACTERS
+    =====================================================
+    */
+
+    if (!/^[A-Z0-9]{8}$/.test(password)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Faqat harf va raqamlardan foydalaning.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      6. SECURE PASSWORD COMPARISON
+    =====================================================
+    */
+
+    const passwordBuffer = Buffer.from(password, "utf8");
+    const correctBuffer = Buffer.from(
+      correctPassword,
+      "utf8"
+    );
+
+    const isCorrect = crypto.timingSafeEqual(
+      passwordBuffer,
+      correctBuffer
+    );
+
+    /*
+    =====================================================
+      7. WRONG PASSWORD
+    =====================================================
+    */
+
+    if (!isCorrect) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "8 belgili password noto'g'ri.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      8. DATABASE
+    =====================================================
+    */
+
+    const db = await connectDB();
+    const users = db.collection("users");
+
+    /*
+    =====================================================
+      9. FIND USER
+      Username yoki email bilan.
+      Case-insensitive.
+    =====================================================
+    */
+
+    const user = await users.findOne({
+      $or: [
+        {
+          username: {
+            $regex: `^${escapeRegex(identifier)}$`,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: `^${escapeRegex(identifier)}$`,
+            $options: "i",
+          },
+        },
+      ],
+    });
+
+    /*
+    =====================================================
+      USER NOT FOUND
+    =====================================================
+    */
+
+    if (!user) {
+      console.error(
+        "GUESS PASSWORD USER NOT FOUND:",
+        identifier
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User topilmadi.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      10. ATOMIC +700 GP
+    =====================================================
+    */
+
+    const updateResult = await users.updateOne(
+      {
+        _id: user._id,
+        guessPasswordRewardClaimed: {
+          $ne: true,
+        },
+      },
+      {
+        $inc: {
+          geniusPoints: 700,
+        },
+        $set: {
+          guessPasswordRewardClaimed: true,
+          guessPasswordRewardAt: new Date(),
+        },
+      }
+    );
+
+    /*
+    =====================================================
+      11. REWARD BERILDI
+    =====================================================
+    */
+
+    if (updateResult.modifiedCount === 1) {
+      const newGP =
+        Number(user.geniusPoints ?? 0) + 700;
+
+      console.log("=================================");
+      console.log("GUESS PASSWORD SUCCESS");
+      console.log("User:", user.username || user.email);
+      console.log("User ID:", String(user._id));
+      console.log("Old GP:", Number(user.geniusPoints ?? 0));
+      console.log("Reward:", 700);
+      console.log("New GP:", newGP);
+      console.log("=================================");
+
+      return NextResponse.json(
+        {
+          success: true,
+          alreadyClaimed: false,
+          reward: 700,
+          geniusPoints: newGP,
+          message:
+            "🎉 Tabriklaymiz! Password buzildi! +700 GP",
+        },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control":
+              "no-store, no-cache, must-revalidate",
+          },
+        }
+      );
+    }
+
+    /*
+    =====================================================
+      12. REWARD OLDIN OLINGAN
+    =====================================================
+    */
+
+    const currentUser = await users.findOne(
+      {
+        _id: user._id,
+      },
+      {
+        projection: {
+          geniusPoints: 1,
+          guessPasswordRewardClaimed: 1,
+        },
+      }
+    );
+
+    const currentGP =
+      Number(currentUser?.geniusPoints ?? 0);
+
+    return NextResponse.json(
+      {
+        success: true,
+        alreadyClaimed: true,
+        reward: 0,
+        geniusPoints: currentGP,
+        message:
+          "🎉 Password ochildi! 700 GP reward avval berilgan.",
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("=================================");
+    console.error("FINAL PASSWORD API ERROR:");
+    console.error(error);
+    console.error("=================================");
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Server Error.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+/*
+=========================================================
+  ESCAPE REGEX
+=========================================================
+*/
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

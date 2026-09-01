@@ -41,6 +41,10 @@ type Countdown = {
   seconds: number;
 };
 
+/* =========================================================
+   CYCLES
+========================================================= */
+
 const CYCLES: Cycle[] = [
   {
     name: "Genesis Cycle",
@@ -58,13 +62,40 @@ const CYCLES: Cycle[] = [
   },
 ];
 
+/* =========================================================
+   SECRET PASSWORD
+========================================================= */
+
+const SECRET_PASSWORD = "4";
+
+/*
+  User must get at least 50% to see the secret password.
+
+  Example:
+  10 questions
+  5 correct = 50% -> password visible
+  4 correct = 40% -> password hidden
+*/
+
+/* =========================================================
+   DATE HELPERS
+========================================================= */
+
 function getStartDate(cycle: Cycle) {
-  return new Date(`${cycle.start}T00:00:00+05:00`);
+  return new Date(
+    `${cycle.start}T00:00:00+05:00`
+  );
 }
 
 function getEndDate(cycle: Cycle) {
-  return new Date(`${cycle.end}T23:59:59+05:00`);
+  return new Date(
+    `${cycle.end}T23:59:59+05:00`
+  );
 }
+
+/* =========================================================
+   CURRENT CYCLE
+========================================================= */
 
 function getCurrentCycle(): Cycle | null {
   const now = new Date();
@@ -81,6 +112,10 @@ function getCurrentCycle(): Cycle | null {
   return null;
 }
 
+/* =========================================================
+   NEXT CYCLE
+========================================================= */
+
 function getNextCycle(): Cycle | null {
   const now = new Date();
 
@@ -95,14 +130,32 @@ function getNextCycle(): Cycle | null {
   return null;
 }
 
+/* =========================================================
+   COUNTDOWN
+========================================================= */
+
 function getCountdown(target: Date): Countdown {
-  const diff = Math.max(0, target.getTime() - Date.now());
+  const diff = Math.max(
+    0,
+    target.getTime() - Date.now()
+  );
 
-  const totalSeconds = Math.floor(diff / 1000);
+  const totalSeconds = Math.floor(
+    diff / 1000
+  );
 
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const days = Math.floor(
+    totalSeconds / 86400
+  );
+
+  const hours = Math.floor(
+    (totalSeconds % 86400) / 3600
+  );
+
+  const minutes = Math.floor(
+    (totalSeconds % 3600) / 60
+  );
+
   const seconds = totalSeconds % 60;
 
   return {
@@ -113,11 +166,21 @@ function getCountdown(target: Date): Countdown {
   };
 }
 
-function formatCountdown(countdown: Countdown) {
+function formatCountdown(
+  countdown: Countdown
+) {
   return `${countdown.days} Days ${countdown.hours} Hours ${countdown.minutes} Minutes`;
 }
 
-function MathText({ text }: { text: string }) {
+/* =========================================================
+   MATH TEXT
+========================================================= */
+
+function MathText({
+  text,
+}: {
+  text: string;
+}) {
   const parts: React.ReactNode[] = [];
 
   const regex =
@@ -127,25 +190,39 @@ function MathText({ text }: { text: string }) {
 
   text.replace(
     regex,
-    (match, exponent, fraction, offset) => {
+    (
+      match,
+      exponent,
+      fraction,
+      offset
+    ) => {
       const index = Number(offset);
 
       if (index > lastIndex) {
         parts.push(
-          <span key={`text-${lastIndex}`}>
-            {text.slice(lastIndex, index)}
+          <span
+            key={`text-${lastIndex}`}
+          >
+            {text.slice(
+              lastIndex,
+              index
+            )}
           </span>
         );
       }
 
       if (exponent) {
-        let value = exponent.slice(1);
+        let value =
+          exponent.slice(1);
 
         if (
           value.startsWith("(") &&
           value.endsWith(")")
         ) {
-          value = value.slice(1, -1);
+          value = value.slice(
+            1,
+            -1
+          );
         }
 
         parts.push(
@@ -157,8 +234,10 @@ function MathText({ text }: { text: string }) {
           </sup>
         );
       } else if (fraction) {
-        const [numerator, denominator] =
-          fraction.split("/");
+        const [
+          numerator,
+          denominator,
+        ] = fraction.split("/");
 
         parts.push(
           <span
@@ -176,7 +255,8 @@ function MathText({ text }: { text: string }) {
         );
       }
 
-      lastIndex = index + match.length;
+      lastIndex =
+        index + match.length;
 
       return match;
     }
@@ -184,7 +264,9 @@ function MathText({ text }: { text: string }) {
 
   if (lastIndex < text.length) {
     parts.push(
-      <span key={`text-end-${lastIndex}`}>
+      <span
+        key={`text-end-${lastIndex}`}
+      >
         {text.slice(lastIndex)}
       </span>
     );
@@ -192,6 +274,10 @@ function MathText({ text }: { text: string }) {
 
   return <>{parts}</>;
 }
+
+/* =========================================================
+   COUNTDOWN BOX
+========================================================= */
 
 function CountdownBox({
   title,
@@ -204,6 +290,7 @@ function CountdownBox({
 }) {
   return (
     <div className="mt-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+
       <p className="text-zinc-500 text-sm text-center">
         {title}
       </p>
@@ -213,10 +300,12 @@ function CountdownBox({
       </h3>
 
       <div className="grid grid-cols-4 gap-2 mt-5">
+
         <div className="bg-black rounded-xl p-3 text-center">
           <p className="text-xl sm:text-2xl font-bold text-white">
             {countdown.days}
           </p>
+
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             DAYS
           </p>
@@ -226,6 +315,7 @@ function CountdownBox({
           <p className="text-xl sm:text-2xl font-bold text-white">
             {countdown.hours}
           </p>
+
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             HOURS
           </p>
@@ -235,6 +325,7 @@ function CountdownBox({
           <p className="text-xl sm:text-2xl font-bold text-white">
             {countdown.minutes}
           </p>
+
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             MINUTES
           </p>
@@ -244,16 +335,23 @@ function CountdownBox({
           <p className="text-xl sm:text-2xl font-bold text-white">
             {countdown.seconds}
           </p>
+
           <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
             SECONDS
           </p>
         </div>
+
       </div>
     </div>
   );
 }
 
+/* =========================================================
+   OLYMPIAD PAGE
+========================================================= */
+
 export default function OlympiadPage() {
+
   const [cycle, setCycle] =
     useState<Cycle | null>(null);
 
@@ -268,13 +366,15 @@ export default function OlympiadPage() {
       seconds: 0,
     });
 
-  const [nextCycleCountdown, setNextCycleCountdown] =
-    useState<Countdown>({
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-    });
+  const [
+    nextCycleCountdown,
+    setNextCycleCountdown,
+  ] = useState<Countdown>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   const [questions, setQuestions] =
     useState<Question[]>([]);
@@ -307,38 +407,49 @@ export default function OlympiadPage() {
     } | null>(null);
 
   const successSound =
-    useRef<HTMLAudioElement | null>(null);
+    useRef<HTMLAudioElement | null>(
+      null
+    );
 
   const failSound =
-    useRef<HTMLAudioElement | null>(null);
+    useRef<HTMLAudioElement | null>(
+      null
+    );
 
   const perfectSound =
-    useRef<HTMLAudioElement | null>(null);
+    useRef<HTMLAudioElement | null>(
+      null
+    );
 
   const rankupSound =
-    useRef<HTMLAudioElement | null>(null);
+    useRef<HTMLAudioElement | null>(
+      null
+    );
 
-  /*
-  =========================================================
-  INITIALIZE CYCLE + COUNTDOWN
-  =========================================================
-  */
+  /* =========================================================
+     INITIALIZE CYCLE + COUNTDOWN
+  ========================================================= */
 
   useEffect(() => {
+
     function updateCycle() {
-      const current = getCurrentCycle();
-      const next = getNextCycle();
+      const current =
+        getCurrentCycle();
+
+      const next =
+        getNextCycle();
 
       setCycle(current);
       setNextCycle(next);
 
       /*
-      If a cycle is currently active,
-      countdown = time until this cycle ends.
+        Current cycle:
+        countdown until cycle ends.
       */
 
       if (current) {
-        const end = getEndDate(current);
+        const end =
+          getEndDate(current);
 
         setCountdown(
           getCountdown(end)
@@ -346,12 +457,13 @@ export default function OlympiadPage() {
       }
 
       /*
-      If there is no active cycle,
-      countdown = time until next cycle starts.
+        No current cycle:
+        countdown until next cycle.
       */
 
       if (!current && next) {
-        const start = getStartDate(next);
+        const start =
+          getStartDate(next);
 
         setCountdown(
           getCountdown(start)
@@ -359,11 +471,12 @@ export default function OlympiadPage() {
       }
 
       /*
-      Countdown for next cycle.
+        Next cycle countdown.
       */
 
       if (next) {
-        const start = getStartDate(next);
+        const start =
+          getStartDate(next);
 
         setNextCycleCountdown(
           getCountdown(start)
@@ -374,19 +487,30 @@ export default function OlympiadPage() {
     updateCycle();
 
     const interval =
-      setInterval(updateCycle, 1000);
+      setInterval(
+        updateCycle,
+        1000
+      );
 
     successSound.current =
-      new Audio("/sounds/success.mp3");
+      new Audio(
+        "/sounds/success.mp3"
+      );
 
     failSound.current =
-      new Audio("/sounds/fail.mp3");
+      new Audio(
+        "/sounds/fail.mp3"
+      );
 
     perfectSound.current =
-      new Audio("/sounds/perfect.mp3");
+      new Audio(
+        "/sounds/perfect.mp3"
+      );
 
     rankupSound.current =
-      new Audio("/sounds/rankup.mp3");
+      new Audio(
+        "/sounds/rankup.mp3"
+      );
 
     return () => {
       clearInterval(interval);
@@ -396,15 +520,15 @@ export default function OlympiadPage() {
       perfectSound.current?.pause();
       rankupSound.current?.pause();
     };
+
   }, []);
 
-  /*
-  =========================================================
-  LOAD QUESTIONS
-  =========================================================
-  */
+  /* =========================================================
+     LOAD QUESTIONS
+  ========================================================= */
 
   useEffect(() => {
+
     if (!cycle) {
       setQuestions([]);
       setQuestionsLoading(false);
@@ -412,16 +536,19 @@ export default function OlympiadPage() {
     }
 
     async function loadQuestions() {
+
       try {
+
         setQuestionsLoading(true);
 
-        const res = await fetch(
-          "/api/olympiad/questions",
-          {
-            method: "GET",
-            cache: "no-store",
-          }
-        );
+        const res =
+          await fetch(
+            "/api/olympiad/questions",
+            {
+              method: "GET",
+              cache: "no-store",
+            }
+          );
 
         if (!res.ok) {
           throw new Error(
@@ -445,33 +572,38 @@ export default function OlympiadPage() {
         setQuestions(
           data.questions
         );
+
       } catch (error) {
+
         console.error(
           "Olympiad questions error:",
           error
         );
 
         setQuestions([]);
+
       } finally {
+
         setQuestionsLoading(false);
+
       }
     }
 
     loadQuestions();
+
   }, [cycle]);
 
-  /*
-  =========================================================
-  CURRENT QUESTION
-  =========================================================
-  */
+  /* =========================================================
+     CURRENT QUESTION
+  ========================================================= */
 
   const question =
     questions[currentQuestion];
 
-  const selectedAnswer = question
-    ? answers[question.id] || ""
-    : "";
+  const selectedAnswer =
+    question
+      ? answers[question.id] || ""
+      : "";
 
   const progress =
     questions.length > 0
@@ -480,11 +612,9 @@ export default function OlympiadPage() {
         100
       : 0;
 
-  /*
-  =========================================================
-  SELECT ANSWER
-  =========================================================
-  */
+  /* =========================================================
+     SELECT ANSWER
+  ========================================================= */
 
   function selectAnswer(
     answer: string
@@ -497,17 +627,17 @@ export default function OlympiadPage() {
     }));
   }
 
-  /*
-  =========================================================
-  NEXT QUESTION
-  =========================================================
-  */
+  /* =========================================================
+     NEXT QUESTION
+  ========================================================= */
 
   function nextQuestion() {
+
     if (!selectedAnswer) {
       alert(
         "Please select an answer."
       );
+
       return;
     }
 
@@ -515,6 +645,7 @@ export default function OlympiadPage() {
       currentQuestion <
       questions.length - 1
     ) {
+
       setCurrentQuestion(
         (prev) => prev + 1
       );
@@ -526,14 +657,14 @@ export default function OlympiadPage() {
     }
   }
 
-  /*
-  =========================================================
-  PREVIOUS QUESTION
-  =========================================================
-  */
+  /* =========================================================
+     PREVIOUS QUESTION
+  ========================================================= */
 
   function previousQuestion() {
+
     if (currentQuestion > 0) {
+
       setCurrentQuestion(
         (prev) => prev - 1
       );
@@ -545,13 +676,12 @@ export default function OlympiadPage() {
     }
   }
 
-  /*
-  =========================================================
-  SUBMIT
-  =========================================================
-  */
+  /* =========================================================
+     SUBMIT
+  ========================================================= */
 
   async function handleSubmit() {
+
     const currentUser =
       localStorage.getItem(
         "currentUser"
@@ -561,6 +691,7 @@ export default function OlympiadPage() {
       alert(
         "Please sign in first."
       );
+
       return;
     }
 
@@ -571,19 +702,24 @@ export default function OlympiadPage() {
       alert(
         "Please answer all questions."
       );
+
       return;
     }
 
     let user: any;
 
     try {
+
       user = JSON.parse(
         currentUser
       );
+
     } catch {
+
       alert(
         "Your session is invalid. Please sign in again."
       );
+
       return;
     }
 
@@ -591,6 +727,7 @@ export default function OlympiadPage() {
       alert(
         "Please sign in first."
       );
+
       return;
     }
 
@@ -601,38 +738,47 @@ export default function OlympiadPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "/api/olympiad",
-        {
-          method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+      const res =
+        await fetch(
+          "/api/olympiad",
+          {
+            method: "POST",
 
-          body: JSON.stringify({
-            username:
-              user.username,
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-            answers,
+            body: JSON.stringify({
+              username:
+                user.username,
 
-            cycle:
-              cycle.theme,
-          }),
-        }
-      );
+              answers,
+
+              cycle:
+                cycle.theme,
+            }),
+          }
+        );
 
       const data =
         await res.json();
 
+      /* =====================================================
+         ERROR
+      ===================================================== */
+
       if (!res.ok) {
+
         if (
           data.error ===
           "You have already completed this Olympiad test."
         ) {
+
           setCompleted(true);
           setLoading(false);
+
           return;
         }
 
@@ -642,15 +788,25 @@ export default function OlympiadPage() {
         );
 
         setLoading(false);
+
         return;
       }
 
+      /* =====================================================
+         RESULT
+      ===================================================== */
+
       setResult(data);
+
+      /* =====================================================
+         PERFECT
+      ===================================================== */
 
       if (
         data.correct ===
         questions.length
       ) {
+
         perfectSound.current
           ?.play()
           .catch(() => {});
@@ -658,67 +814,95 @@ export default function OlympiadPage() {
         confetti({
           particleCount: 220,
           spread: 100,
+
           origin: {
             y: 0.6,
           },
         });
-      } else if (
+
+      }
+
+      /* =====================================================
+         SUCCESS
+      ===================================================== */
+
+      else if (
         data.correct > 0
       ) {
+
         successSound.current
           ?.play()
           .catch(() => {});
-      } else {
+
+      }
+
+      /* =====================================================
+         FAIL
+      ===================================================== */
+
+      else {
+
         failSound.current
           ?.play()
           .catch(() => {});
+
       }
 
       setAnswers({});
       setCurrentQuestion(0);
+
     } catch (error) {
+
       console.error(
         "Olympiad submit error:",
         error
       );
 
-      alert("Server Error.");
+      alert(
+        "Server Error."
+      );
+
     }
 
     setLoading(false);
   }
 
-  /*
-  =========================================================
-  LOADING
-  =========================================================
-  */
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (questionsLoading) {
+
     return (
       <div className="w-full min-h-[500px] flex items-center justify-center px-4">
+
         <div className="text-center">
+
           <div className="w-12 h-12 border-4 border-zinc-700 border-t-green-500 rounded-full animate-spin mx-auto mb-5" />
 
           <p className="text-zinc-400 text-base sm:text-lg">
             Loading Olympiad questions...
           </p>
+
         </div>
+
       </div>
     );
   }
 
-  /*
-  =========================================================
-  BEFORE / AFTER CYCLE
-  =========================================================
-  */
+  /* =========================================================
+     BEFORE / AFTER CYCLE
+  ========================================================= */
 
   if (!cycle) {
+
     if (!nextCycle) {
+
       return (
         <div className="w-full min-h-[500px] flex items-center justify-center px-4">
+
           <div className="text-center max-w-lg">
+
             <div className="text-5xl mb-5">
               🏆
             </div>
@@ -731,14 +915,18 @@ export default function OlympiadPage() {
               There is currently no
               upcoming Olympiad cycle.
             </p>
+
           </div>
+
         </div>
       );
     }
 
     return (
       <div className="w-full min-h-[500px] flex items-center justify-center px-4">
+
         <div className="text-center max-w-lg w-full">
+
           <div className="text-5xl mb-5">
             🏆
           </div>
@@ -764,21 +952,24 @@ export default function OlympiadPage() {
             The countdown updates
             automatically.
           </p>
+
         </div>
+
       </div>
     );
   }
 
-  /*
-  =========================================================
-  NO QUESTIONS
-  =========================================================
-  */
+  /* =========================================================
+     NO QUESTIONS
+  ========================================================= */
 
   if (questions.length === 0) {
+
     return (
       <div className="w-full min-h-[500px] flex items-center justify-center px-4">
+
         <div className="text-center max-w-lg w-full">
+
           <div className="text-5xl mb-5">
             🏆
           </div>
@@ -793,6 +984,7 @@ export default function OlympiadPage() {
           </p>
 
           <div className="mt-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+
             <p className="text-zinc-500 text-sm">
               Cycle ends in
             </p>
@@ -802,6 +994,7 @@ export default function OlympiadPage() {
                 countdown
               )}
             </p>
+
           </div>
 
           <button
@@ -813,26 +1006,30 @@ export default function OlympiadPage() {
           >
             Reload
           </button>
+
         </div>
+
       </div>
     );
   }
 
-  /*
-  =========================================================
-  MAIN PAGE
-  =========================================================
-  */
+  /* =========================================================
+     MAIN PAGE
+  ========================================================= */
 
   return (
     <div className="w-full max-w-5xl pb-16 sm:pb-20">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <div className="mb-6 sm:mb-8">
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
           <div>
+
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 sm:mb-3">
               Olympiad
             </h1>
@@ -841,6 +1038,7 @@ export default function OlympiadPage() {
               Solve the questions below
               and earn Genius Points.
             </p>
+
           </div>
 
           {/* CURRENT CYCLE */}
@@ -853,18 +1051,24 @@ export default function OlympiadPage() {
                 : "bg-green-500/10 border-green-500/20 text-green-400"
             }`}
           >
+
             {cycle.theme ===
             "independence"
               ? "🇺🇿 Independence Cycle"
               : "✦ Genesis Cycle"}
+
           </div>
+
         </div>
 
         {/* CURRENT CYCLE COUNTDOWN */}
 
         <div className="mt-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5">
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
             <div>
+
               <p className="text-zinc-500 text-xs uppercase tracking-wider">
                 Current Cycle
               </p>
@@ -872,9 +1076,11 @@ export default function OlympiadPage() {
               <p className="text-white font-bold text-sm sm:text-base mt-1">
                 {cycle.name}
               </p>
+
             </div>
 
             <div className="text-left sm:text-right">
+
               <p className="text-zinc-500 text-xs">
                 Cycle ends in
               </p>
@@ -884,15 +1090,23 @@ export default function OlympiadPage() {
                   countdown
                 )}
               </p>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
-      {/* PROGRESS */}
+      {/* =====================================================
+          PROGRESS
+      ===================================================== */}
 
       <div className="mb-5 sm:mb-8">
+
         <div className="flex justify-between items-center mb-2 sm:mb-3 gap-4">
+
           <span className="text-zinc-400 text-sm sm:text-base font-medium">
             Question{" "}
             {currentQuestion + 1} /{" "}
@@ -902,19 +1116,25 @@ export default function OlympiadPage() {
           <span className="text-green-400 text-sm sm:text-base font-bold">
             {Math.round(progress)}%
           </span>
+
         </div>
 
         <div className="w-full h-2.5 sm:h-3 bg-zinc-800 rounded-full overflow-hidden">
+
           <div
             className="h-full bg-green-500 rounded-full transition-all duration-500"
             style={{
               width: `${progress}%`,
             }}
           />
+
         </div>
+
       </div>
 
-      {/* QUESTION CARD */}
+      {/* =====================================================
+          QUESTION CARD
+      ===================================================== */}
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8">
 
@@ -923,6 +1143,7 @@ export default function OlympiadPage() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5 sm:mb-8">
 
           <div>
+
             <p className="text-xs sm:text-sm text-zinc-500 uppercase tracking-wider mb-1.5 sm:mb-2">
               Question{" "}
               {currentQuestion + 1}
@@ -931,11 +1152,13 @@ export default function OlympiadPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-white">
               Olympiad Problem
             </h2>
+
           </div>
 
           <span className="self-start sm:self-auto bg-green-600 px-4 py-2 rounded-full font-bold text-sm sm:text-base text-white whitespace-nowrap">
             +{question.points} GP
           </span>
+
         </div>
 
         {/* QUESTION */}
@@ -946,33 +1169,40 @@ export default function OlympiadPage() {
 
           {question.image && (
             <div className="mb-6 flex justify-center">
+
               <img
                 src={question.image}
                 alt={`Question ${question.id} diagram`}
                 className="max-w-full h-auto rounded-xl border border-zinc-800"
               />
+
             </div>
           )}
 
           {/* TEXT */}
 
           <div className="text-base sm:text-lg md:text-xl text-white leading-8 md:leading-9 whitespace-pre-line break-words overflow-wrap-anywhere">
+
             <MathText
               text={
                 question.question
               }
             />
+
           </div>
+
         </div>
 
         {/* OPTIONS */}
 
         <div className="space-y-3 sm:space-y-4">
+
           {question.options.map(
             (
               option,
               index
             ) => {
+
               const letter =
                 String.fromCharCode(
                   65 + index
@@ -997,6 +1227,7 @@ export default function OlympiadPage() {
                       : "border-zinc-800 bg-black hover:border-zinc-600"
                   }`}
                 >
+
                   <span
                     className={`shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center font-bold text-sm sm:text-base ${
                       selected
@@ -1008,11 +1239,13 @@ export default function OlympiadPage() {
                   </span>
 
                   <span className="flex-1 text-sm sm:text-base md:text-lg text-white leading-7 pt-1 break-words whitespace-pre-line overflow-wrap-anywhere">
+
                     <MathText
                       text={
                         option
                       }
                     />
+
                   </span>
 
                   {selected && (
@@ -1020,10 +1253,12 @@ export default function OlympiadPage() {
                       ✓
                     </span>
                   )}
+
                 </button>
               );
             }
           )}
+
         </div>
 
         {/* NAVIGATION */}
@@ -1047,6 +1282,7 @@ export default function OlympiadPage() {
 
           {currentQuestion ===
           questions.length - 1 ? (
+
             <button
               type="button"
               onClick={
@@ -1062,7 +1298,9 @@ export default function OlympiadPage() {
                 ? "Submitting..."
                 : "Submit Olympiad ✓"}
             </button>
+
           ) : (
+
             <button
               type="button"
               onClick={
@@ -1075,13 +1313,19 @@ export default function OlympiadPage() {
             >
               Next Question →
             </button>
+
           )}
+
         </div>
+
       </div>
 
-      {/* RESULT MODAL */}
+      {/* =====================================================
+          RESULT MODAL
+      ===================================================== */}
 
       {result && (
+
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
 
           <div className="bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full max-w-[650px] max-h-[90vh] overflow-y-auto">
@@ -1130,8 +1374,37 @@ export default function OlympiadPage() {
                 </span>
               </p>
 
+              {/* =================================================
+                  SECRET PASSWORD
+              ================================================= */}
+
+              {result.total > 0 &&
+                result.correct /
+                  result.total >=
+                  0.5 && (
+
+                  <div className="mt-5 p-5 rounded-2xl bg-green-500/10 border border-green-500/30">
+
+                    <p className="text-green-400 text-sm sm:text-base font-bold text-center mb-2">
+                      🔐 Secret Password
+                    </p>
+
+                    <p className="text-white text-3xl sm:text-4xl font-black text-center tracking-widest">
+                      {SECRET_PASSWORD}
+                    </p>
+
+                    <p className="text-zinc-400 text-xs sm:text-sm text-center mt-2">
+                      You scored 50% or higher.
+                    </p>
+
+                  </div>
+
+                )}
+
               {result.rankUp && (
+
                 <p className="text-yellow-400 font-bold text-center">
+
                   🎉 Rank Up!
 
                   <br />
@@ -1141,7 +1414,9 @@ export default function OlympiadPage() {
                     {" → "}
                     {result.newRank}
                   </span>
+
                 </p>
+
               )}
 
             </div>
@@ -1153,6 +1428,7 @@ export default function OlympiadPage() {
                 if (
                   result.rankUp
                 ) {
+
                   setRankData({
                     oldRank:
                       result.oldRank,
@@ -1168,15 +1444,23 @@ export default function OlympiadPage() {
                   );
 
                   setTimeout(() => {
+
                     rankupSound.current
                       ?.play()
                       .catch(
                         () => {}
                       );
+
                   }, 200);
+
                 } else {
+
                   setResult(null);
-                  setCompleted(true);
+
+                  setCompleted(
+                    true
+                  );
+
                 }
 
               }}
@@ -1186,12 +1470,17 @@ export default function OlympiadPage() {
             </button>
 
           </div>
+
         </div>
+
       )}
 
-      {/* COMPLETED / NEXT CYCLE MODAL */}
+      {/* =====================================================
+          COMPLETED / NEXT CYCLE MODAL
+      ===================================================== */}
 
       {completed && (
+
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
 
           <div className="bg-zinc-900 border border-zinc-700 rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full max-w-[650px] max-h-[90vh] overflow-y-auto">
@@ -1201,13 +1490,18 @@ export default function OlympiadPage() {
             </h1>
 
             <p className="text-center text-zinc-300 text-base sm:text-xl leading-8">
+
               Congratulations! 🎉
+
               <br />
+
               You have completed this
               Olympiad test.
+
             </p>
 
             {nextCycle ? (
+
               <CountdownBox
                 title="Next Olympiad Cycle"
                 cycleName={
@@ -1217,14 +1511,19 @@ export default function OlympiadPage() {
                   nextCycleCountdown
                 }
               />
+
             ) : (
+
               <div className="mt-6 bg-zinc-800 rounded-2xl p-5 text-center">
+
                 <p className="text-zinc-300">
                   No upcoming cycle
                   is currently
                   scheduled.
                 </p>
+
               </div>
+
             )}
 
             <div className="mt-6 p-5 rounded-2xl bg-zinc-800">
@@ -1236,10 +1535,15 @@ export default function OlympiadPage() {
               </p>
 
               <div className="mt-4 space-y-2 text-sm sm:text-base">
+
                 <p>📘 SAT</p>
+
                 <p>📚 Certificate</p>
+
                 <p>⚡ Math Sprint</p>
+
                 <p>🧩 Daily Problems</p>
+
               </div>
 
             </div>
@@ -1255,24 +1559,33 @@ export default function OlympiadPage() {
             </button>
 
           </div>
+
         </div>
+
       )}
 
-      {/* RANK UP MODAL */}
+      {/* =====================================================
+          RANK UP MODAL
+      ===================================================== */}
 
       {showRankUp &&
         rankData && (
+
           <RankUpModal
             open={
               showRankUp
             }
+
             oldRank={
               rankData.oldRank
             }
+
             newRank={
               rankData.newRank
             }
+
             onClose={() => {
+
               setShowRankUp(
                 false
               );
@@ -1281,16 +1594,13 @@ export default function OlympiadPage() {
                 null
               );
 
-              /*
-              After rank-up modal closes,
-              show next cycle countdown.
-              */
-
               setCompleted(
                 true
               );
+
             }}
           />
+
         )}
 
     </div>

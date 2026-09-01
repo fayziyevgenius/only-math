@@ -1,81 +1,43 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import {
-  GENESIS_END_DATE,
-  GENESIS_START_DATE,
   getQuestionForDay,
+  getCycleForDate,
 } from "@/lib/dailyQuestions";
 
 export const dynamic = "force-dynamic";
 
-const CYCLE_NAME = "Genesis Cycle";
+/* =========================================================
+   TASHKENT DATE
+========================================================= */
 
 function getTashkentDateKey(): string {
-  const formatter = new Intl.DateTimeFormat(
-    "en-CA",
-    {
-      timeZone: "Asia/Tashkent",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }
-  );
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tashkent",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
-  const parts = formatter.formatToParts(
-    new Date()
-  );
+  const parts = formatter.formatToParts(new Date());
 
-  const year = parts.find(
-    (part) => part.type === "year"
-  )?.value;
+  const year =
+    parts.find((part) => part.type === "year")?.value ?? "";
 
-  const month = parts.find(
-    (part) => part.type === "month"
-  )?.value;
+  const month =
+    parts.find((part) => part.type === "month")?.value ?? "";
 
-  const day = parts.find(
-    (part) => part.type === "day"
-  )?.value;
+  const day =
+    parts.find((part) => part.type === "day")?.value ?? "";
 
   return `${year}-${month}-${day}`;
 }
 
-function dateToUtc(dateKey: string) {
-  return new Date(`${dateKey}T00:00:00Z`);
-}
+/* =========================================================
+   RANK
+========================================================= */
 
-function getCycleDay(
-  dateKey: string
-): number | null {
-  const start = dateToUtc(
-    GENESIS_START_DATE
-  );
-
-  const end = dateToUtc(
-    GENESIS_END_DATE
-  );
-
-  const current = dateToUtc(dateKey);
-
-  if (
-    current < start ||
-    current > end
-  ) {
-    return null;
-  }
-
-  const difference =
-    current.getTime() -
-    start.getTime();
-
-  return (
-    Math.floor(
-      difference / (1000 * 60 * 60 * 24)
-    ) + 1
-  );
-}
-
-function getRank(totalPoints: number) {
+function getRank(totalPoints: number): string {
   if (totalPoints >= 3000) {
     return "👑 Math Genius";
   }
@@ -99,14 +61,262 @@ function getRank(totalPoints: number) {
   return "🌱 Beginner";
 }
 
-export async function POST(
-  req: Request
-) {
-  try {
-    const body = await req.json();
+/* =========================================================
+   GET
+   Today's Daily Question
+========================================================= */
 
-    const username = body?.username;
-    const answer = body?.answer;
+export async function GET(req: Request) {
+  try {
+    const { searchParams } =
+      new URL(req.url);
+
+    const username =
+      searchParams.get("username")?.trim() || "";
+
+    /* =======================================================
+       TODAY
+    ======================================================= */
+
+    const today =
+      getTashkentDateKey();
+
+    /* =======================================================
+       ACTIVE CYCLE
+       
+       Genesis:
+       17 Aug → 30 Aug
+
+       Independence:
+       31 Aug → 13 Sep
+    ======================================================= */
+
+    const activeCycle =
+      getCycleForDate(today);
+
+    if (!activeCycle) {
+      return NextResponse.json(
+        {
+          success: true,
+          active: false,
+          question: null,
+          message:
+            "There is no active Daily Challenge today.",
+        },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control":
+              "no-store, max-age=0",
+          },
+        }
+      );
+    }
+
+    const {
+      cycle,
+      name: cycleName,
+      day: cycleDay,
+    } = activeCycle;
+
+    /* =======================================================
+       GET QUESTION
+    ======================================================= */
+
+    const question =
+      getQuestionForDay(
+        cycle,
+        cycleDay
+      );
+
+    if (!question) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Today's Daily Challenge is not configured.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /* =======================================================
+       USER STATUS
+       
+       username berilsa:
+       today's question completed yoki yo'qligini
+       ham qaytaramiz.
+    ======================================================= */
+
+    let completed = false;
+
+    let userStats = null;
+
+    if (username) {
+      const db =
+        await connectDB();
+
+      const user =
+        await db
+          .collection("users")
+          .findOne(
+            { username },
+            {
+              projection: {
+                _id: 0,
+                username: 1,
+                geniusPoints: 1,
+                currentCycleGP: 1,
+                streak: 1,
+                lastDailyDate: 1,
+                lastDailyCycle: 1,
+                lastDailyCycleDay: 1,
+                title: 1,
+                "stats.daily": 1,
+              },
+            }
+          );
+
+      if (user) {
+        completed =
+          user.lastDailyDate ===
+          today;
+
+        userStats = {
+          geniusPoints:
+            Number(
+              user.geniusPoints || 0
+            ),
+
+          currentCycleGP:
+            Number(
+              user.currentCycleGP || 0
+            ),
+
+          streak:
+            Number(
+              user.streak || 0
+            ),
+
+          title:
+            user.title ||
+            getRank(
+              Number(
+                user.geniusPoints || 0
+              )
+            ),
+
+          daily:
+            user.stats?.daily || {
+              attempts: 0,
+              correct: 0,
+              incorrect: 0,
+            },
+        };
+      }
+    }
+
+    /* =======================================================
+       RESPONSE
+    ======================================================= */
+
+    return NextResponse.json(
+      {
+        success: true,
+
+        active: true,
+
+        cycle,
+
+        cycleName,
+
+        cycleDay,
+
+        date: today,
+
+        completed,
+
+        question: {
+          id: question.id,
+
+          day: question.day,
+
+          cycle: question.cycle,
+
+          category:
+            question.category,
+
+          title:
+            question.title,
+
+          question:
+            question.question,
+
+          options:
+            question.options,
+
+          points:
+            question.points,
+
+          table:
+            question.table || null,
+        },
+
+        user: userStats,
+      },
+      {
+        status: 200,
+
+        headers: {
+          "Cache-Control":
+            "no-store, max-age=0",
+        },
+      }
+    );
+  } catch (error) {
+    console.error(
+      "Daily GET API error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Failed to load Daily Challenge.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+/* =========================================================
+   POST
+   Submit Today's Daily Question
+========================================================= */
+
+export async function POST(req: Request) {
+  try {
+    const body =
+      await req.json();
+
+    const username =
+      String(
+        body?.username || ""
+      ).trim();
+
+    const answer =
+      typeof body?.answer === "string"
+        ? body.answer.trim()
+        : "";
+
+    /* =======================================================
+       VALIDATION
+    ======================================================= */
 
     if (!username) {
       return NextResponse.json(
@@ -120,9 +330,7 @@ export async function POST(
       );
     }
 
-    if (
-      typeof answer !== "string"
-    ) {
+    if (!answer) {
       return NextResponse.json(
         {
           error:
@@ -134,14 +342,20 @@ export async function POST(
       );
     }
 
-    const db = await connectDB();
+    /* =======================================================
+       DATABASE
+    ======================================================= */
+
+    const db =
+      await connectDB();
+
+    const users =
+      db.collection("users");
 
     const user =
-      await db
-        .collection("users")
-        .findOne({
-          username,
-        });
+      await users.findOne({
+        username,
+      });
 
     if (!user) {
       return NextResponse.json(
@@ -155,18 +369,21 @@ export async function POST(
       );
     }
 
+    /* =======================================================
+       TODAY
+    ======================================================= */
+
     const today =
       getTashkentDateKey();
 
-    const cycleDay =
-      getCycleDay(today);
+    /* =======================================================
+       ACTIVE CYCLE
+    ======================================================= */
 
-    /*
-     * Genesis Cycle is active only
-     * from 17 August through 30 August.
-     */
+    const activeCycle =
+      getCycleForDate(today);
 
-    if (cycleDay === null) {
+    if (!activeCycle) {
       return NextResponse.json(
         {
           error:
@@ -178,8 +395,19 @@ export async function POST(
       );
     }
 
+    const {
+      cycle,
+      name: cycleName,
+      day: cycleDay,
+    } = activeCycle;
+
+    /* =======================================================
+       TODAY'S QUESTION
+    ======================================================= */
+
     const question =
       getQuestionForDay(
+        cycle,
         cycleDay
       );
 
@@ -195,19 +423,22 @@ export async function POST(
       );
     }
 
-    /*
-     * Prevent multiple submissions
-     * for the same day.
-     */
-
-    const lastDailyDate =
-      user.lastDailyDate;
+    /* =======================================================
+       DUPLICATE SUBMISSION
+       
+       Har cycleda har kun faqat 1 marta.
+    ======================================================= */
 
     if (
-      lastDailyDate === today
+      user.lastDailyDate ===
+      today
     ) {
       return NextResponse.json(
         {
+          success: false,
+
+          alreadyCompleted: true,
+
           error:
             "You have already completed today's Daily Challenge.",
         },
@@ -217,16 +448,18 @@ export async function POST(
       );
     }
 
-    const submittedAnswer =
-      answer.trim();
+    /* =======================================================
+       CHECK ANSWER
+    ======================================================= */
 
     const isCorrect =
-      submittedAnswer ===
+      answer ===
       question.correctAnswer;
 
-    const points = isCorrect
-      ? question.points
-      : 0;
+    const points =
+      isCorrect
+        ? question.points
+        : 0;
 
     const correct =
       isCorrect ? 1 : 0;
@@ -234,9 +467,11 @@ export async function POST(
     const incorrect =
       isCorrect ? 0 : 1;
 
-    const oldTitle =
-      user.title ||
-      "🌱 Beginner";
+    /* =======================================================
+       GLOBAL GP
+       
+       Global GP bu yerda RESET QILINMAYDI.
+    ======================================================= */
 
     const currentGlobalPoints =
       Number(
@@ -247,15 +482,24 @@ export async function POST(
       currentGlobalPoints +
       points;
 
+    /* =======================================================
+       TITLE
+    ======================================================= */
+
+    const oldTitle =
+      user.title ||
+      getRank(
+        currentGlobalPoints
+      );
+
     const newTitle =
       getRank(
         newGlobalPoints
       );
 
-    /*
-     * Cycle GP is separate from
-     * Global GP.
-     */
+    /* =======================================================
+       CURRENT CYCLE GP
+    ======================================================= */
 
     const currentCyclePoints =
       Number(
@@ -266,31 +510,46 @@ export async function POST(
       currentCyclePoints +
       points;
 
+    /* =======================================================
+       UPDATE
+    ======================================================= */
+
     const update: any = {
       $set: {
-        lastDailyDate: today,
+        lastDailyDate:
+          today,
+
         lastDailyCycleDay:
           cycleDay,
+
         lastDailyCycle:
-          CYCLE_NAME,
-        title: newTitle,
+          cycleName,
+
+        title:
+          newTitle,
+
         currentCycleGP:
           newCyclePoints,
       },
 
       $inc: {
-        geniusPoints: points,
+        geniusPoints:
+          points,
 
-        "stats.daily.attempts": 1,
-        "stats.daily.correct": correct,
+        "stats.daily.attempts":
+          1,
+
+        "stats.daily.correct":
+          correct,
+
         "stats.daily.incorrect":
           incorrect,
       },
     };
 
-    /*
-     * Streak
-     */
+    /* =======================================================
+       STREAK
+    ======================================================= */
 
     if (
       user.lastSolvedDate !==
@@ -302,29 +561,31 @@ export async function POST(
         today;
     }
 
-    await db
-      .collection("users")
-      .updateOne(
-        {
-          username,
-        },
-        update
-      );
+    /* =======================================================
+       SAVE USER
+    ======================================================= */
 
-    /*
-     * Save Daily submission.
-     *
-     * This gives us a real server-side
-     * history and prevents relying only
-     * on localStorage.
-     */
+    await users.updateOne(
+      {
+        username,
+      },
+      update
+    );
+
+    /* =======================================================
+       SAVE SUBMISSION
+    ======================================================= */
 
     await db
-      .collection("daily_submissions")
+      .collection(
+        "daily_submissions"
+      )
       .insertOne({
         username,
 
-        cycle: CYCLE_NAME,
+        cycle,
+
+        cycleName,
 
         cycleDay,
 
@@ -336,8 +597,7 @@ export async function POST(
         category:
           question.category,
 
-        answer:
-          submittedAnswer,
+        answer,
 
         correct:
           isCorrect,
@@ -348,55 +608,67 @@ export async function POST(
           new Date(),
       });
 
-    return NextResponse.json({
-      success: true,
+    /* =======================================================
+       RESPONSE
+    ======================================================= */
 
-      cycle: CYCLE_NAME,
+    return NextResponse.json(
+      {
+        success: true,
 
-      cycleDay,
+        cycle,
 
-      date: today,
+        cycleName,
 
-      questionId:
-        question.id,
+        cycleDay,
 
-      category:
-        question.category,
+        date: today,
 
-      points,
+        questionId:
+          question.id,
 
-      correct,
+        category:
+          question.category,
 
-      incorrect,
+        points,
 
-      globalPoints:
-        newGlobalPoints,
+        correct,
 
-      cyclePoints:
-        newCyclePoints,
+        incorrect,
 
-      rankUp:
-        oldTitle !==
-        newTitle,
+        globalPoints:
+          newGlobalPoints,
 
-      oldRank:
-        oldTitle,
+        cyclePoints:
+          newCyclePoints,
 
-      newRank:
-        newTitle,
+        rankUp:
+          oldTitle !==
+          newTitle,
 
-      message: isCorrect
-        ? `Correct! You received ${points} GP.`
-        : "Incorrect answer. +0 GP.",
-    });
+        oldRank:
+          oldTitle,
+
+        newRank:
+          newTitle,
+
+        message: isCorrect
+          ? `Correct! You received ${points} GP.`
+          : "Incorrect answer. +0 GP.",
+      },
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error(
-      "Daily API error:",
+      "Daily POST API error:",
       error
     );
 
     return NextResponse.json(
       {
+        success: false,
         error:
           "Server Error",
       },

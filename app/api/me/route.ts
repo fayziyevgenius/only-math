@@ -2,18 +2,46 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { getTitle } from "@/lib/title";
 
+export const dynamic = "force-dynamic";
+
+/*
+=========================================================
+  ESCAPE REGEX
+=========================================================
+*/
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/*
+=========================================================
+  POST
+=========================================================
+*/
+
 export async function POST(req: Request) {
   try {
+    /*
+    =====================================================
+      READ BODY
+    =====================================================
+    */
+
     const body = await req.json();
 
     const identifier = String(
-      body?.username || body?.email || ""
+      body?.username ?? body?.email ?? ""
     ).trim();
 
     if (!identifier) {
       return NextResponse.json(
-        { error: "Username or email is required" },
-        { status: 400 }
+        {
+          error: "Username or email is required",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
@@ -22,27 +50,37 @@ export async function POST(req: Request) {
     console.log("Identifier:", identifier);
     console.log("=================================");
 
+    /*
+    =====================================================
+      DATABASE
+    =====================================================
+    */
+
     const db = await connectDB();
     const users = db.collection("users");
 
-    /* =====================================================
-       FIND USER
-       Username OR Email
-       Case-insensitive
-    ===================================================== */
+    /*
+    =====================================================
+      FIND USER
+      Username OR Email
+      Case insensitive
+    =====================================================
+    */
+
+    const safeIdentifier = escapeRegex(identifier);
 
     const user = await users.findOne(
       {
         $or: [
           {
             username: {
-              $regex: `^${escapeRegex(identifier)}$`,
+              $regex: `^${safeIdentifier}$`,
               $options: "i",
             },
           },
           {
             email: {
-              $regex: `^${escapeRegex(identifier)}$`,
+              $regex: `^${safeIdentifier}$`,
               $options: "i",
             },
           },
@@ -65,6 +103,12 @@ export async function POST(req: Request) {
         : null
     );
 
+    /*
+    =====================================================
+      USER NOT FOUND
+    =====================================================
+    */
+
     if (!user) {
       console.log(
         "USER NOT FOUND:",
@@ -74,6 +118,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "User not found",
+          identifier,
         },
         {
           status: 404,
@@ -81,9 +126,11 @@ export async function POST(req: Request) {
       );
     }
 
-    /* =====================================================
-       NATIONAL / CERTIFICATE
-    ===================================================== */
+    /*
+    =====================================================
+      NATIONAL / CERTIFICATE
+    =====================================================
+    */
 
     let nationalAttempts = Number(
       user.stats?.national?.attempts ?? 0
@@ -94,8 +141,10 @@ export async function POST(req: Request) {
     );
 
     /*
-     * Eski Certificate natijalarini ham tekshiramiz.
-     */
+    =====================================================
+      OLD CERTIFICATE DATA
+    =====================================================
+    */
 
     const certificateCycles =
       user.certificateCycles || {};
@@ -129,9 +178,11 @@ export async function POST(req: Request) {
       }
     }
 
-    /* =====================================================
-       SAT
-    ===================================================== */
+    /*
+    =====================================================
+      SAT
+    =====================================================
+    */
 
     const satAttempts = Number(
       user.stats?.sat?.attempts ?? 0
@@ -141,9 +192,11 @@ export async function POST(req: Request) {
       user.stats?.sat?.correct ?? 0
     );
 
-    /* =====================================================
-       OLYMPIAD
-    ===================================================== */
+    /*
+    =====================================================
+      OLYMPIAD
+    =====================================================
+    */
 
     const olympiadBaseAttempts =
       Number(
@@ -179,11 +232,6 @@ export async function POST(req: Request) {
           ?.correct ?? 0
       );
 
-    /*
-     * Barcha Olympiad natijalarini
-     * birlashtiramiz.
-     */
-
     const olympiadAttempts =
       olympiadBaseAttempts +
       olympiadGenesisAttempts +
@@ -194,9 +242,11 @@ export async function POST(req: Request) {
       olympiadGenesisCorrect +
       olympiadIndependenceCorrect;
 
-    /* =====================================================
-       DAILY
-    ===================================================== */
+    /*
+    =====================================================
+      DAILY
+    =====================================================
+    */
 
     const dailyAttempts = Number(
       user.stats?.daily?.attempts ?? 0
@@ -206,9 +256,11 @@ export async function POST(req: Request) {
       user.stats?.daily?.correct ?? 0
     );
 
-    /* =====================================================
-       MATH SPRINT
-    ===================================================== */
+    /*
+    =====================================================
+      MATH SPRINT
+    =====================================================
+    */
 
     const mathSpirit = {
       games: Number(
@@ -216,24 +268,23 @@ export async function POST(req: Request) {
       ),
 
       highestScore: Number(
-        user.stats?.mathSpirit
-          ?.highestScore ?? 0
+        user.stats?.mathSpirit?.highestScore ?? 0
       ),
 
       totalScore: Number(
-        user.stats?.mathSpirit
-          ?.totalScore ?? 0
+        user.stats?.mathSpirit?.totalScore ?? 0
       ),
 
       bestCombo: Number(
-        user.stats?.mathSpirit
-          ?.bestCombo ?? 0
+        user.stats?.mathSpirit?.bestCombo ?? 0
       ),
     };
 
-    /* =====================================================
-       FINAL STATS
-    ===================================================== */
+    /*
+    =====================================================
+      FINAL STATS
+    =====================================================
+    */
 
     const stats = {
       national: {
@@ -251,17 +302,13 @@ export async function POST(req: Request) {
         correct: olympiadCorrect,
 
         genesis: {
-          attempts:
-            olympiadGenesisAttempts,
-          correct:
-            olympiadGenesisCorrect,
+          attempts: olympiadGenesisAttempts,
+          correct: olympiadGenesisCorrect,
         },
 
         independence: {
-          attempts:
-            olympiadIndependenceAttempts,
-          correct:
-            olympiadIndependenceCorrect,
+          attempts: olympiadIndependenceAttempts,
+          correct: olympiadIndependenceCorrect,
         },
       },
 
@@ -273,9 +320,11 @@ export async function POST(req: Request) {
       mathSpirit,
     };
 
-    /* =====================================================
-       PERFECT TRIO
-    ===================================================== */
+    /*
+    =====================================================
+      PERFECT TRIO
+    =====================================================
+    */
 
     const certificatePerfect =
       nationalAttempts === 20 &&
@@ -294,9 +343,11 @@ export async function POST(req: Request) {
       satPerfect &&
       olympiadPerfect;
 
-    /* =====================================================
-       SELF-HEAL OLD CERTIFICATE DATA
-    ===================================================== */
+    /*
+    =====================================================
+      SELF HEAL CERTIFICATE DATA
+    =====================================================
+    */
 
     const oldNationalAttempts =
       Number(
@@ -329,56 +380,104 @@ export async function POST(req: Request) {
       );
     }
 
-    /* =====================================================
-       RESPONSE
-    ===================================================== */
+    /*
+    =====================================================
+      RESPONSE USER
+    =====================================================
+    */
 
     const responseUser = {
       ...user,
+
+      _id: undefined,
 
       title: getTitle(
         Number(user.geniusPoints ?? 0)
       ),
 
+      geniusPoints: Number(
+        user.geniusPoints ?? 0
+      ),
+
+      streak: Number(
+        user.streak ?? 0
+      ),
+
       stats,
 
       perfectTrio,
+
+      avatar:
+        user.avatar || "only-math",
+
+      topThree:
+        user.topThree === true,
     };
+
+    /*
+    =====================================================
+      REMOVE _id
+    =====================================================
+    */
+
+    delete responseUser._id;
 
     console.log(
       "API /ME SUCCESS:",
       user.username
     );
 
+    console.log(
+      "Current GP:",
+      Number(user.geniusPoints ?? 0)
+    );
+
     console.log("=================================");
 
+    /*
+    =====================================================
+      RESPONSE
+    =====================================================
+    */
+
     return NextResponse.json(
-      responseUser
+      responseUser,
+      {
+        status: 200,
+
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate",
+        },
+      }
     );
   } catch (error) {
     console.error(
-      "API /me ERROR:",
-      error
+      "================================="
+    );
+
+    console.error(
+      "API /ME ERROR:"
+    );
+
+    console.error(error);
+
+    console.error(
+      "================================="
     );
 
     return NextResponse.json(
       {
         error: "Server Error",
+
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unknown server error",
       },
       {
         status: 500,
       }
     );
   }
-}
-
-/* =====================================================
-   ESCAPE REGEX
-===================================================== */
-
-function escapeRegex(value: string) {
-  return value.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
 }
